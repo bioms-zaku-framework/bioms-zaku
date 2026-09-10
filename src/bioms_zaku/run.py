@@ -122,26 +122,40 @@ def run(config: dict | str | Path, *, printer: Callable[[str], None] = print) ->
                 "n_jobs": cfg["n_jobs"], "resampling_scheme": "deterministic per (n rows, seed, B, min_oob): default_rng(seed).integers(0,n,n); OOB>=min_oob",
                 "started_at": time.strftime("%Y-%m-%dT%H:%M:%S")}
 
-    # ---- design (optional): designed index audited only on the audit partition
-    designed = None
+    # ---- design (optional): designed index audited only on the audit partition (CONTRATOS §2.7)
+    #      EN: the split is made over rows with a finite target; the vector is fitted WITHIN each stratum (so a stratum
+    #          difference in the target is never absorbed as signal); one vector per stratum, all recorded in the manifest.
+    designed: dict[str, object] = {}
     if cfg["design"]:
         dg = cfg["design"]; tgt = dg["target"]
+        has_t = np.isfinite(pd.to_numeric(frame[tgt], errors="coerce").to_numpy(float))
+        sub = frame[has_t].reset_index(drop=True)
         if dg.get("split", "holdout") == "holdout":
-            strat = frame[ds.strata] if ds.strata else None
+            strat = sub[ds.strata] if ds.strata else None
             if ds.target_types.get(tgt) == "classification":
-                strat = (strat.astype(str) + "|" if strat is not None else "") + frame[tgt].astype(str)
-            split = holdout_split(frame, fraction=float(dg.get("fraction", 0.70)), seed=int(dg.get("seed", 42)), stratify=strat, id_col=ds.id)
+                strat = (strat.astype(str) + "|" if strat is not None else "") + sub[tgt].astype(str)
+            split = holdout_split(sub, fraction=float(dg.get("fraction", 0.70)), seed=int(dg.get("seed", 42)), stratify=strat, id_col=ds.id)
         else:
-            split = by_stratum_split(frame, ds.strata, dg["design_value"], dg["audit_value"])
-        designed = design_index(frame, tgt, ds.variables + list(cfg["algebra"]["extra_log_variables"]), split, index_id=dg.get("id", f"designed_{tgt}"))
-        manifest["design"] = {"target": tgt, "mode": split.mode, "fraction": split.fraction, "seed": split.seed, "stratify_on": split.stratify_on,
-                              "design_hash": split.design_hash, "n_design": split.n_design, "n_audit": split.n_audit,
-                              "variables": list(designed.variables), "vector_design": designed.vector_design.tolist(), "r2_design": designed.r2_design,
-                              "vector_refit_full": None if designed.vector_refit_full is None else designed.vector_refit_full.tolist(),
-                              "r2_refit_full": designed.r2_refit_full, "refit_full": designed.vector_refit_full is not None}
-        if split.n_audit < 100:
-            warnings.append(f"design: audit partition has n={split.n_audit} < 100; intervals will be wide")
-        frame = frame[split.audit].reset_index(drop=True)      # EN: everything below runs on the audit partition only
+            split = by_stratum_split(sub, ds.strata, dg["design_value"], dg["audit_value"])
+        dvars = ds.variables + list(cfg["algebra"]["extra_log_variables"])
+        did = dg.get("id", f"designed_{tgt}")
+        groups_d = sorted(sub[ds.strata].dropna().unique()) if ds.strata else [None]
+        man_d = {"target": tgt, "mode": split.mode, "fraction": split.fraction, "seed": split.seed, "stratify_on": split.stratify_on,
+                 "design_hash": split.design_hash, "n_with_target": int(has_t.sum()), "n_design": split.n_design, "n_audit": split.n_audit,
+                 "variables": list(dvars), "per_stratum": {}}
+        for g in groups_d:
+            mask = np.ones(len(sub), dtype=bool) if g is None else (sub[ds.strata] == g).to_numpy()
+            from .design import Split
+            sp = Split(split.design & mask, split.audit & mask, split.mode, split.fraction, split.seed, split.stratify_on, split.design_hash)
+            di = design_index(sub, tgt, dvars, sp, index_id=did)
+            key = "all" if g is None else str(g)
+            designed[key] = di
+            man_d["per_stratum"][key] = {"n_design": sp.n_design, "n_audit": sp.n_audit, "vector_design": di.vector_design.tolist(), "r2_design": di.r2_design,
+                                         "vector_refit_full": None if di.vector_refit_full is None else di.vector_refit_full.tolist(), "r2_refit_full": di.r2_refit_full}
+            if sp.n_audit < 100:
+                warnings.append(f"design/{key}: audit partition has n={sp.n_audit} < 100; intervals will be wide")
+        manifest["design"] = man_d
+        frame = sub[split.audit].reset_index(drop=True)      # EN: everything below runs on the audit partition only
 
     # ---- per stratum
     lab_map = {str(k): str(v) for k, v in (cfg.get("strata_labels") or {}).items()}
@@ -156,8 +170,10 @@ def run(config: dict | str | Path, *, printer: Callable[[str], None] = print) ->
     total = sum(1 for _ in strata) ; done_methods = 0
     for stratum, fr in strata:
         vals, skipped = _values(cat, ds, fr)
-        if designed is not None:
-            vals[designed.id] = designed.values(fr)
+        raw_key = str(fr[ds.strata].iloc[0]) if ds.strata and len(fr) else "all"
+        di = designed.get(raw_key) if designed else None
+        if di is not None:
+            vals[di.id] = di.values(fr)
         skipped_all[stratum] = skipped
         # EN: complete-case fraction warning per method
         for mid, v in vals.items():
@@ -166,11 +182,11 @@ def run(config: dict | str | Path, *, printer: Callable[[str], None] = print) ->
                 warnings.append(f"{stratum}/{mid}: {frac:.0%} of rows lack the index (complete-case)")
         design_vars = ds.variables + list(cfg["algebra"]["extra_log_variables"])
         S, n_sig = A.log_covariance(fr, design_vars)
-        vecs = A.compute_vectors(cat, {k: v for k, v in vals.items() if k != (designed.id if designed else None)}, fr, ds.variables, stratum,
+        vecs = A.compute_vectors(cat, {k: v for k, v in vals.items() if di is None or k != di.id}, fr, ds.variables, stratum,
                                  extra_log_variables=cfg["algebra"]["extra_log_variables"])
-        if designed is not None:
-            vecs[designed.id] = A.VectorFit(designed.id, stratum, tuple(design_vars), designed.vector_design, "designed",
-                                            int(np.isfinite(vals[designed.id]).sum()), 0, designed.r2_design)
+        if di is not None:
+            vecs[di.id] = A.VectorFit(di.id, stratum, tuple(design_vars), di.vector_design, "designed",
+                                      int(np.isfinite(vals[di.id]).sum()), 0, di.r2_design)
         conf = {e.id: e.confidence for e in cat.entries}
         oov = {mid: _out_of_validity(cat[mid], fr, ds) for mid in vecs if mid in cat.ids()}
         for mid, vf in vecs.items():
@@ -185,7 +201,7 @@ def run(config: dict | str | Path, *, printer: Callable[[str], None] = print) ->
         for i, vi in enumerate(design_vars):
             for j, vj in enumerate(design_vars):
                 T["sigma"].append(dict(stratum=stratum, n=n_sig, var_i=vi, var_j=vj, cov_log=float(S[i, j])))
-        pcat = Catalog(cat.version, cat.conventions, list(cat.entries) + ([_designed_entry(designed)] if designed else []), cat.source_path)
+        pcat = Catalog(cat.version, cat.conventions, list(cat.entries) + ([_designed_entry(di)] if di is not None else []), cat.source_path)
         pairs = A.pairs_table(pcat, vecs, vals, S, stratum, min_pair_n=cfg["algebra"]["min_pair_n"], alpha=cfg["algebra"]["fisher_alpha"])
         red = A.redundancy_table(pcat, pairs, stratum, threshold=cfg["algebra"]["redundancy_threshold"]) if not pairs.empty else pd.DataFrame()
         T["pairs"].append(pairs); T["redundancy"].append(red)

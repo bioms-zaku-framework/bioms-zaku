@@ -57,7 +57,7 @@ def test_strata_transfer_classification_and_design(tmp_path):
     cfg["design"] = {"target": "LMI_DXA", "split": "holdout", "fraction": 0.70, "seed": 42, "id": "designed_LMI"}; cfg["audit"]["bootstrap"]["min_oob"] = 5
     res = run(cfg, printer=lambda s: None); t = res["tables"]
     assert "sigma_transfer" in t and len(t["sigma_transfer"]) == 4
-    assert "designed_LMI" in set(t["algebra"].method_id) and res["manifest"]["design"]["n_audit"] == 72
+    assert "designed_LMI" in set(t["algebra"].method_id) and res["manifest"]["design"]["n_audit"] == 72 and set(res["manifest"]["design"]["per_stratum"]) == {"0", "1"}
     assert not (res["out_dir"] / "figures" / "supplementary").exists()   # supplementary off by default
     # classification path: binary target with permuted-null control built in the CSV
     df = pd.read_csv(p); rng = np.random.default_rng(0); df["diab_perm"] = rng.permutation(df["diab"].to_numpy()); df.to_csv(p, index=False)
@@ -92,3 +92,13 @@ def test_validity_flag_and_strata_labels(tmp_path):
     assert set(t.stratum) == {"F", "M"}
     lima = t[(t.method_id == "Lima2008_SMM") & (t.stratum == "F")]
     assert len(lima) == 1 and lima.out_of_validity_frac.iloc[0] == 1.0 and "sex" in lima.out_of_validity_fields.iloc[0]
+
+
+def test_figure_customisation_title_language_palette(tmp_path):
+    from bioms_zaku.run import run
+    cfg = _cfg(tmp_path, "fig"); cfg["figures"] = {"title": "Meu título", "subtitle": "sub", "language": "pt", "labels": "short",
+                                                    "palette": {"specific": "#1f77b4"}, "formats": ["png"], "dpi": 100}
+    res = run(cfg, printer=lambda s: None); fd = res["out_dir"] / "figures"
+    assert (fd / "board_all.png").exists() and not (fd / "board_all.pdf").exists()
+    txt = (fd / "README.md").read_text(encoding="utf-8")
+    assert txt.index("**PT**") < txt.index("**EN**")     # chosen language first
