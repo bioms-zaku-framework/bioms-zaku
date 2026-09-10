@@ -1,0 +1,30 @@
+# EN: how to cite this software (Citation File Format 1.2). GitHub renders a "Cite this repository" button from it.
+# ES: cómo citar este software.  PT: como citar este software.
+cff-version: 1.2.0
+message: "If you use BioMS Zaku, please cite it as below."
+type: software
+title: "BioMS Zaku: an algebraic and predictive framework to decompose, audit and design bioimpedance indices and equations"
+version: 0.1.0.dev0
+date-released: 2026-09-10
+license: MIT
+repository-code: "https://github.com/ThallesLM/bioms-zaku"
+authors:
+  - family-names: "Mota"
+    given-names: "Thalles"
+    email: "thallesleandromota@gmail.com"
+    affiliation: "Universidade Federal de Mato Grosso, Brazil"
+  - family-names: "Martins"
+    given-names: "Claudia"
+    email: "claudia@ic.ufmt.br"
+    affiliation: "Universidade Federal de Mato Grosso, Brazil"
+  - family-names: "Oliveira Gonçalves"
+    given-names: "Luis Carlos"
+    email: "luiscarlosoliveiragoncalves@gmail.com"
+    affiliation: "Universidade Federal de Uberlândia, Brazil"
+keywords:
+  - bioimpedance
+  - body composition
+  - index validation
+  - negative control
+  - redundancy
+abstract: "Algebraic decomposition of indices and predictive equations into exponent vectors, analytic prediction of their redundancy from the log-covariance of the measured variables, and an out-of-sample predictive audit with negative controls. Demonstrated on bioimpedance."
