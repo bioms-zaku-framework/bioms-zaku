@@ -55,6 +55,7 @@ def test_strata_transfer_classification_and_design(tmp_path):
     cfg = _cfg(tmp_path, "syn"); cfg["data"]["path"] = str(p); cfg["strata"] = "sexo"; cfg["data"]["min_n"] = 30   # top-level strata is the single source
     cfg["data"]["columns"]["targets"] = {"LMI_DXA": "lmi_dxa"}; cfg["data"]["columns"]["controls"] = {"FMI_DXA": "fmi_dxa"}
     cfg["design"] = {"target": "LMI_DXA", "split": "holdout", "fraction": 0.70, "seed": 42, "id": "designed_LMI"}; cfg["audit"]["bootstrap"]["min_oob"] = 5
+    cfg["declarations"] = {"targets_independent_of_variables": True}   # EN: synthetic DXA targets are not computed from R, Xc, H, W
     res = run(cfg, printer=lambda s: None); t = res["tables"]
     assert "sigma_transfer" in t and len(t["sigma_transfer"]) == 4
     assert "designed_LMI" in set(t["algebra"].method_id) and res["manifest"]["design"]["n_audit"] == 72 and set(res["manifest"]["design"]["per_stratum"]) == {"0", "1"}

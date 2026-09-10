@@ -15,9 +15,27 @@ def main(argv=None) -> int:
     r = sub.add_parser("run", help="run a configuration file (YAML)")
     r.add_argument("config"); r.add_argument("--threads", type=int, default=None)
     sub.add_parser("version")
+    i = sub.add_parser("init", help="build a configuration from a CSV (interactive; or --map role=column ...)")
+    i.add_argument("csv"); i.add_argument("-o", "--out", default=None); i.add_argument("--sep", default="auto"); i.add_argument("--decimal", default="auto")
+    i.add_argument("--encoding", default="utf-8"); i.add_argument("--map", nargs="*", default=None, help="role=column pairs, e.g. R=resistencia Xc=reatancia H=estatura W=peso target=lmi control=fmi independent=yes")
+    c = sub.add_parser("check", help="validate configuration and data without running")
+    c.add_argument("config")
     a = ap.parse_args(argv)
     if a.cmd == "version":
         from . import __version__; print(__version__); return 0
+    if a.cmd == "init":
+        from .wizard import init
+        flags = dict(kv.split("=", 1) for kv in (a.map or [])) or None
+        ask = None if flags else (lambda prompt, default: input(prompt + ": "))
+        init(a.csv, a.out, ask=ask, map_flags=flags, sep=a.sep, decimal=a.decimal, encoding=a.encoding)
+        return 0
+    if a.cmd == "check":
+        from .check import CheckError, check
+        try:
+            check(a.config)
+        except CheckError:
+            return 2
+        return 0
     threads = a.threads
     if threads is None:
         import yaml

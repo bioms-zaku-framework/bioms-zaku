@@ -29,7 +29,8 @@ DEFAULTS: dict[str, Any] = {
               "bootstrap": {"B": 2000, "min_oob": 20, "max_attempts_factor": 6},
               "utility_margin": 0.03, "verdict": {"p_specific": 0.95, "p_control": 0.05, "ci": 0.95},
               "multiplicity": "none", "combinations": False},
-    "design": None,   # {"target": ..., "split": "holdout", "fraction": 0.70, "seed": 42, "id": "designed_<target>"}
+    "design": None,
+    "declarations": {"targets_independent_of_variables": None},   # EN: circularity rule (contract v0.4.3); required true with design   # {"target": ..., "split": "holdout", "fraction": 0.70, "seed": 42, "id": "designed_<target>"}
     "seeds": {"cv": 42, "bootstrap": 42},
     "preset": "article",
     "threads": 1,

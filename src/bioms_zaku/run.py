@@ -127,6 +127,8 @@ def run(config: dict | str | Path, *, printer: Callable[[str], None] = print) ->
     #          difference in the target is never absorbed as signal); one vector per stratum, all recorded in the manifest.
     designed: dict[str, object] = {}
     if cfg["design"]:
+        if (cfg.get("declarations") or {}).get("targets_independent_of_variables") is not True:
+            raise ValueError("design requires declarations.targets_independent_of_variables: true (contract v0.4.3: the target must not be computed from any mapped variable)")
         dg = cfg["design"]; tgt = dg["target"]
         has_t = np.isfinite(pd.to_numeric(frame[tgt], errors="coerce").to_numpy(float))
         sub = frame[has_t].reset_index(drop=True)

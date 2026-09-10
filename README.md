@@ -40,9 +40,18 @@ bioms-zaku run examples/minimo.yaml      # 150 synthetic rows, preset quick, ~15
 ls zaku_out/minimo                        # algebra.csv pairs.csv redundancy.csv audit.csv utility.csv screening.csv manifest.json summary.md figures/
 ```
 
-Your own data: one row per person, positive measured variables, at least one target and one negative-control column.
-Map the columns in a YAML (see `examples/minimo.yaml` and `CONTRATOS.md` §1): `variables` (R, Xc, H, W at the declared
-frequency), `units`, `targets`, `controls`, optional `covariates`, `strata`, `groups`, `id`. Then `bioms-zaku run my.yaml`.
+Your own data — three commands / tres comandos / três comandos:
+
+```bash
+bioms-zaku init my_data.csv          # asks which column is R, Xc, H, W, target, control… (suggests, never guesses) → my_data.zaku.yaml
+bioms-zaku check my_data.zaku.yaml   # validates data + configuration WITHOUT running: rows, classes, methods, bootstrap, circularity
+bioms-zaku run   my_data.zaku.yaml   # the analysis
+```
+
+Non-interactive `init`: `bioms-zaku init my_data.csv --map R=resistance Xc=reactance H=height W=weight target=lmi control=fmi independent=yes`.
+The YAML maps columns to roles (see `CONTRATOS.md` §1): `variables` (R, Xc, H, W at the declared frequency), `units`,
+`targets`, `controls`, optional `covariates`, `strata`, `groups`, `id`, and `declarations.targets_independent_of_variables`
+(true only if no target/control is computed from the mapped variables — the circularity rule).
 
 ```yaml
 run_name: my_study
