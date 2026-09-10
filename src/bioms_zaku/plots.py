@@ -40,7 +40,7 @@ plt.rcParams.update({"font.family": "DejaVu Sans", "font.size": 8.5, "axes.spine
                      "grid.color": C["grid"], "grid.linewidth": 0.6, "figure.facecolor": C["surface"], "axes.facecolor": C["surface"]})
 
 CAPTIONS = {
-    "board": ("Verdict board. One row per method, ordered by publication (earliest at top). Left: originality = 1 − max|Spearman| with an earlier method (log scale; left of the dashed line = redundant). Centre: specificity = score(target) − score(control) with 95% bootstrap interval; blue = specific, orange = measures the control, grey = inconclusive. Right: added value over the covariates with interval; dashed = margin. Hollow markers = formula provenance not high. ◆ = exact transformation of another method (identity).",
+    "board": ("Verdict board. One row per method, ordered by publication (earliest at top). Left: originality = 1 − max|Spearman| with an earlier method (log scale; left of the dashed line = redundant). Centre: specificity = score(target) − score(control) with 95% bootstrap interval; blue = specific, orange = measures the control, grey = inconclusive. Right: added value over the covariates with interval; dashed = margin. Hollow markers = formula provenance not high. ◆ = exact transformation of another method (identity). † = applied mostly outside the method's declared validity range (age, BMI or sex).",
               "Cuadro de veredictos. Una fila por método, en orden de publicación. Izquierda: originalidad = 1 − máx|Spearman| con un método anterior (escala log; a la izquierda de la línea discontinua = redundante). Centro: especificidad = puntaje(objetivo) − puntaje(control) con intervalo bootstrap 95%; azul = específico, naranja = mide el control, gris = no concluyente. Derecha: valor agregado sobre las covariables con intervalo; discontinua = margen. Marcadores huecos = procedencia de la fórmula no alta. ◆ = transformación exacta de otro método.",
               "Quadro de vereditos. Uma linha por método, em ordem de publicação. Esquerda: originalidade = 1 − máx|Spearman| com um método anterior (escala log; à esquerda da linha tracejada = redundante). Centro: especificidade = escore(alvo) − escore(controle) com intervalo bootstrap 95%; azul = específico, laranja = mede o controle, cinza = inconclusivo. Direita: valor acrescentado sobre as covariáveis com intervalo; tracejada = margem. Marcadores vazados = procedência da fórmula não alta. ◆ = transformação exata de outro método."),
     "exponents": ("Exponent vectors. Each row is a method written as a product of powers of the measured variables; cells show the exponent (blue positive, orange negative). Rows with similar patterns carry the same information; 'fit R²' is how well a sum-type equation behaves as a product (1.00 = exact).",
@@ -96,7 +96,8 @@ def board(alg: pd.DataFrame, red: pd.DataFrame, aud: pd.DataFrame, uti: pd.DataF
         fig, axes = plt.subplots(1, 3, figsize=(11, 0.28 * n + 1.6), sharey=True, gridspec_kw={"width_ratios": [1.0, 1.2, 1.0], "wspace": 0.08})
         for ax in axes:
             ax.set_yticks(y); ax.grid(axis="x"); ax.set_axisbelow(True); ax.tick_params(axis="y", length=0)
-        axes[0].set_yticklabels([lab.get(m, m) for m in ids], fontsize=7.5, color=C["ink"])
+        oov = alg[alg.stratum == s].set_index("method_id").get("out_of_validity_frac", pd.Series(dtype=float)).to_dict()
+        axes[0].set_yticklabels([lab.get(m, m) + (" †" if oov.get(m, 0) > 0.5 else "") for m in ids], fontsize=7.5, color=C["ink"])
         # --- panel 1: originality
         ax = axes[0]; orig = np.array([1 - r.loc[m, "rho_sp_max"] if np.isfinite(r.loc[m, "rho_sp_max"]) else 1.0 for m in ids])
         orig = np.clip(orig, 1e-3, 1.0)
@@ -133,7 +134,7 @@ def board(alg: pd.DataFrame, red: pd.DataFrame, aud: pd.DataFrame, uti: pd.DataF
         else:
             ax.text(0.5, 0.5, "utility not run\n(no covariates declared)", ha="center", va="center", transform=ax.transAxes, color=C["ink2"])
             ax.set_xticks([])
-        fig.suptitle(f"Verdict board — stratum {s} · target {primary_target} vs control {a.control.iloc[0]}", fontsize=10, color=C["ink"], x=0.01, ha="left", y=0.995)
+        fig.suptitle(f"Verdict board — stratum {s} · target {primary_target} vs control {a.control.iloc[0]}   († = mostly outside declared validity)", fontsize=10, color=C["ink"], x=0.01, ha="left", y=0.995)
         fig.subplots_adjust(top=0.96)
         _save(fig, out_dir, f"board_{s}")
 

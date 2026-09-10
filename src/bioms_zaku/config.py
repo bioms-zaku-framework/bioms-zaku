@@ -18,6 +18,7 @@ DEFAULTS: dict[str, Any] = {
              "drop_nonpositive": False, "impute": False, "max_missing_frac_warn": 0.10, "min_n": 30, "min_per_class": 20},
     "catalog": {"path": "builtin", "include": "all", "exclude": [], "user_entries": []},
     "strata": None,
+    "strata_labels": {},   # EN: optional display names for stratum values, e.g. {0: F, 1: M}
     "algebra": {"fit_affine": True, "extra_log_variables": [], "min_fit_r2": 0.90, "redundancy_threshold": 0.95,
                 "min_pair_n": 30, "transfer": True, "fisher_alpha": 0.05},
     "audit": {"task": "auto",

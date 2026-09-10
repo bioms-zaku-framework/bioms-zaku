@@ -80,3 +80,15 @@ def test_strata_conflict_is_an_error(tmp_path):
     cfg = _cfg(tmp_path, "conf"); cfg["strata"] = "sexo"; cfg["data"]["columns"]["strata"] = "idade_anos"
     with pytest.raises(ValueError, match="strata declared twice"):
         run(cfg, printer=lambda s: None)
+
+
+def test_validity_flag_and_strata_labels(tmp_path):
+    from bioms_zaku.run import run
+    p = _synthetic_csv(tmp_path)
+    cfg = _cfg(tmp_path, "val"); cfg["data"]["path"] = str(p); cfg["strata"] = "sexo"; cfg["strata_labels"] = {0: "F", 1: "M"}
+    cfg["data"]["min_n"] = 30; cfg["audit"]["bootstrap"]["min_oob"] = 5
+    cfg["data"]["columns"]["targets"] = {"LMI_DXA": "lmi_dxa"}; cfg["data"]["columns"]["controls"] = {"FMI_DXA": "fmi_dxa"}
+    t = run(cfg, printer=lambda s: None)["tables"]["algebra"]
+    assert set(t.stratum) == {"F", "M"}
+    lima = t[(t.method_id == "Lima2008_SMM") & (t.stratum == "F")]
+    assert len(lima) == 1 and lima.out_of_validity_frac.iloc[0] == 1.0 and "sex" in lima.out_of_validity_fields.iloc[0]

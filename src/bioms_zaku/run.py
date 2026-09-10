@@ -144,7 +144,8 @@ def run(config: dict | str | Path, *, printer: Callable[[str], None] = print) ->
         frame = frame[split.audit].reset_index(drop=True)      # EN: everything below runs on the audit partition only
 
     # ---- per stratum
-    strata = [(str(s), frame[frame[ds.strata] == s].reset_index(drop=True)) for s in sorted(frame[ds.strata].dropna().unique())] if ds.strata else [("all", frame)]
+    lab_map = {str(k): str(v) for k, v in (cfg.get("strata_labels") or {}).items()}
+    strata = [(lab_map.get(str(s), str(s)), frame[frame[ds.strata] == s].reset_index(drop=True)) for s in sorted(frame[ds.strata].dropna().unique())] if ds.strata else [("all", frame)]
     T = {k: [] for k in ("algebra", "sigma", "pairs", "redundancy", "audit", "utility", "combinations")}
     vecs_by, sig_by, pairs_by, skipped_all = {}, {}, {}, {}
     acfg = AuditConfig(task=cfg["audit"]["task"], cv_folds=cfg["audit"]["cv"]["folds"], cv_repeats=cfg["audit"]["cv"]["repeats"],
@@ -171,11 +172,13 @@ def run(config: dict | str | Path, *, printer: Callable[[str], None] = print) ->
             vecs[designed.id] = A.VectorFit(designed.id, stratum, tuple(design_vars), designed.vector_design, "designed",
                                             int(np.isfinite(vals[designed.id]).sum()), 0, designed.r2_design)
         conf = {e.id: e.confidence for e in cat.entries}
+        oov = {mid: _out_of_validity(cat[mid], fr, ds) for mid in vecs if mid in cat.ids()}
         for mid, vf in vecs.items():
             row = dict(method_id=mid, label=(cat[mid].label if mid in cat.ids() else mid), year=(cat[mid].year if mid in cat.ids() else None),
                        kind=(cat[mid].kind if mid in cat.ids() else "designed"), form=(cat[mid].form if mid in cat.ids() else "monomial"),
                        stratum=stratum, n=vf.n, n_nonpositive_pred=vf.n_nonpositive_pred, fit_r2=vf.fit_r2,
                        poor_monomial=bool(vf.fit_r2 < cfg["algebra"]["min_fit_r2"]), vector_source=vf.source,
+                       out_of_validity_frac=oov.get(mid, (0.0, ""))[0], out_of_validity_fields=oov.get(mid, (0.0, ""))[1],
                        provenance_confidence=conf.get(mid, "low"))
             row.update({f"e_{v}": float(x) for v, x in zip(vf.variables, vf.vector)})
             T["algebra"].append(row)
@@ -252,6 +255,32 @@ def run(config: dict | str | Path, *, printer: Callable[[str], None] = print) ->
             warnings.append(f"figures skipped: {e}")
     printer(f"done in {time.time() - t0:.0f}s → {out_dir}")
     return {"tables": tables, "manifest": manifest, "out_dir": out_dir}
+
+
+def _out_of_validity(entry, frame: pd.DataFrame, ds: Dataset) -> tuple[float, str]:
+    """
+    EN: §2.2 — fraction of rows outside the method's declared validity (age, bmi, sex) and which fields; never blocks.
+        age from group `idade`, bmi from W/H_m² when both exist, sex from group `sexo` (male=1).
+    ES/PT: fração de linhas fora da faixa de validade declarada (idade, IMC, sexo); nunca bloqueia.
+    """
+    v = entry.validity or {}; n = len(frame); bad = np.zeros(n, dtype=bool); fields = []
+    if v.get("age") and "idade" in frame:
+        lo, hi = v["age"]; a = pd.to_numeric(frame["idade"], errors="coerce").to_numpy(float)
+        m = np.zeros(n, dtype=bool)
+        if lo is not None: m |= a < lo
+        if hi is not None: m |= a > hi
+        if m.any(): bad |= m; fields.append("age")
+    if v.get("bmi") and {"W", "H"} <= set(frame.columns):
+        lo, hi = v["bmi"]; b = frame["W"].to_numpy(float) / (frame["H"].to_numpy(float) / 100) ** 2
+        m = np.zeros(n, dtype=bool)
+        if lo is not None: m |= b < lo
+        if hi is not None: m |= b > hi
+        if m.any(): bad |= m; fields.append("bmi")
+    if v.get("sex") in ("male", "female") and "sexo" in frame:
+        sx = pd.to_numeric(frame["sexo"], errors="coerce").to_numpy(float)
+        m = (sx != 1) if v["sex"] == "male" else (sx != 0)
+        if m.any(): bad |= m; fields.append("sex")
+    return float(bad.mean()) if n else 0.0, "+".join(fields)
 
 
 def _designed_entry(di):
