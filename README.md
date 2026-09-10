@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/assets/logo.svg" alt="BioMS Zaku" width="360"></p>
+
 # BioMS Zaku
 
 **EN** — Algebraic decomposition and predictive audit of indices and predictive equations. Demonstrated on bioimpedance.
@@ -21,8 +23,9 @@ Status: pre-alpha · License: MIT · Contracts: `CONTRATOS.md` · Plan: `PROJETO
    control* if the opposite; plus **added value** over covariates and **gain** from combining indices.
 3. **Design.** A new index for a context (e.g. VO₂max) is fitted on a design partition and audited on a disjoint one.
 
-Outputs are aggregate tables (full precision), a manifest (hashes, versions, seeds), a summary, and three figures:
-`exponents`, `predicted_observed`, `board`. Row-level data never leave the run.
+Outputs are aggregate tables (full precision), a manifest (hashes, versions, seeds), a summary, three figures
+(`exponents`, `predicted_observed`, `scorecard`) and a single-file `report.html` with everything embedded. Row-level data
+never leave the run. Figures accept `figures: {title, subtitle, language: en|es|pt, palette: default|brand, …}`.
 
 ## Install / Instalar
 
@@ -80,9 +83,10 @@ preset: article          # 5×50 CV, B = 2000 (quick = 5×5, B = 200, for demos 
 
 ## Catalog / Catálogo
 
-31 published bioimpedance methods (indices and equations) with DOI, provenance and confidence level, in
-`data/catalog_v1.json`. Curation is ongoing and entry by entry; contributions require DOI, formula source, a published
-numeric example and review (`CONTRATOS.md` §2). Multi-frequency methods need the corresponding variables mapped.
+Five public bioimpedance indices are included and verified at the source: impedance index H²/R (Lukaski 1985), phase
+angle (Baumgartner 1988), R/H and Xc/H (Piccoli 1994), LMI (Levi Micheli 2022). Further indices and predictive equations
+enter one at a time, each with DOI, formula source, a published numeric example checked at load, and review
+(`CONTRATOS.md` §2). The catalog file also carries entries under curation; they are not evaluated unless explicitly included.
 
 ## Reproducibility / Reproducibilidad / Reprodutibilidade
 

@@ -271,6 +271,8 @@ def run(config: dict | str | Path, *, printer: Callable[[str], None] = print) ->
             make_all(out_dir, tables, cfg)
         except ImportError as e:
             warnings.append(f"figures skipped: {e}")
+    from .html import write_report
+    write_report(out_dir, cfg, tables, manifest)
     printer(f"done in {time.time() - t0:.0f}s → {out_dir}")
     return {"tables": tables, "manifest": manifest, "out_dir": out_dir}
 

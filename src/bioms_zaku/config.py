@@ -39,7 +39,7 @@ DEFAULTS: dict[str, Any] = {
     # EN: figure customisation (all optional). language: en | es | pt (axis labels, legends, captions).
     # ES/PT: personalização das figuras (tudo opcional).
     "figures": {"title": None, "subtitle": None, "language": "en", "labels": "full",   # labels: full | short (author year)
-                "palette": {"specific": "#2a78d6", "control": "#eb6834", "muted": "#9a9893"},
+                "palette": "default",   # "default" (validated blue/orange) | "brand" (BioMS violet/green) | {specific:, control:, muted:}
                 "font": "DejaVu Sans", "font_size": 8.5, "dpi": 300, "formats": ["png", "pdf"], "footer": True},
 }
 PRESETS = {"quick": {"audit": {"cv": {"repeats": 5}, "bootstrap": {"B": 200}}}, "article": {}}

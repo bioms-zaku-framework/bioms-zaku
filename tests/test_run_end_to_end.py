@@ -38,7 +38,7 @@ def test_end_to_end_minimal_example_writes_all_outputs(tmp_path):
     m = json.loads((out / "manifest.json").read_text())
     assert m["preset"] == "quick" and m["input_sha256"] and m["outputs_sha256"]["audit.csv"] and m["versions"]["sklearn"]
     assert "PRESET `quick`" in (out / "summary.md").read_text(encoding="utf-8")
-    for f in ("board_all", "exponents", "predicted_observed"):
+    for f in ("scorecard_all", "exponents", "predicted_observed"):
         assert (out / "figures" / f"{f}.png").exists() and (out / "figures" / f"{f}.pdf").exists(), f
     assert not any(c.startswith("seqn") for c in pd.read_csv(out / "audit.csv").columns)   # no row-level data
 
@@ -100,6 +100,22 @@ def test_figure_customisation_title_language_palette(tmp_path):
     cfg = _cfg(tmp_path, "fig"); cfg["figures"] = {"title": "Meu título", "subtitle": "sub", "language": "pt", "labels": "short",
                                                     "palette": {"specific": "#1f77b4"}, "formats": ["png"], "dpi": 100}
     res = run(cfg, printer=lambda s: None); fd = res["out_dir"] / "figures"
-    assert (fd / "board_all.png").exists() and not (fd / "board_all.pdf").exists()
+    assert (fd / "scorecard_all.png").exists() and not (fd / "scorecard_all.pdf").exists()
     txt = (fd / "README.md").read_text(encoding="utf-8")
     assert txt.index("**PT**") < txt.index("**EN**")     # chosen language first
+
+
+def test_html_report_and_brand_palette(tmp_path):
+    from bioms_zaku.run import run
+    cfg = _cfg(tmp_path, "html"); cfg["figures"] = {"palette": "brand", "language": "es"}
+    res = run(cfg, printer=lambda s: None); rp = res["out_dir"] / "report.html"
+    assert rp.exists()
+    txt = rp.read_text(encoding="utf-8")
+    assert "data:image/png;base64" in txt and "manifest.json" in txt and "<table" in txt
+    # EN: no row-level data: the id column never appears as a table header, and no table has one row per input person
+    import re
+    assert not re.search(r"<th[^>]*>\s*seqn\s*</th>", txt, flags=re.I)
+    assert "150 rows" not in txt
+    cfg2 = _cfg(tmp_path, "badpal"); cfg2["figures"] = {"palette": "rainbow"}
+    with pytest.raises(ValueError, match="figures.palette"):
+        run(cfg2, printer=lambda s: None)
