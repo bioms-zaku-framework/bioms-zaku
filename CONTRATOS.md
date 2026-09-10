@@ -256,12 +256,22 @@ em dados que não podem sair (container em parceiros). Figuras das tabelas garan
 
 ## 5. Contrato de REPRODUTIBILIDADE
 - Determinismo: mesma entrada + configuração + versões ⇒ mesmos `outputs_sha256`, para qualquer `n_jobs`.
-- Equivalência com a referência (`preset: article`, sementes 42/42, `threads: 1`, Python 3.11.13,
-  numpy 2.3.5, pandas 2.3.3, scipy 1.16.2, scikit-learn 1.4.2): reproduz os CSVs do NHANES (09/09/2026)
-  e do piloto v2 com tolerância relativa **1e-9 na mesma máquina** e **1e-6 entre máquinas**.
-  Exceção declarada: Segal específica (seleção por %gordura do DXA) não é reproduzida; o artigo reprocessa
-  com seleção por `groups`.
+- Equivalência com o **motor anterior** (scripts de 08–09/09/2026), onde o método não mudou: com `preset: article`,
+  sementes 42/42, `threads: 1`, Python 3.11.13, numpy 2.3.5, pandas 2.3.3, scipy 1.16.2, scikit-learn 1.4.2, o pacote
+  reproduz os CSVs do NHANES (09/09/2026) e do piloto v2 com tolerância **1e-9 na mesma máquina** e **1e-6 entre
+  máquinas** para estatísticas não baseadas em postos (expoentes ajustados, R², Pearson dos logs, escores de
+  validação cruzada e bootstrap). Estatísticas de posto (Spearman) a **1e-6** e contagens discretas (pares dentro do IC)
+  com **±1 par**: verificado em 10/09/2026 que o CSV de referência carrega diferenças de 1 ulp nas colunas derivadas
+  (H_m, II) que desfazem empates nos postos e deslocam o Spearman em ~3e-7.
+- Exceções declaradas (o motor anterior fazia diferente e o framework é mais rigoroso): Segal específica selecionada
+  por %gordura do DXA (vazamento; o framework só seleciona por `groups`); IMC como método (fora do catálogo);
+  identidades por escala contadas como redundância (o framework as separa); precedência só por ano (o framework usa
+  ano > data > DOI). Nos testes, esses casos são reproduzidos por entradas só-de-teste ou excluídos, com o motivo escrito.
 - Teste rápido em CI: recorte fixo (400 linhas, 5 métodos, `quick`), referência congelada, < 60 s.
+
+**Justificativa.** O artigo será produzido pelo framework. A equivalência com o motor anterior é verificação de
+implementação onde o método não mudou; não amarra decisões de rigor. Declarar as exceções agora evita "ajustar" o
+teste depois para passar.
 
 ---
 
