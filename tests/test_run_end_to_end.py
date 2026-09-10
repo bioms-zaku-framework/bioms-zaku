@@ -38,7 +38,7 @@ def test_end_to_end_minimal_example_writes_all_outputs(tmp_path):
     m = json.loads((out / "manifest.json").read_text())
     assert m["preset"] == "quick" and m["input_sha256"] and m["outputs_sha256"]["audit.csv"] and m["versions"]["sklearn"]
     assert "PRESET `quick`" in (out / "summary.md").read_text(encoding="utf-8")
-    for f in ("board_all", "exponents", "predicted_observed", "lineage_all"):
+    for f in ("board_all", "exponents", "predicted_observed"):
         assert (out / "figures" / f"{f}.png").exists() and (out / "figures" / f"{f}.pdf").exists(), f
     assert not any(c.startswith("seqn") for c in pd.read_csv(out / "audit.csv").columns)   # no row-level data
 
@@ -58,7 +58,7 @@ def test_strata_transfer_classification_and_design(tmp_path):
     res = run(cfg, printer=lambda s: None); t = res["tables"]
     assert "sigma_transfer" in t and len(t["sigma_transfer"]) == 4
     assert "designed_LMI" in set(t["algebra"].method_id) and res["manifest"]["design"]["n_audit"] == 72
-    assert (res["out_dir"] / "figures" / "sigma_transfer.png").exists()
+    assert not (res["out_dir"] / "figures" / "supplementary").exists()   # supplementary off by default
     # classification path: binary target with permuted-null control built in the CSV
     df = pd.read_csv(p); rng = np.random.default_rng(0); df["diab_perm"] = rng.permutation(df["diab"].to_numpy()); df.to_csv(p, index=False)
     cfg2 = _cfg(tmp_path, "cls"); cfg2["data"]["path"] = str(p); cfg2["data"]["columns"]["targets"] = {"DIAB": "diab"}

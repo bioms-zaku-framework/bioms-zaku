@@ -33,7 +33,7 @@ DEFAULTS: dict[str, Any] = {
     "preset": "article",
     "threads": 1,
     "n_jobs": 1,
-    "output": {"dir": "./zaku_out", "figures": True, "format": "csv"},
+    "output": {"dir": "./zaku_out", "figures": True, "supplementary_figures": False, "format": "csv"},
 }
 PRESETS = {"quick": {"audit": {"cv": {"repeats": 5}, "bootstrap": {"B": 200}}}, "article": {}}
 

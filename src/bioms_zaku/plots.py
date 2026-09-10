@@ -109,7 +109,7 @@ def board(alg: pd.DataFrame, red: pd.DataFrame, aud: pd.DataFrame, uti: pd.DataF
             if redund and isinstance(pred, str):
                 ax.text(1.02 * o, yi, f"≈ {lab.get(pred, pred)}", fontsize=6, va="center", color=C["ink2"])
         ax.set_xscale("log"); ax.set_xlim(1e-3, 1.2); ax.axvline(1 - threshold, color=C["ink2"], lw=0.8, ls="--")
-        ax.set_xlabel("originality: 1 − max |Spearman| with an earlier method (log)")
+        ax.set_xlabel("originality\n1 − max |Spearman| with an earlier method (log)")
         # --- panel 2: specificity
         ax = axes[1]
         for yi, m in zip(y, ids):
@@ -118,7 +118,7 @@ def board(alg: pd.DataFrame, red: pd.DataFrame, aud: pd.DataFrame, uti: pd.DataF
             row = a.loc[m]; col = {"SPECIFIC": C["specific"], "MEASURES_CONTROL": C["control"]}.get(row.verdict, C["muted"])
             ax.plot([row.disc_lo, row.disc_hi], [yi, yi], color=col, lw=1.4, alpha=0.9)
             ax.plot(row.disc_mean, yi, "o", ms=5, mfc=C["surface"] if conf.get((m, s), "high") != "high" else col, mec=col, mew=1.2)
-        ax.axvline(0, color=C["ink2"], lw=0.8); ax.set_xlabel(f"specificity: {a.metric.iloc[0]}(target) − {a.metric.iloc[0]}(control), 95% interval")
+        ax.axvline(0, color=C["ink2"], lw=0.8); ax.set_xlabel(f"specificity\n{a.metric.iloc[0]}(target) − {a.metric.iloc[0]}(control), 95% interval")
         # --- panel 3: utility
         ax = axes[2]
         if u is not None:
@@ -129,11 +129,12 @@ def board(alg: pd.DataFrame, red: pd.DataFrame, aud: pd.DataFrame, uti: pd.DataF
                 ax.plot([row.delta_lo, row.delta_hi], [yi, yi], color=col, lw=1.4, alpha=0.9)
                 ax.plot(row.delta_mean, yi, "o", ms=5, mfc=C["surface"] if conf.get((m, s), "high") != "high" else col, mec=col, mew=1.2)
             ax.axvline(margin, color=C["ink2"], lw=0.8, ls="--"); ax.axvline(0, color=C["grid"], lw=0.8)
-            ax.set_xlabel(f"added value over covariates: Δ{a.metric.iloc[0]}, 95% interval")
+            ax.set_xlabel(f"added value over covariates\nΔ{a.metric.iloc[0]}, 95% interval")
         else:
             ax.text(0.5, 0.5, "utility not run\n(no covariates declared)", ha="center", va="center", transform=ax.transAxes, color=C["ink2"])
             ax.set_xticks([])
-        fig.suptitle(f"Verdict board — stratum {s} · target {primary_target} vs control {a.control.iloc[0]}", fontsize=10, color=C["ink"], x=0.01, ha="left")
+        fig.suptitle(f"Verdict board — stratum {s} · target {primary_target} vs control {a.control.iloc[0]}", fontsize=10, color=C["ink"], x=0.01, ha="left", y=0.995)
+        fig.subplots_adjust(top=0.96)
         _save(fig, out_dir, f"board_{s}")
 
 
@@ -202,19 +203,27 @@ def lineage(red: pd.DataFrame, alg: pd.DataFrame, out_dir: Path) -> None:
             if m in r.index:
                 lanes.setdefault(root(m), []).append(m)
         roots = [m for m in order if m in lanes]
-        fig, ax = plt.subplots(figsize=(10, 0.42 * len(roots) + 1.2))
+        fig, ax = plt.subplots(figsize=(11, 0.75 * len(roots) + 1.4))
+        def short(m, dup: bool):
+            full = lab.get(m, m); base = full.split(" [")[0].split(" (")[0]
+            tag = (" [" + full.split(" [")[1]) if dup and " [" in full else ""
+            return (f"{base} {yr.get(m, '')}" if str(yr.get(m, "")) not in base else base) + tag
         for i, rt in enumerate(roots):
             yy = len(roots) - 1 - i
             members = lanes[rt]; xs = [yr.get(m, np.nan) for m in members]
             ax.plot([min(xs), max(xs)], [yy, yy], color=C["grid"], lw=1.2, zorder=1)
-            for m, x in zip(members, xs):
+            k = 0; levels = (0.20, -0.20, 0.40, -0.40)
+            shorts = [lab.get(m, m).split(" [")[0] for m in members]
+            for m, x, sh in zip(members, xs, shorts):
                 ident = pd.notna(r.loc[m, "identity_of"]); is_root = m == rt
                 mk = "D" if ident else "o"; col = C["specific"] if is_root else C["muted"]
                 ax.plot(x, yy, mk, ms=6 if is_root else 4.5, mfc=col if is_root else C["surface"], mec=col, mew=1.2, zorder=2)
-                ax.text(x, yy + 0.18, lab.get(m, m) if is_root else lab.get(m, m).split(" [")[0], fontsize=6.5 if is_root else 5.8, ha="center", va="bottom",
-                        color=C["ink"] if is_root else C["ink2"], rotation=0)
-        ax.set_yticks([]); ax.set_ylim(-0.6, len(roots) - 0.2); ax.grid(axis="x"); ax.set_axisbelow(True)
-        ax.set_xlabel("year of publication"); ax.set_title(f"Precedence lanes — stratum {s} (filled = original root; hollow = redundant with the lane's root; ◆ = identity)", fontsize=9, loc="left")
+                if not is_root:
+                    dy = levels[k % 4]; k += 1
+                    ax.text(x, yy + dy, short(m, shorts.count(sh) > 1), fontsize=5.8, ha="center", va="bottom" if dy > 0 else "top", color=C["ink2"])
+        ax.set_yticks(range(len(roots))); ax.set_yticklabels([lab.get(rt, rt) for rt in roots[::-1]], fontsize=7.5, color=C["ink"])
+        ax.tick_params(axis="y", length=0); ax.set_ylim(-0.7, len(roots) - 0.3); ax.grid(axis="x"); ax.set_axisbelow(True)
+        ax.set_xlabel("year of publication"); ax.set_title(f"Precedence lanes — stratum {s} (row label = original root; hollow = redundant with that root; ◆ = identity)", fontsize=9, loc="left")
         _save(fig, out_dir, f"lineage_{s}")
 
 
@@ -267,18 +276,31 @@ def compass(alg: pd.DataFrame, out_dir: Path) -> None:
 
 
 def write_captions(out_dir: Path) -> None:
-    L = ["# Figures — how to read them / cómo leerlas / como ler", ""]
+    L = ["# Figures — how to read them / cómo leerlas / como ler", "",
+         "Official (the framework's three): exponents · predicted_observed · board. Supplementary (on request): lineage · sigma_transfer · combination_gain · compass.", ""]
     for name, (en, es, pt) in CAPTIONS.items():
         L += [f"## {name}", "", f"**EN** — {en}", "", f"**ES** — {es}", "", f"**PT** — {pt}", ""]
     (out_dir / "README.md").write_text("\n".join(L), encoding="utf-8")
 
 
-def make_all(out_dir: Path, tables: dict, cfg: dict) -> None:
+OFFICIAL = ("exponents", "predicted_observed", "board")            # EN: the framework's three figures (decision 2026-09-10)
+SUPPLEMENTARY = ("lineage", "sigma_transfer", "combination_gain", "compass")
+
+
+def make_all(out_dir: Path, tables: dict, cfg: dict, *, supplementary: bool | None = None) -> None:
+    """
+    EN: official figures always; supplementary ones only when `output.supplementary_figures` (or the flag) is true.
+    ES/PT: figuras oficiais sempre; suplementares só quando solicitadas.
+    """
     fd = Path(out_dir) / "figures"; fd.mkdir(exist_ok=True)
     alg, red, aud, uti = (tables.get(k, pd.DataFrame()) for k in ("algebra", "redundancy", "audit", "utility"))
     primary = aud.target.iloc[0] if not aud.empty else None
+    exponents(alg, fd); predicted_observed(tables.get("pairs", pd.DataFrame()), alg, fd)
     if primary:
         board(alg, red, aud, uti, fd, primary, threshold=cfg["algebra"]["redundancy_threshold"], margin=cfg["audit"]["utility_margin"])
-    exponents(alg, fd); predicted_observed(tables.get("pairs", pd.DataFrame()), alg, fd); lineage(red, alg, fd)
-    sigma_transfer(tables.get("sigma_transfer"), fd); combination_gain(tables.get("combinations"), fd); compass(alg, fd)
+    if supplementary is None:
+        supplementary = bool(cfg.get("output", {}).get("supplementary_figures", False))
+    if supplementary:
+        sd = fd / "supplementary"; sd.mkdir(exist_ok=True)
+        lineage(red, alg, sd); sigma_transfer(tables.get("sigma_transfer"), sd); combination_gain(tables.get("combinations"), sd); compass(alg, sd)
     write_captions(fd)
