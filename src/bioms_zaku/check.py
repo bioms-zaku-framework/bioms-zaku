@@ -99,7 +99,11 @@ def check(config: str | Path | dict, *, printer: Callable[[str], None] = print) 
         rep["info"].append(f"design: target {tgt}, holdout {fr:.0%} of {n_t} rows with target → audit ≈ {int(round((1 - fr) * n_t))} rows")
         if (1 - fr) * n_t < 100:
             rep["warnings"].append("design: audit partition < 100 rows; intervals will be wide")
-    rep["info"].append(f"preset {cfg['preset']}: CV {cfg['audit']['cv']['folds']}×{cfg['audit']['cv']['repeats']}, B={B}; estimator {cfg['audit']['single']['estimator']}")
+    task = cfg["audit"]["task"] if cfg["audit"]["task"] != "auto" else ds.target_types[ds.targets[0]]
+    est = cfg["audit"]["single"]["estimator"]
+    if est in ("ridge", "logistic"):
+        est = "logistic" if task == "classification" else "ridge"      # EN: effective default per task (§3.2)
+    rep["info"].append(f"preset {cfg['preset']}: task {task}; CV {cfg['audit']['cv']['folds']}×{cfg['audit']['cv']['repeats']}, B={B}; estimator {est}")
     _emit(rep, printer)
     if rep["errors"]:
         raise CheckError(f"{len(rep['errors'])} blocking problem(s)")
