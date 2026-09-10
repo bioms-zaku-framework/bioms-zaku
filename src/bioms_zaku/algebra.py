@@ -177,7 +177,9 @@ def pairs_table(cat: Catalog, vecs: dict[str, VectorFit], values: dict[str, np.n
         r_obs = float(np.corrcoef(np.log(va[ok]), np.log(vb[ok]))[0, 1])
         rho_obs = float(spearmanr(va[ok], vb[ok])[0])
         lo, hi = fisher_ci(rho_obs, n, alpha)
-        is_id = identity.get(a) == b or identity.get(b) == a
+        # EN: `identity` = the pair is (method, its exact transformation) OR involves a copy (a method with identity_of),
+        #     whose pairs duplicate the original's; such pairs are excluded from prediction statistics and figures.
+        is_id = identity.get(a) == b or identity.get(b) == a or a in identity or b in identity
         rows.append(dict(a_id=a, b_id=b, stratum=stratum, n_pair=n, r_log_predicted=r_pred, r_log_observed=r_obs,
                          rho_sp_observed=rho_obs, rho_sp_converted=pearson_to_spearman(r_pred), ci_lo=lo, ci_hi=hi,
                          within_ci=bool(lo <= pearson_to_spearman(r_pred) <= hi), abs_err_log=abs(r_pred - r_obs), identity=is_id))
