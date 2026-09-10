@@ -49,6 +49,7 @@ class AuditConfig:
     p_control: float = 0.05
     utility_margin: float = 0.03
     impute: bool = False                  # explicit only (§1.4); default complete-case
+    min_n: int = 30                       # minimum complete-case rows for a method to be audited
 
 
 def default_estimator(task: str):
@@ -139,6 +140,9 @@ def oob_scores(configs: dict[str, np.ndarray], Y: np.ndarray, task: str, estimat
     """
     n = Y.shape[0]
     tr, oob = resamples(n, cfg.seed_bootstrap, cfg.B, cfg.min_oob, cfg.max_attempts_factor)
+    if not tr:
+        raise AuditError(f"bootstrap impossible: no resample of n={n} rows leaves >= min_oob={cfg.min_oob} out-of-bag "
+                         f"(expected OOB ≈ {0.368 * n:.0f}); lower min_oob or provide more rows")
     pipe = make_pipeline(estimator, cfg.impute)
     store = {k: np.full((len(tr), Y.shape[1]), np.nan) for k in configs}
     dropped = 0
@@ -165,6 +169,8 @@ def contrast(d: np.ndarray, cfg: AuditConfig) -> dict:
     ES/PT: resumo da diferença pareada: média, IC por percentis, P(d>0). Descritivo, não é valor-p.
     """
     d = d[np.isfinite(d)]
+    if len(d) == 0:
+        return dict(mean=float("nan"), lo=float("nan"), hi=float("nan"), p=float("nan"), n=0)
     a = (1 - cfg.ci) / 2 * 100
     lo, hi = np.percentile(d, [a, 100 - a])
     return dict(mean=float(d.mean()), lo=float(lo), hi=float(hi), p=float((d > 0).mean()), n=int(len(d)))
@@ -172,6 +178,8 @@ def contrast(d: np.ndarray, cfg: AuditConfig) -> dict:
 
 def verdict(c: dict, cfg: AuditConfig) -> str:
     """EN: SPECIFIC / MEASURES_CONTROL / INCONCLUSIVE per §5 rules. ES/PT: veredito conforme as regras fixas."""
+    if c.get("n", 1) == 0 or not np.isfinite(c["mean"]):
+        return "INCONCLUSIVE"
     if c["mean"] > 0 and c["lo"] > 0 and c["p"] >= cfg.p_specific:
         return "SPECIFIC"
     if c["mean"] < 0 and c["hi"] < 0 and c["p"] <= cfg.p_control:
@@ -215,7 +223,7 @@ def audit_method(method_id: str, stratum: str, x: np.ndarray, targets: dict[str,
     names = list(targets) + [c for c in controls if c not in targets]
     Yall = np.column_stack([targets.get(k, controls.get(k)) for k in names])
     ok = np.isfinite(x) & np.isfinite(Yall).all(axis=1)
-    if ok.sum() < 30:
+    if ok.sum() < cfg.min_n:
         return rows
     X = x[ok].reshape(-1, 1); Y = Yall[ok]; g = groups[ok] if groups is not None else None
     task = cfg.task
@@ -265,7 +273,7 @@ def utility_method(method_id: str, stratum: str, x: np.ndarray, covariates: np.n
     names = list(targets)
     Yall = np.column_stack([targets[k] for k in names])
     ok = np.isfinite(x) & np.isfinite(covariates).all(axis=1) & np.isfinite(Yall).all(axis=1)
-    if ok.sum() < 30:
+    if ok.sum() < cfg.min_n:
         return []
     FA = covariates[ok]; FB = np.column_stack([FA, x[ok]]); Y = Yall[ok]; g = groups[ok] if groups is not None else None
     task = cfg.task if cfg.task != "auto" else infer_task(Y[:, 0])
@@ -289,7 +297,7 @@ def combination_gain(host_id: str, added_id: str, stratum: str, xh: np.ndarray, 
     """
     names = list(targets); Yall = np.column_stack([targets[k] for k in names])
     ok = np.isfinite(xh) & np.isfinite(xa) & np.isfinite(Yall).all(axis=1)
-    if ok.sum() < 30:
+    if ok.sum() < cfg.min_n:
         return []
     A = xh[ok].reshape(-1, 1); Bm = np.column_stack([xh[ok], xa[ok]]); Y = Yall[ok]
     task = cfg.task if cfg.task != "auto" else infer_task(Y[:, 0])

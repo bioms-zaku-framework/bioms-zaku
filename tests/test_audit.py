@@ -98,3 +98,11 @@ def test_verdict_rules():
 def test_infer_task():
     assert infer_task(np.array([0, 1, 1, 0])) == "classification"
     assert infer_task(np.array([0.1, 2.3, 1.2])) == "regression"
+
+
+def test_bootstrap_impossible_is_a_clear_error():
+    import pytest as _pt
+    from bioms_zaku.audit import AuditError
+    muscle, fat, idx_specific, _, _ = _synthetic(n=30)
+    with _pt.raises(AuditError, match="bootstrap impossible"):
+        audit_method("spec", "all", idx_specific, {"muscle": muscle}, {"fat": fat}, {"muscle": "fat"}, AuditConfig(cv_repeats=2, B=20, min_oob=25))

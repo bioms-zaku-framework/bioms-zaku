@@ -1,0 +1,22 @@
+# EN: minimal example (150 SYNTHETIC rows from tools/make_example.py; quick preset) — demonstrates the plumbing in seconds. Not for reporting.
+# ES/PT: exemplo mínimo (10 linhas sintéticas; preset quick) — demonstra o fluxo em segundos. Não é para reportar.
+run_name: minimo
+data:
+  path: examples/sintetico.csv
+  columns:
+    variables: {R: resistencia_ohm, Xc: reatancia_ohm, H: estatura_cm, W: massa_kg}
+    units: {H: cm, W: kg}
+    targets: {LMI_DXA: lmi_dxa}
+    controls: {FMI_DXA: fmi_dxa}
+    covariates: [massa_kg, estatura_cm]
+    groups: {sexo: sexo, idade: idade_anos}
+    id: seqn
+  min_n: 30
+  min_per_class: 10
+strata: null
+algebra: {min_pair_n: 30}
+audit:
+  bootstrap: {B: 60, min_oob: 20}
+  cv: {folds: 3, repeats: 2}
+preset: quick
+output: {dir: ./zaku_out, figures: true}

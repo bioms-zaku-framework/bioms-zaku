@@ -565,7 +565,9 @@
     }
    },
    "notes": "Transcription judged invalid in the 2026-09-08 audit; excluded from analyses until the original is read.",
-   "expr": "-17.58 + 0.240*II - 0.172*W + 0.040*(sexo*W) + 0.165*H"
+   "expr": "-17.58 + 0.240*II - 0.172*W + 0.040*(sexo*W) + 0.165*H",
+   "status": "excluded",
+   "exclusion_reason": "invalid transcription (Kyle 2004 table, signs inferred; yields impossible TBW values); original PDF not yet read"
   },
   {
    "id": "Deurenberg1991_FFM",

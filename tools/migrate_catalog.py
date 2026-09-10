@@ -120,6 +120,7 @@ def main() -> None:
     entries.append(single("Heitmann1990_TBW", "Heitmann 1990 [TBW]", "TBW", detail="Kyle 2004 Table 3 (signs inferred; original PDF not read)",
                           coding=SEX, validity={"age": [35, 65], "bmi": None, "sex": "both", "population": "Danish adults"},
                           notes="Transcription judged invalid in the 2026-09-08 audit; excluded from analyses until the original is read."))
+    entries[-1]["status"] = "excluded"; entries[-1]["exclusion_reason"] = "invalid transcription (Kyle 2004 table, signs inferred; yields impossible TBW values); original PDF not yet read"
     entries.append(single("Deurenberg1991_FFM", "Deurenberg 1991 [FFM]", "FFM", detail="PubMed abstract", coding=SEX, extra=("idade",),
                           validity={"age": [16, None], "bmi": None, "sex": "both", "population": "adults ≥16 y (n=661)"}))
     entries.append(single("Houtkooper1992_FFM", "Houtkooper 1992 [FFM]", "FFM", detail="PubMed abstract",

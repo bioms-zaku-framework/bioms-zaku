@@ -295,6 +295,7 @@ teste depois para passar.
 ---
 
 ## 6. Changelog
+- **v0.4.1 (10/09/2026)** — catálogo: campo `status` (`active` | `excluded` com `exclusion_reason` obrigatória; excluído nunca é avaliado e sai em `methods_skipped`); `strata` tem fonte única (topo da configuração; conflito com `columns.strata` → erro); figuras revistas após inspeção (§4.4): quadro de vereditos (`board`, assinatura) substitui quadrante e mapa; mapa de calor de expoentes substitui a bússola acima de 10 métodos; árvore de precedência em faixas por linhagem, sem aleatoriedade; paleta validada (2 cores: azul específico, laranja mede-controle; cinza = desênfase; identidade = forma/rótulo; procedência ≠ alta = marcador vazado).
 - **v0.4 (10/09/2026)** — §2.7 desenho de índices com partição obrigatória (holdout 70:30 padrão, `by_stratum` opcional), reajuste final rotulado, aviso de n<100, entrada `designed` no catálogo da execução.
 - **v0.3.2 (10/09/2026)** — sem imputação por padrão (decisão do Thalles): caso completo por método; utilidade e
   combinação em caso completo na união das colunas; `max_missing_frac_warn` no resumo; `impute` só explícito. Na

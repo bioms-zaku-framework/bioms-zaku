@@ -91,3 +91,11 @@ def test_inputs_include_branch_group():
     c = load_catalog()
     assert "fat_class" in c["Segal1988_spec_LBM"].inputs
     assert "sexo" in c["Sun2003_FFM"].inputs
+
+
+def test_excluded_entries_require_reason_and_builtin_marks_heitmann_tbw():
+    c = load_catalog()
+    e = c["Heitmann1990_TBW"]
+    assert e.status == "excluded" and e.exclusion_reason
+    with pytest.raises(CatalogError, match="exclusion_reason"):
+        build_catalog(_with(status="excluded"))

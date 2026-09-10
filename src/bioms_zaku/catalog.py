@@ -61,6 +61,8 @@ class Entry:
     exprs: dict[str | None, CompiledExpr] = field(default_factory=dict)
     extra_inputs: tuple[str, ...] = ()       # EN: extra continuous inputs (e.g. age) — must be mapped by the user
     identity_of: str | None = None
+    status: str = "active"                   # active | excluded (never evaluated; reason in exclusion_reason)
+    exclusion_reason: str | None = None
     pmid: int | None = None
     date: str | None = None
     check_example: dict | None = None
@@ -207,6 +209,10 @@ def _parse_entry(e: dict, i: int, canon: tuple[str, ...], rng_seed: int) -> Entr
     # PT: a confiança pode ser rebaixada, nunca elevada acima do padrão da fonte.
     if CONFIDENCE.index(prov["confidence"]) < CONFIDENCE.index(DEFAULT_CONFIDENCE[prov["formula_source"]]):
         raise CatalogError(f"{where}: confidence {prov['confidence']!r} exceeds what source {prov['formula_source']!r} allows")
+    if e.get("status", "active") not in ("active", "excluded"):
+        raise CatalogError(f"{where}: status must be active or excluded")
+    if e.get("status") == "excluded" and not e.get("exclusion_reason"):
+        raise CatalogError(f"{where}: excluded entries must state exclusion_reason")
     val = e["validity"]
     for k in ("age", "bmi", "sex", "population"):
         if k not in val:
@@ -254,7 +260,8 @@ def _parse_entry(e: dict, i: int, canon: tuple[str, ...], rng_seed: int) -> Entr
         id=e["id"], label=e["label"], authors=e["authors"], year=e["year"], doi=e.get("doi"), kind=e["kind"],
         target=e["target"], form=e["form"], frequency_khz=tuple(float(x) for x in (fk if isinstance(fk, (list, tuple)) else [fk])), validity=val, provenance=prov,
         vector=vector, vector_tol=vector_tol, group_coding=group_coding, branch_group=branch_group, exprs=exprs,
-        extra_inputs=extra_inputs, identity_of=e.get("identity_of"), pmid=e.get("pmid"), date=e.get("date"),
+        extra_inputs=extra_inputs, identity_of=e.get("identity_of"), status=e.get("status", "active"),
+        exclusion_reason=e.get("exclusion_reason"), pmid=e.get("pmid"), date=e.get("date"),
         check_example=e.get("check_example"), n=e.get("n"), r2=e.get("r2"), see=e.get("see"),
         device=e.get("device"), reference_method=e.get("reference_method"), notes=e.get("notes"),
     )

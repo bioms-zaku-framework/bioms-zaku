@@ -1,0 +1,263 @@
+"""
+EN: Orchestrator: config → data → catalog (+designed index) → per stratum: values, Σ, vectors, pairs, redundancy →
+    Σ transfer → audit (specificity), utility, combinations → screening → tables, manifest, summary (, figures).
+    Progress with ETA from the first method. Row-level data never leave this module.
+ES: Orquestador: de la configuración a las salidas. Progreso con ETA desde el primer método.
+PT: Orquestrador: da configuração às saídas. Progresso com ETA desde o primeiro método.
+"""
+from __future__ import annotations
+
+import json
+import os
+import time
+from concurrent.futures import ProcessPoolExecutor
+from dataclasses import asdict
+from pathlib import Path
+from typing import Callable
+
+import numpy as np
+import pandas as pd
+
+from . import algebra as A
+from .audit import AuditConfig, AuditError, audit_method, combination_gain, default_estimator, utility_method
+from .catalog import BUILTIN_PATH, Catalog, build_catalog
+from .config import resolve
+from .design import design_index, holdout_split, by_stratum_split
+from .io import Dataset, read_table
+from .report import sha256_file, sha256_obj, write_manifest, write_summary, write_table
+from .screen import screening_table
+
+
+def _estimator(spec: dict, task: str):
+    """EN: 'ridge' | 'logistic' | 'hgb' | 'xgboost' | 'module:Class' with params. ES/PT: fábrica de estimadores."""
+    name, params = spec.get("estimator"), dict(spec.get("params") or {})
+    if name in (None, "ridge", "logistic"):
+        est = default_estimator(task)
+        if name == "ridge" and task == "regression":
+            est.set_params(**params)
+        elif name == "logistic" and task == "classification":
+            est.set_params(**params)
+        return est
+    if name == "hgb":
+        from sklearn.ensemble import HistGradientBoostingClassifier, HistGradientBoostingRegressor
+        cls = HistGradientBoostingRegressor if task == "regression" else HistGradientBoostingClassifier
+        return cls(random_state=0, **params)
+    if name == "xgboost":
+        import xgboost as xgb  # optional dependency
+        cls = xgb.XGBRegressor if task == "regression" else xgb.XGBClassifier
+        return cls(random_state=0, n_jobs=1, **params)
+    mod, _, cls = name.partition(":")
+    import importlib
+    return getattr(importlib.import_module(mod), cls)(**params)
+
+
+def _load_catalog(cfg: dict) -> Catalog:
+    path = None if cfg["catalog"]["path"] in (None, "builtin") else cfg["catalog"]["path"]
+    raw = json.loads(Path(path or BUILTIN_PATH).read_text(encoding="utf-8"))
+    raw["entries"] = list(raw["entries"]) + list(cfg["catalog"].get("user_entries") or [])
+    cat = build_catalog(raw, source_path=str(path or BUILTIN_PATH))
+    inc, exc = cfg["catalog"]["include"], set(cfg["catalog"]["exclude"] or [])
+    keep = [e for e in cat.entries if (inc == "all" or e.id in inc) and e.id not in exc]
+    return Catalog(cat.version, cat.conventions, keep, cat.source_path)
+
+
+def _values(cat: Catalog, ds: Dataset, frame: pd.DataFrame) -> tuple[dict[str, np.ndarray], dict[str, str]]:
+    env = {c: frame[c].to_numpy(float) for c in ds.variables + ds.derived if c in frame}
+    for g in ds.groups:
+        env[g] = pd.to_numeric(frame[g], errors="coerce").to_numpy(float)
+    vals, skipped = {}, {}
+    for e in cat.entries:
+        if e.status == "excluded":
+            skipped[e.id] = f"excluded: {e.exclusion_reason}"; continue
+        if e.form == "closed":
+            skipped[e.id] = "closed method (no published coefficients)"; continue
+        missing = sorted(set(e.inputs) - set(env))
+        if missing:
+            skipped[e.id] = f"missing inputs {missing}"; continue
+        v = e.evaluate(env, frame[e.branch_group].to_numpy() if e.branch_group else None)
+        vals[e.id] = np.asarray(v, float)
+    return vals, skipped
+
+
+def _audit_one(args):
+    """EN: worker for one method (picklable). ES/PT: trabalhador por método."""
+    mid, stratum, x, targets, controls, pairing, acfg, est_spec, task, groups, cov, cov_names, utility_targets = args
+    est = _estimator(est_spec, task if task != "auto" else ("classification" if len(np.unique(next(iter(targets.values()))[np.isfinite(next(iter(targets.values())))])) <= 10 else "regression"))
+    try:
+        rows = [asdict(r) for r in audit_method(mid, stratum, x, targets, controls, pairing, acfg, est, groups)]
+        urows = [asdict(u) for u in utility_method(mid, stratum, x, cov, cov_names, utility_targets, acfg, est, groups)] if cov is not None else []
+    except AuditError as e:
+        return [], [], f"{stratum}/{mid}: audit skipped — {e}"
+    return rows, urows, None
+
+
+def run(config: dict | str | Path, *, printer: Callable[[str], None] = print) -> dict:
+    """
+    EN: execute a full run; returns {"tables": {...}, "manifest": {...}, "out_dir": Path}.
+    ES/PT: executa uma rodada completa.
+    """
+    t0 = time.time()
+    cfg = resolve(config)
+    os.environ.setdefault("OMP_NUM_THREADS", str(cfg["threads"])); os.environ.setdefault("OPENBLAS_NUM_THREADS", str(cfg["threads"]))
+    out_dir = Path(cfg["output"]["dir"]) / cfg["run_name"]; out_dir.mkdir(parents=True, exist_ok=True)
+    d = cfg["data"]
+    # EN: single source of truth for strata: top-level `strata` (contract §3); copied into the column mapping.
+    cols = d["columns"]
+    if cfg["strata"] is not None:
+        if cols.get("strata") not in (None, cfg["strata"]):
+            raise ValueError(f"strata declared twice and differently: top-level {cfg['strata']!r} vs columns.strata {cols.get('strata')!r}")
+        cols = {**cols, "strata": cfg["strata"]}
+        d = {**d, "columns": cols}
+    ds = read_table(d["path"], d["columns"], sep=d["sep"], decimal=d["decimal"], encoding=d["encoding"],
+                    drop_nonpositive=d["drop_nonpositive"], min_n=d["min_n"], min_per_class=d["min_per_class"])
+    cat = _load_catalog(cfg)
+    warnings = list(ds.info["warnings"])
+    frame = ds.frame
+    manifest = {"run_name": cfg["run_name"], "config_resolved": cfg, "config_sha256": sha256_obj(cfg), "catalog_version": cat.version,
+                "catalog_sha256": sha256_file(cat.source_path) if cat.source_path and Path(cat.source_path).exists() else None,
+                "input_path": ds.info.get("input_path"), "input_sha256": sha256_file(d["path"]) if isinstance(d["path"], (str, Path)) else None,
+                "input_rows": ds.info["rows_in"], "rows_out": ds.info["rows_out"], "sep_used": ds.info.get("sep_used"),
+                "decimal_used": ds.info.get("decimal_used"), "encoding_used": ds.info.get("encoding_used"),
+                "rows_dropped": ds.info["rows_dropped"], "seeds_used": cfg["seeds"], "preset": cfg["preset"], "threads": cfg["threads"],
+                "n_jobs": cfg["n_jobs"], "resampling_scheme": "deterministic per (n rows, seed, B, min_oob): default_rng(seed).integers(0,n,n); OOB>=min_oob",
+                "started_at": time.strftime("%Y-%m-%dT%H:%M:%S")}
+
+    # ---- design (optional): designed index audited only on the audit partition
+    designed = None
+    if cfg["design"]:
+        dg = cfg["design"]; tgt = dg["target"]
+        if dg.get("split", "holdout") == "holdout":
+            strat = frame[ds.strata] if ds.strata else None
+            if ds.target_types.get(tgt) == "classification":
+                strat = (strat.astype(str) + "|" if strat is not None else "") + frame[tgt].astype(str)
+            split = holdout_split(frame, fraction=float(dg.get("fraction", 0.70)), seed=int(dg.get("seed", 42)), stratify=strat, id_col=ds.id)
+        else:
+            split = by_stratum_split(frame, ds.strata, dg["design_value"], dg["audit_value"])
+        designed = design_index(frame, tgt, ds.variables + list(cfg["algebra"]["extra_log_variables"]), split, index_id=dg.get("id", f"designed_{tgt}"))
+        manifest["design"] = {"target": tgt, "mode": split.mode, "fraction": split.fraction, "seed": split.seed, "stratify_on": split.stratify_on,
+                              "design_hash": split.design_hash, "n_design": split.n_design, "n_audit": split.n_audit,
+                              "variables": list(designed.variables), "vector_design": designed.vector_design.tolist(), "r2_design": designed.r2_design,
+                              "vector_refit_full": None if designed.vector_refit_full is None else designed.vector_refit_full.tolist(),
+                              "r2_refit_full": designed.r2_refit_full, "refit_full": designed.vector_refit_full is not None}
+        if split.n_audit < 100:
+            warnings.append(f"design: audit partition has n={split.n_audit} < 100; intervals will be wide")
+        frame = frame[split.audit].reset_index(drop=True)      # EN: everything below runs on the audit partition only
+
+    # ---- per stratum
+    strata = [(str(s), frame[frame[ds.strata] == s].reset_index(drop=True)) for s in sorted(frame[ds.strata].dropna().unique())] if ds.strata else [("all", frame)]
+    T = {k: [] for k in ("algebra", "sigma", "pairs", "redundancy", "audit", "utility", "combinations")}
+    vecs_by, sig_by, pairs_by, skipped_all = {}, {}, {}, {}
+    acfg = AuditConfig(task=cfg["audit"]["task"], cv_folds=cfg["audit"]["cv"]["folds"], cv_repeats=cfg["audit"]["cv"]["repeats"],
+                       B=cfg["audit"]["bootstrap"]["B"], min_oob=cfg["audit"]["bootstrap"]["min_oob"], max_attempts_factor=cfg["audit"]["bootstrap"]["max_attempts_factor"],
+                       seed_cv=cfg["seeds"]["cv"], seed_bootstrap=cfg["seeds"]["bootstrap"], ci=cfg["audit"]["verdict"]["ci"],
+                       p_specific=cfg["audit"]["verdict"]["p_specific"], p_control=cfg["audit"]["verdict"]["p_control"],
+                       utility_margin=cfg["audit"]["utility_margin"], impute=d["impute"], min_n=d["min_n"])
+    total = sum(1 for _ in strata) ; done_methods = 0
+    for stratum, fr in strata:
+        vals, skipped = _values(cat, ds, fr)
+        if designed is not None:
+            vals[designed.id] = designed.values(fr)
+        skipped_all[stratum] = skipped
+        # EN: complete-case fraction warning per method
+        for mid, v in vals.items():
+            frac = 1 - np.isfinite(v).mean()
+            if frac > d["max_missing_frac_warn"]:
+                warnings.append(f"{stratum}/{mid}: {frac:.0%} of rows lack the index (complete-case)")
+        design_vars = ds.variables + list(cfg["algebra"]["extra_log_variables"])
+        S, n_sig = A.log_covariance(fr, design_vars)
+        vecs = A.compute_vectors(cat, {k: v for k, v in vals.items() if k != (designed.id if designed else None)}, fr, ds.variables, stratum,
+                                 extra_log_variables=cfg["algebra"]["extra_log_variables"])
+        if designed is not None:
+            vecs[designed.id] = A.VectorFit(designed.id, stratum, tuple(design_vars), designed.vector_design, "designed",
+                                            int(np.isfinite(vals[designed.id]).sum()), 0, designed.r2_design)
+        conf = {e.id: e.confidence for e in cat.entries}
+        for mid, vf in vecs.items():
+            row = dict(method_id=mid, label=(cat[mid].label if mid in cat.ids() else mid), year=(cat[mid].year if mid in cat.ids() else None),
+                       kind=(cat[mid].kind if mid in cat.ids() else "designed"), form=(cat[mid].form if mid in cat.ids() else "monomial"),
+                       stratum=stratum, n=vf.n, n_nonpositive_pred=vf.n_nonpositive_pred, fit_r2=vf.fit_r2,
+                       poor_monomial=bool(vf.fit_r2 < cfg["algebra"]["min_fit_r2"]), vector_source=vf.source,
+                       provenance_confidence=conf.get(mid, "low"))
+            row.update({f"e_{v}": float(x) for v, x in zip(vf.variables, vf.vector)})
+            T["algebra"].append(row)
+        for i, vi in enumerate(design_vars):
+            for j, vj in enumerate(design_vars):
+                T["sigma"].append(dict(stratum=stratum, n=n_sig, var_i=vi, var_j=vj, cov_log=float(S[i, j])))
+        pcat = Catalog(cat.version, cat.conventions, list(cat.entries) + ([_designed_entry(designed)] if designed else []), cat.source_path)
+        pairs = A.pairs_table(pcat, vecs, vals, S, stratum, min_pair_n=cfg["algebra"]["min_pair_n"], alpha=cfg["algebra"]["fisher_alpha"])
+        red = A.redundancy_table(pcat, pairs, stratum, threshold=cfg["algebra"]["redundancy_threshold"]) if not pairs.empty else pd.DataFrame()
+        T["pairs"].append(pairs); T["redundancy"].append(red)
+        vecs_by[stratum], sig_by[stratum], pairs_by[stratum] = vecs, S, pairs
+
+        # ---- audit
+        targets = {t: fr[t].to_numpy(float) for t in ds.targets}
+        controls = {c: fr[c].to_numpy(float) for c in ds.controls}
+        groups = fr[ds.id].to_numpy() if ds.id and fr[ds.id].duplicated().any() else None
+        cov = fr[ds.covariates].to_numpy(float) if ds.covariates else None
+        task = cfg["audit"]["task"]
+        jobs = [(mid, stratum, vals[mid], targets, controls, ds.pairing, acfg, cfg["audit"]["single"], task, groups, cov, ds.covariates, targets)
+                for mid in vecs]
+        t_s = time.time()
+        if cfg["n_jobs"] > 1:
+            with ProcessPoolExecutor(max_workers=cfg["n_jobs"]) as ex:
+                results = list(ex.map(_audit_one, jobs))
+        else:
+            results = []
+            for k, jb in enumerate(jobs):
+                results.append(_audit_one(jb))
+                el = time.time() - t_s
+                printer(f"[{stratum}] audit {k + 1}/{len(jobs)} {jb[0]} | {el:.0f}s | ETA {el / (k + 1) * (len(jobs) - k - 1) / 60:.1f} min")
+        for rows, urows, warn in results:
+            T["audit"] += rows; T["utility"] += urows
+            if warn:
+                warnings.append(warn)
+        # ---- combinations (pairs of methods), boosting estimator, same resamples
+        if cfg["audit"]["combinations"]:
+            ids = list(vecs)
+            task_c = task if task != "auto" else ("classification" if ds.target_types[ds.targets[0]] == "classification" else "regression")
+            est_c = _estimator(cfg["audit"]["combination"], task_c)
+            for hi in ids:
+                for ad in ids:
+                    if hi == ad:
+                        continue
+                    rp = pairs[((pairs.a_id == hi) & (pairs.b_id == ad)) | ((pairs.a_id == ad) & (pairs.b_id == hi))]
+                    try:
+                        rows = combination_gain(hi, ad, stratum, vals[hi], vals[ad], targets, acfg, est_c, groups)
+                    except AuditError as e:
+                        warnings.append(f"{stratum}/{hi}+{ad}: combination skipped — {e}"); continue
+                    for r in rows:
+                        r["rho_sp_predicted"] = float(rp.rho_sp_converted.iloc[0]) if len(rp) else np.nan
+                    T["combinations"] += rows
+
+    tables = {k: (pd.concat(v, ignore_index=True) if v and isinstance(v[0], pd.DataFrame) else pd.DataFrame(v)) for k, v in T.items()}
+    if cfg["algebra"]["transfer"] and len(strata) > 1:
+        tables["sigma_transfer"] = A.sigma_transfer_table(vecs_by, sig_by, pairs_by)
+    primary = ds.targets[0]
+    tables["screening"] = screening_table(tables["redundancy"], tables["audit"], tables.get("utility"), primary_target=primary) if not tables["audit"].empty else pd.DataFrame()
+
+    # ---- write
+    sort_keys = {"algebra": ["stratum", "method_id"], "sigma": ["stratum", "var_i", "var_j"], "pairs": ["stratum", "a_id", "b_id"],
+                 "redundancy": ["stratum", "method_id"], "audit": ["stratum", "method_id", "target"], "utility": ["stratum", "method_id", "target"],
+                 "combinations": ["stratum", "host_id", "added_id", "target"], "sigma_transfer": ["sigma_from", "observed_in"], "screening": ["stratum", "method_id"]}
+    for name, df in tables.items():
+        write_table(df, out_dir / f"{name}.csv", sort_keys.get(name, []))
+    manifest.update(strata_used={s: int(len(fr)) for s, fr in strata}, methods_evaluated=sorted(set(tables["algebra"].method_id)) if not tables["algebra"].empty else [],
+                    methods_skipped=skipped_all, warnings=warnings, finished_at=time.strftime("%Y-%m-%dT%H:%M:%S"), wall_seconds=round(time.time() - t0, 1))
+    manifest = write_manifest(out_dir, manifest)
+    write_summary(out_dir, cfg, tables, manifest)
+    if cfg["output"]["figures"]:
+        try:
+            from .plots import make_all
+            make_all(out_dir, tables, cfg)
+        except ImportError as e:
+            warnings.append(f"figures skipped: {e}")
+    printer(f"done in {time.time() - t0:.0f}s → {out_dir}")
+    return {"tables": tables, "manifest": manifest, "out_dir": out_dir}
+
+
+def _designed_entry(di):
+    """EN: minimal Entry for a designed index so pairs/redundancy can include it (precedence: current year). ES/PT: entrada mínima."""
+    import datetime
+    from .catalog import Entry
+    return Entry(id=di.id, label=di.id, authors="designed", year=datetime.date.today().year, doi=None, kind="index", target=di.target,
+                 form="monomial", frequency_khz=(50.0,), validity={}, provenance={"formula_source": "designed", "confidence": "low"},
+                 vector={v: float(x) for v, x in zip(di.variables, di.vector_design)})
