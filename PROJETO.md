@@ -121,6 +121,8 @@ Regra de trabalho: uma etapa por vez; reportar; parar. Nada de encadear.
 ## 8b. Curadoria do catálogo (depois da infra)
 O catálogo entra na v1.0 como está, com o campo `verificacao` (nível de confiança) propagado até as saídas. Pendências conhecidas (10/09/2026): 9 equações só de resumo PubMed; Heitmann 1990 sem PDF original (sinais inferidos); Lima 2008 'conferir no PDF'; Segal generalizada via tabela de Gray; 17 sem `sex_coding`; 12 sem n; índices sem `vetor` gravado no JSON; Segal específica selecionada por %gordura do DXA (vazamento — trocar por IMC ou estimativa só-BIA); Schifferli 2020 = 0,854×2011 (marcar como identidade por escala); faixa de validade (IMC, idade) como campo obrigatório. Contribuições futuras: uma a uma, por pull request com modelo (DOI resolvido + fórmula com origem + teste com valor publicado + revisão humana). Catálogo com versão própria.
 
+**Decisão (10/09/2026): o IMC NÃO entra no catálogo.** O catálogo é de métodos de bioimpedância; o IMC é antropométrico. Na análise do artigo ele foi usado como âncora do "mede gordura"; no framework, quem quiser essa âncora a declara como covariável ou como entrada de usuário. No teste de equivalência ele existe só como entrada de teste.
+
 ## 9. Riscos e como estão tratados
 
 - **Resultado diferente do artigo após refatorar** → portão 2 (equivalência) bloqueia.
