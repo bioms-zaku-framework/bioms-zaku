@@ -32,7 +32,7 @@ xgboost = ["xgboost>=2"]
 dev = ["pytest>=8", "build", "twine"]
 
 [project.urls]
-Homepage = "https://github.com/ThallesLM/bioms-zaku"
+Homepage = "https://github.com/bioms-zaku-framework/bioms-zaku"
 
 [project.scripts]
 bioms-zaku = "bioms_zaku.cli:main"

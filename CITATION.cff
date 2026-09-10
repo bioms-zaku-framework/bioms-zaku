@@ -7,7 +7,7 @@ title: "BioMS Zaku: an algebraic and predictive framework to decompose, audit an
 version: 0.1.0.dev0
 date-released: 2026-09-10
 license: MIT
-repository-code: "https://github.com/ThallesLM/bioms-zaku"
+repository-code: "https://github.com/bioms-zaku-framework/bioms-zaku"
 authors:
   - family-names: "Mota"
     given-names: "Thalles"
