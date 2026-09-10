@@ -135,6 +135,25 @@ Equação `affine` com valor ≤ 0 numa linha: linha fora da parte algébrica da
 ### 2.6 Migração
 `metodos_bia.json` → **31 entradas** (8 índices + 23 equações; metades por sexo unidas). Script testado.
 
+### 2.7 Desenho de índices para um contexto (v0.4)
+Um índice novo pode ser construído para um alvo (ex.: VO2máx): regressão de ln(alvo) em ln(variáveis) no conjunto
+de **desenho**; os coeficientes são o vetor de expoentes do índice novo. Regra obrigatória: **desenho e auditoria em
+conjuntos disjuntos**.
+- `design.split`: `holdout` (padrão) com `fraction: 0.70` (opções declaradas 0.60, 0.75), `seed`, estratificado por
+  `strata` e, em classificação, por classe; ou `by_stratum` (desenha num estrato, audita em outro; testa transferência).
+- Os números reportados (Σ, redundância, auditoria, utilidade) vêm **só da partição de auditoria**.
+- O vetor final para uso prático é reajustado em 100% dos dados e sai rotulado `refit_full=true`, com o vetor de
+  desenho e o R² de ambos gravados no manifesto.
+- Aviso no resumo quando a partição de auditoria tem n < 100 (intervalos largos).
+- O índice desenhado entra no catálogo da execução como `user_entry` com `provenance.formula_source = "designed"`,
+  `confidence = "low"` e o hash da partição de desenho — nunca vai para o catálogo embutido sem curadoria.
+- Variáveis além da BIA (ex.: frequência cardíaca por estágio) entram como `variables` positivas e ampliam Σ;
+  o índice desenhado pode combinar BIA e sinais funcionais.
+
+**Justificativa.** Auditar no mesmo conjunto em que o índice foi ajustado mede ajuste, não validade. A partição é a
+prática padrão de aprendizado de máquina e é o que permite dizer ao preparador físico "este índice prediz VO2máx em
+pessoas que ele nunca viu". O reajuste final é o que se faz com qualquer modelo entregue.
+
 **Justificativa.** Uma entrada por método é o que precedência e redundância exigem. `validity`
 marca sem bloquear. `identity_of` impede que identidades inflem redundância e acurácia. Ramo só por
 `groups` fecha o vazamento da Segal específica. Validação numérica e `check_example` fazem uma
@@ -276,6 +295,7 @@ teste depois para passar.
 ---
 
 ## 6. Changelog
+- **v0.4 (10/09/2026)** — §2.7 desenho de índices com partição obrigatória (holdout 70:30 padrão, `by_stratum` opcional), reajuste final rotulado, aviso de n<100, entrada `designed` no catálogo da execução.
 - **v0.3.2 (10/09/2026)** — sem imputação por padrão (decisão do Thalles): caso completo por método; utilidade e
   combinação em caso completo na união das colunas; `max_missing_frac_warn` no resumo; `impute` só explícito. Na
   referência NHANES o imputador nunca agiu (linhas sem índice eram removidas antes do modelo), logo a equivalência não muda.
