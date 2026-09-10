@@ -8,7 +8,7 @@ def _frame(n=600, seed=3):
     rng = np.random.default_rng(seed)
     df = pd.DataFrame({"R": rng.uniform(300, 800, n), "Xc": rng.uniform(30, 90, n), "H": rng.uniform(150, 190, n), "W": rng.uniform(45, 120, n),
                        "sexo": rng.integers(0, 2, n)})
-    df["vo2"] = 40 * (df.H ** 2 / df.R) ** 0.3 * df.W ** -0.4 * np.exp(rng.normal(0, 0.05, n))
+    df["vo2"] = 40 * (df.H ** 2 / df.R) ** 0.3 * df.W ** -0.4 * np.exp(rng.normal(0, 0.02, n))
     return df
 
 
