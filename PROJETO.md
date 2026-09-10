@@ -85,8 +85,10 @@ resolvida + versões + hash.
 
 1. **Testes de unidade com resposta à mão**: a tabela de 4 pessoas das lições (Var, Cov, Σ, aᵀΣa,
    aᵀΣb, ρ = −0,998) e a regressão de 3+2 pontos (R² = 0,72). Tolerância 1e-9.
-2. **Testes de equivalência**: o pacote reproduz, bit a bit ou a 1e-9, os CSVs do NHANES de 09/09/2026
-   e do piloto v2 do DRC, com as mesmas sementes.
+2. **Testes de equivalência com o motor anterior**: onde o método não mudou, o pacote reproduz os CSVs do NHANES de
+   09/09/2026 e do piloto v2 (mesmas sementes) — é uma verificação de implementação, não uma amarra. O artigo será
+   produzido pelo framework; onde o framework é mais rigoroso que o motor anterior (sem imputação, sem seleção pelo
+   critério, identidades separadas, precedência declarada), o número do artigo é o do framework e a diferença é explicada.
 3. **Testes de contrato**: CSV com `;` e vírgula decimal; coluna negativa → erro claro; faltante no
    alvo → linha removida com aviso; expressão maliciosa → rejeitada pelo parser.
 4. **Determinismo**: duas execuções → saídas idênticas e mesmo hash no manifesto.
