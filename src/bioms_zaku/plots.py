@@ -102,10 +102,14 @@ def board(alg: pd.DataFrame, red: pd.DataFrame, aud: pd.DataFrame, uti: pd.DataF
         ax = axes[0]; orig = np.array([1 - r.loc[m, "rho_sp_max"] if np.isfinite(r.loc[m, "rho_sp_max"]) else 1.0 for m in ids])
         orig = np.clip(orig, 1e-3, 1.0)
         for yi, m, o in zip(y, ids, orig):
-            ident = pd.notna(r.loc[m, "identity_of"]); redund = bool(r.loc[m, "redundant"])
-            col = C["muted"] if (ident or redund) else C["specific"]
+            ident = r.loc[m, "identity_of"] if pd.notna(r.loc[m, "identity_of"]) else None; redund = bool(r.loc[m, "redundant"])
+            if ident:   # EN: identity rows carry no originality bar — they are the same index as their original
+                ax.plot(1.2e-3, yi, "D", ms=5, mfc=C["surface"], mec=C["muted"], mew=1.2)
+                ax.text(1.6e-3, yi, f"= {lab.get(ident, ident)} (identity)", fontsize=6, va="center", color=C["ink2"])
+                continue
+            col = C["muted"] if redund else C["specific"]
             ax.plot([1e-3, o], [yi, yi], color=col, lw=1.4, alpha=0.9)
-            ax.plot(o, yi, "D" if ident else "o", ms=5, mfc=C["surface"] if conf.get((m, s), "high") != "high" or ident else col, mec=col, mew=1.2)
+            ax.plot(o, yi, "o", ms=5, mfc=C["surface"] if conf.get((m, s), "high") != "high" else col, mec=col, mew=1.2)
             pred = r.loc[m, "predecessor_id"]
             if redund and isinstance(pred, str):
                 ax.text(1.02 * o, yi, f"≈ {lab.get(pred, pred)}", fontsize=6, va="center", color=C["ink2"])
