@@ -263,6 +263,10 @@ em dados que não podem sair (container em parceiros). Figuras das tabelas garan
 ---
 
 ## 6. Changelog
+- **v0.3.1 (10/09/2026)** — §5: tolerâncias separadas para estatísticas de posto (1e-6) e contagens (±1 par), com a causa
+  verificada; `form` ∈ {monomial, composite, closed} (o antigo "affine" é caso de composite; a BIVA específica não é
+  soma nem produto e recebe o mesmo ajuste log-linear); `doi` pode ser `null` só com `pmid` (obras sem DOI); `frequency_khz`
+  aceita lista (multifrequência).
 - **v0.3** — simplificação (decisões do Thalles): desfecho do pesquisador; Xc obrigatória; frequência
   declarada e mínima, várias permitidas; fora: critério/DXA, pré-calculados, segmentares, peso amostral,
   Excel. Dois estimadores padrão por papel (isolado: Ridge/logística; combinação: HistGradientBoosting
