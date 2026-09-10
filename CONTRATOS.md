@@ -68,7 +68,7 @@ columns:
 |---|---|
 | coluna mapeada ausente | erro |
 | variável ≤ 0, não numérica ou infinita | erro com linhas; `drop_nonpositive=true` remove, avisa, conta no manifesto |
-| faltante em `variables` | linha fora da parte algébrica; na auditoria imputada (mediana, dentro do pipeline) se `impute=true`, senão fora |
+| faltante em `variables` ou índice não calculável | linha fora da parte algébrica **e** da auditoria daquele método (caso completo por método; `n` reportado). Imputação só se `impute=true`, explícita e gravada no manifesto |
 | faltante em `targets`/`controls` | linha fora daquele alvo; contagem no manifesto |
 | n por estrato < `min_n` (30) | estrato ignorado, aviso |
 | classe com < `min_per_class` (20) casos no estrato | auditoria daquele alvo não roda no estrato, aviso |
@@ -148,7 +148,7 @@ fórmula errada falhar na carga, não no artigo. Lista branca substitui `eval`.
 ```yaml
 run_name: nhanes_1999_2004
 data: {path: nhanes_limpo.csv, encoding: utf-8, sep: auto, decimal: auto, columns: {…},
-       drop_nonpositive: false, impute: true, min_n: 30, min_per_class: 20}
+       drop_nonpositive: false, impute: false, max_missing_frac_warn: 0.10, min_n: 30, min_per_class: 20}
 catalog: {path: builtin, include: all, exclude: [], user_entries: []}
 strata: sexo
 algebra:
@@ -183,7 +183,10 @@ output: {dir: ./zaku_out, figures: true}
 ### 3.2 Regras
 - Estimador declarado antes; sem seleção pelo resultado. `sensitivity` roda nos mesmos sorteios e
   vai para `sensitivity.csv`; `nested_tuning: true` (Optuna, opcional) só nesse modo, com aviso de custo.
-- Pipeline: `SimpleImputer(median)` → `StandardScaler` → estimador. Regressão padrão `Ridge`;
+- Pipeline: `StandardScaler` → estimador, sobre **caso completo**: na auditoria de um índice, as linhas em que o índice
+  e o alvo/controle existem; na utilidade e na combinação, as linhas completas na **união** das colunas das duas
+  configurações comparadas (mesmas pessoas nos dois lados do contraste). `impute: true` insere `SimpleImputer(median)`
+  antes da padronização e fica registrado no manifesto. Regressão padrão `Ridge`;
   classificação padrão `LogisticRegression(l2, C=1, lbfgs, max_iter=1000)`; multiclasse: um-contra-todos.
 - Métricas: regressão `r2_score`; classificação binária `roc_auc_score`; multiclasse AUROC
   um-contra-todos macro + acurácia balanceada. OOB com uma só classe → reamostra descartada (`B_dropped`).
@@ -263,6 +266,9 @@ em dados que não podem sair (container em parceiros). Figuras das tabelas garan
 ---
 
 ## 6. Changelog
+- **v0.3.2 (10/09/2026)** — sem imputação por padrão (decisão do Thalles): caso completo por método; utilidade e
+  combinação em caso completo na união das colunas; `max_missing_frac_warn` no resumo; `impute` só explícito. Na
+  referência NHANES o imputador nunca agiu (linhas sem índice eram removidas antes do modelo), logo a equivalência não muda.
 - **v0.3.1 (10/09/2026)** — §5: tolerâncias separadas para estatísticas de posto (1e-6) e contagens (±1 par), com a causa
   verificada; `form` ∈ {monomial, composite, closed} (o antigo "affine" é caso de composite; a BIVA específica não é
   soma nem produto e recebe o mesmo ajuste log-linear); `doi` pode ser `null` só com `pmid` (obras sem DOI); `frequency_khz`
