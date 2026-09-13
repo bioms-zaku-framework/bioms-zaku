@@ -4,6 +4,7 @@ EN: equivalence of the algebra with the reference NHANES run (2026-09-09): fitte
 ES/PT: equivalência da álgebra com a referência NHANES; pula se os dados não estiverem na máquina.
 """
 import json
+from dataclasses import replace
 from pathlib import Path
 
 import numpy as np
@@ -11,7 +12,7 @@ import pandas as pd
 import pytest
 from scipy.stats import spearmanr
 
-from bioms_zaku.algebra import (fit_log_linear, log_covariance, pairs_table, compute_vectors, sigma_transfer_table)
+from bioms_zaku.algebra import (fit_log_linear, log_covariance, pairs_table, compute_vectors, sigma_transfer_table_legacy)
 from bioms_zaku.catalog import Catalog, Entry, load_catalog
 from bioms_zaku.expr import compile_expr
 from bioms_zaku.io import read_table
@@ -150,9 +151,20 @@ def test_sigma_transfer_matches_reference_D(ref):
             vals = {k: v for k, v in vals.items() if k not in ("Rsp", "Xcsp")}
             S, _ = log_covariance(frame, ["R", "Xc", "H", "W"])
             vecs = compute_vectors(cat, vals, frame, ["R", "Xc", "H", "W"], lab + name)
+            # EN: declared exception (§5): the reference engine used LINEARISED vectors for PhA (−1, 1, 0, 0) and LMI
+            #     (−2, 1, 1, 0), i.e. atan(x) ≈ x. Since catalog 1.1.0 both are composite with fitted vectors (exactness
+            #     rule §2.3). To prove the Σ-transfer machinery itself is identical, the reference convention is
+            #     reproduced here, test-only, for these two methods.
+            # PT: exceção declarada — o motor anterior linearizava PhA e LMI; aqui a convenção antiga é reproduzida só no teste.
+            for mid, lin in (("Baumgartner1988_PhA", (-1.0, 1.0, 0.0, 0.0)), ("LMI", (-2.0, 1.0, 1.0, 0.0))):
+                if mid in vecs:
+                    vecs[mid] = replace(vecs[mid], vector=np.array(lin), source="catalog-linearised (reference convention, test-only)", fit_r2=1.0)
             vecs_by[lab + name] = vecs; sig_by[lab + name] = S
             pairs_by[lab + name] = pairs_table(cat, vecs, vals, S, lab + name, min_pair_n=30)
-    T = sigma_transfer_table(vecs_by, sig_by, pairs_by, exclude_identity=False)
+    # EN: declared exception (§5): the reference used the Spearman conversion and the Fisher-CI fraction; since v0.5 the
+    #     official table uses the n-fair metric (median error, tolerance, person bootstrap). The legacy function reproduces
+    #     the reference computation exactly and exists only for this test.
+    T = sigma_transfer_table_legacy(vecs_by, sig_by, pairs_by, exclude_identity=False)
     checked = 0
     for _, d in D.iterrows():
         t = T[(T.sigma_from == d.Sigma_de) & (T.observed_in == d.observado_em)]

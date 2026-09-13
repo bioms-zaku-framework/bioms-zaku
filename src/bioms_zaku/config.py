@@ -20,17 +20,20 @@ DEFAULTS: dict[str, Any] = {
     "strata": None,
     "strata_labels": {},   # EN: optional display names for stratum values, e.g. {0: F, 1: M}
     "algebra": {"fit_affine": True, "extra_log_variables": [], "min_fit_r2": 0.90, "redundancy_threshold": 0.95,
-                "min_pair_n": 30, "transfer": True, "fisher_alpha": 0.05},
+                "min_pair_n": 30, "transfer": True, "fisher_alpha": 0.05,
+                "transfer_tol": 0.05, "transfer_B": 200},   # EN: v0.5 Σ-transfer: fixed tolerance and person-bootstrap size
     "audit": {"task": "auto",
               "single": {"estimator": "ridge", "params": {"alpha": 1.0}},
               "combination": {"estimator": "hgb", "params": {"max_depth": 3, "learning_rate": 0.05, "max_iter": 300}},
               "sensitivity": {"estimator": None, "params": {}, "nested_tuning": False},
               "cv": {"folds": 5, "repeats": 50, "stratified": "auto"},
               "bootstrap": {"B": 2000, "min_oob": 20, "max_attempts_factor": 6},
-              "utility_margin": 0.03, "verdict": {"p_specific": 0.95, "p_control": 0.05, "ci": 0.95},
+              "utility_margin": 0.03, "verdict": {"p_specific": 0.95, "p_control": 0.05, "ci": 0.95, "margin": 0.03,
+                          "sensitivity_margins": [0.02, 0.03, 0.05], "sensitivity_p": [0.90, 0.95, 0.99]},   # EN: v0.5 verdict margin + threshold grid (v0.5.1)
               "multiplicity": "none", "combinations": False},
     "design": None,
-    "declarations": {"targets_independent_of_variables": None},   # EN: circularity rule (contract v0.4.3); required true with design   # {"target": ..., "split": "holdout", "fraction": 0.70, "seed": 42, "id": "designed_<target>"}
+    "declarations": {"targets_independent_of_variables": None,
+                     "target_kinds": {}},   # EN: optional {column: lean_mass|fat_mass|body_water|hydration|cell_mass|other} for targets/controls   # EN: circularity rule (contract v0.4.3); required true with design   # {"target": ..., "split": "holdout", "fraction": 0.70, "seed": 42, "id": "designed_<target>"}
     "seeds": {"cv": 42, "bootstrap": 42},
     "preset": "article",
     "threads": 1,
@@ -40,7 +43,8 @@ DEFAULTS: dict[str, Any] = {
     # ES/PT: personalização das figuras (tudo opcional).
     "figures": {"title": None, "subtitle": None, "language": "en", "labels": "full",   # labels: full | short (author year)
                 "palette": "default",   # "default" (validated blue/orange) | "brand" (BioMS violet/green) | {specific:, control:, muted:}
-                "font": "DejaVu Sans", "font_size": 8.5, "dpi": 300, "formats": ["png", "pdf"], "footer": True},
+                "font": "DejaVu Sans", "font_size": 8.5, "dpi": 300, "formats": ["png", "pdf"], "footer": True,
+                "captions": False},   # EN: in-figure explanatory legends off by default; the report/documentation text explains each figure
 }
 PRESETS = {"quick": {"audit": {"cv": {"repeats": 5}, "bootstrap": {"B": 200}}}, "article": {}}
 

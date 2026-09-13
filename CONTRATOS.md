@@ -110,7 +110,9 @@ treino/teste.
 | `expr` / `expr_by_group` | sim | gramática 2.4; ramo só por colunas de `groups`, nunca por alvo/controle/covariável |
 | `group_coding` | se usa grupo | ex.: `{sexo: {male: 1, female: 0}}` |
 | `frequency_khz` | sim | frequência para a qual a fórmula foi derivada (informativo) |
-| `validity` | sim | `{age, bmi, sex, population}`, `null` onde não informado; fora da faixa → flag, não bloqueio |
+| `validity` | sim | aplicabilidade **afirmada ou testada pelo autor**: `{age, bmi, sex, population}`, `null` onde o autor não afirma nada (sem flag); fora da faixa → flag †, **nunca bloqueio** — o pesquisador pode aplicar qualquer método a qualquer contexto; a figura só avisa |
+| `target_kind` | não | categoria do que o autor diz medir: `lean_mass` \| `fat_mass` \| `body_water` \| `hydration` \| `cell_mass` \| `other`. Comparada com `declarations.target_kinds` da configuração (§3.2): índice de gordura auditado contra alvo de massa magra recebe aviso "acompanha o controle por desenho; inverta alvo e controle" — aviso, nunca bloqueio |
+| `derivation_sample` | não | quem foi usado para ajustar: `{n, sex, age, condition, country}`; descritivo, nunca gera flag. Distinto de `validity` (Hoffer 1969: derivado em 20 homens saudáveis, testado e proposto para pacientes de ambos os sexos, 18-77 anos) |
 | `provenance` | sim | `{formula_source: pdf_table|pdf_text|pmc_text|abstract|review_table, source_detail, verified_by, verified_on, confidence}`; mapa padrão pdf/pmc → high, abstract → medium, review → low |
 | `check_example` | obrig. para contribuições | `{inputs, expected, tol}` com valor publicado; testado na carga |
 | `identity_of` | não | transformação exata de outro método → sai como `identity`, excluído das estatísticas de previsão |
@@ -121,8 +123,14 @@ treino/teste.
 
 ### 2.3 Validação numérica na carga
 `vector` de monômio: 1.000 vetores aleatórios positivos → avalia `expr` → ajuste log-linear →
-coeficientes = `vector` com |erro| < `vector_tol` (padrão 1e-6; LMI declara 1e-2 por PhA = atan).
+coeficientes = `vector` com |erro| < `vector_tol` (padrão 1e-6; máximo 1e-4, folga numérica, não orçamento de aproximação).
+**Regra de exatidão (v0.4.5):** o vetor do catálogo é exato ou não é vetor. Nomes derivados que não são monômios nas
+variáveis base (`PhA` = atan(Xc/R); `Z` = √(R²+Xc²)) são aceitos em `expr`, nunca em `vector`; o método é `composite`,
+recebe vetor ajustado por estrato e o `fit_r2` fica na tabela e na figura (o antigo "linearizar atan com tolerância 0,03"
+foi removido: PhA e LMI passaram a `composite`). `II` e `H_m` continuam re-expressões exatas.
 `check_example`: |expr(inputs) − expected| ≤ tol. Falha → erro na carga.
+Versão e histórico: `catalog_version` (semântico) e `history` (uma linha por evento de curadoria: versão, data, autor,
+mudança). O resultado da migração de 08/09 está congelado em `tests/fixtures/catalog_v1_migrated_2026-09-08.json`.
 
 ### 2.4 Gramática (árvore sintática, lista branca)
 Números; nomes canônicos das variáveis mapeadas e derivadas; nomes de `groups`; `+ - * / ** ( )`;
@@ -200,6 +208,21 @@ output: {dir: ./zaku_out, figures: true}
 ```
 
 ### 3.2 Regras
+- **Controle negativo condicional (v0.5).** Além de escore(alvo | índice) e escore(controle | índice), a auditoria ajusta,
+  nas MESMAS reamostras, o controle como preditor do alvo (com e sem o índice) e o alvo como preditor do controle (com e
+  sem o índice). Dois incrementos pareados: **S1** = escore(alvo | controle + índice) − escore(alvo | controle), o sinal
+  sobre o alvo que o controle não carrega; **S2** = escore(controle | alvo + índice) − escore(controle | alvo), o sinal
+  sobre o controle que o alvo não explica. Um incremento está *presente* quando média > `verdict.margin` (0,03), IC 95 %
+  exclui 0 e P(d>0) ≥ `p_specific`. Vereditos: `SPECIFIC` (S1 presente, S2 ausente) · `TRACKS_CONTROL` (S2 presente, S1
+  ausente) · `BOTH` (os dois: o índice carrega informação que nem alvo nem controle explicam, p. ex. tamanho corporal)
+  · `NEITHER` (nenhum). A regra anterior (diferença marginal `disc`) fica em `verdict_marginal`, descritiva, e mantém a
+  equivalência com o motor anterior. Justificativa: alvo e controle correlacionam (0,7 no NHANES); a diferença marginal
+  dava crédito ao índice pela parte do alvo que o controle também carrega; o condicional pergunta o que o índice acrescenta.
+- **Amostra de conveniência.** O framework não estima parâmetros populacionais: pesos amostrais são ignorados por
+  desenho e os vereditos descrevem a amostra analisada. O resumo declara isso.
+- `declarations.target_kinds` (opcional): `{coluna: lean_mass|fat_mass|body_water|hydration|cell_mass|other}` para alvos e
+  controles. Quando o `target_kind` de um método coincide com o tipo do controle e difere do tipo do alvo, o resumo e
+  o relatório recebem um aviso de orientação (v0.4.6). Sem declaração, nada muda.
 - Estimador declarado antes; sem seleção pelo resultado. `sensitivity` roda nos mesmos sorteios e
   vai para `sensitivity.csv`; `nested_tuning: true` (Optuna, opcional) só nesse modo, com aviso de custo.
 - Pipeline: `StandardScaler` → estimador, sobre **caso completo**: na auditoria de um índice, as linhas em que o índice
@@ -235,16 +258,19 @@ compartilhadas = comportamento da referência + condição de pareamento.
 | `sigma.csv` | estrato × par de variáveis | `stratum, n, var_i, var_j, cov_log` |
 | `pairs.csv` | par × estrato | `a_id, b_id, stratum, n_pair, r_log_predicted, r_log_observed (Pearson nos logs; identidade exata), rho_sp_observed, rho_sp_converted, identity` |
 | `redundancy.csv` | método × estrato | `method_id, stratum, rho_sp_max, predecessor_id, predecessor_year, redundant, identity_of` |
-| `sigma_transfer.csv` | origem × destino | `sigma_from, observed_in, type, pairs, median_abs_err, max_abs_err` |
-| `audit.csv` | método × estrato × alvo | `method_id, stratum, target, control, task, metric, estimator, n, B, B_eff, B_dropped, score_cv_target, score_cv_control, disc_mean, disc_lo, disc_hi, p_disc, verdict, out_of_validity_frac, provenance_confidence` |
+| `sigma_transfer.csv` | origem × destino | `sigma_from, observed_in, type, pairs, median_abs_err, p90_abs_err, max_abs_err, frac_within_tol, tol, own_median_abs_err, excess_median, median_abs_err_lo, median_abs_err_hi, excess_lo, excess_hi, boot_B` — erro em Pearson dos logs; `own` = Σ do próprio estrato (0 exato para monômios, pela identidade); `excess` = transferido − próprio, par a par; IC por bootstrap das PESSOAS do estrato observado (`algebra.transfer_B`, semente `seeds.bootstrap`); `frac_within_tol` com tolerância fixa `algebra.transfer_tol` (0,05), independente de n. A fração "dentro do IC de Fisher" e a conversão Σ→Spearman saíram das saídas oficiais (v0.5; legado só no teste de equivalência, §5) |
+| `audit.csv` | método × estrato × alvo | `method_id, stratum, target, control, task, metric, estimator, n, B, B_eff, B_dropped, score_cv_target, score_cv_control, score_oob_target_mean, score_oob_control_mean, disc_mean, disc_lo, disc_hi, p_disc, verdict` (condicional, v0.5), `verdict_marginal, score_oob_control_to_target, score_oob_idx_control_to_target, score_oob_target_to_control, score_oob_idx_target_to_control, s1_mean, s1_lo, s1_hi, p_s1, s2_mean, s2_lo, s2_hi, p_s2` |
 | `utility.csv` | método × estrato × alvo | `…, covariates, score_base, score_with, delta_mean, delta_lo, delta_hi, p_delta, margin, useful` |
-| `combinations.csv` | par ordenado × estrato × alvo | `host_id, added_id, rho_sp_predicted, score_host, score_pair, gain_mean, gain_lo, gain_hi, p_gain` |
-| `sensitivity.csv` | como `audit.csv` | + `estimator_primary, disc_primary, disc_delta` |
+| `combinations.csv` | par ordenado × estrato × alvo | `host_id, added_id, r_log_predicted, score_host, score_pair, gain_mean, gain_lo, gain_hi, p_gain` |
+| `sensitivity.csv` | como `audit.csv` | + `estimator_primary, verdict_primary, verdict_changed, s1_primary, s1_delta, s2_primary, s2_delta, disc_primary, disc_delta` |
+| `threshold_sensitivity.csv` | método × estrato × alvo × margem × P | `verdict, verdict_default, changed` (reclassificação, sem reajuste) |
 | `screening.csv` | método × estrato | `method_id, stratum, redundant, specific, useful, identity, class` |
 
 **Verificação primária da álgebra = Pearson nos logaritmos**, previsto × observado: identidade
-algébrica, sem suposição distribucional. **Redundância = Spearman observado** (não paramétrico).
-A conversão Σ→Spearman fica como coluna secundária, com a suposição declarada.
+algébrica, sem suposição distribucional (nos logs, um monômio é combinação linear exata; a linearidade está garantida por
+construção). **Redundância = Spearman observado** (de postos, invariante a transformações monótonas; não exige
+linearidade). A conversão Σ→Spearman por (6/π)·asin(ρ/2) exige normalidade bivariada dos logs, rejeitada no NHANES
+(Stage P), e **não aparece em nenhuma saída oficial** desde v0.5.
 
 ### 4.2 Manifesto (`manifest.json`)
 `package_version, catalog_version, catalog_sha256, config_sha256, config_resolved, preset, seeds_used,
@@ -285,7 +311,11 @@ em dados que não podem sair (container em parceiros). Figuras das tabelas garan
 - Exceções declaradas (o motor anterior fazia diferente e o framework é mais rigoroso): Segal específica selecionada
   por %gordura do DXA (vazamento; o framework só seleciona por `groups`); IMC como método (fora do catálogo);
   identidades por escala contadas como redundância (o framework as separa); precedência só por ano (o framework usa
-  ano > data > DOI). Nos testes, esses casos são reproduzidos por entradas só-de-teste ou excluídos, com o motivo escrito.
+  ano > data > DOI); transferência de Σ com conversão Σ→Spearman e fração no IC de Fisher (motor anterior; v0.5 usa
+  erro em Pearson dos logs com bootstrap de pessoas — o teste usa `sigma_transfer_table_legacy`); veredito marginal
+  (v0.5 compara `verdict_marginal`); PhA e LMI com vetor linearizado (atan(x) ≈ x) no bloco de transferência de Σ (desde o catálogo 1.1.0
+  ambos são `composite` com vetor ajustado; o teste reproduz a convenção antiga só para esses dois métodos).
+  Nos testes, esses casos são reproduzidos por entradas só-de-teste ou excluídos, com o motivo escrito.
 - Teste rápido em CI: recorte fixo (400 linhas, 5 métodos, `quick`), referência congelada, < 60 s.
 
 **Justificativa.** O artigo será produzido pelo framework. A equivalência com o motor anterior é verificação de
@@ -295,6 +325,33 @@ teste depois para passar.
 ---
 
 ## 6. Changelog
+- **v0.5.1 — verificação quick × article (13/09/2026, exemplo sintético, 7 índices, 2 estratos, 2 alvos):** 28 vereditos
+  idênticos; mediana |ΔS1| 0,0005 (máx 0,0015); largura mediana do IC de S1 0,032 (quick) vs 0,033 (article); redundância
+  idêntica; utilidade idêntica. Conclusão: `quick` serve para desenvolvimento e demonstração; `article` para reportar, como
+  o contrato já dizia; os intervalos de 200 reamostras já são estáveis neste n (8 000).
+- **v0.5.1 (13/09/2026)** — modo de sensibilidade **implementado** (antes só declarado): `audit.sensitivity.estimator`
+  roda o segundo estimador nas mesmas reamostras e grava `sensitivity.csv` (S1/S2/veredito primário e alternativo,
+  deltas; nunca seleciona); `nested_tuning` continua não implementado e gera aviso. Sensibilidade aos limiares
+  (`threshold_sensitivity.csv`): reclassificação dos S1/S2 gravados sob a grade `verdict.sensitivity_margins` ×
+  `verdict.sensitivity_p` (padrão 0,02/0,03/0,05 × 0,90/0,95/0,99), sem reajuste; o resumo lista os vereditos que
+  mudam em algum ponto da grade. Ambas entram em `summary.md`.
+- **v0.5.0 (13/09/2026)** — decisões do Thalles: (1) **controle negativo condicional** (§3.2): S1/S2 com o controle e o
+  alvo como preditores nas mesmas reamostras; vereditos `SPECIFIC` · `TRACKS_CONTROL` · `BOTH` · `NEITHER`; regra
+  marginal preservada em `verdict_marginal`; mapa alvo × controle passa a S2 × S1 com margem; ficha mostra S1 e S2.
+  (2) **Transferência de Σ em métrica justa quanto a n** (§4.1): erro próprio × transferido, excesso par a par, IC por
+  bootstrap de pessoas, fração dentro de tolerância fixa; fração no IC de Fisher e conversão Σ→Spearman fora das saídas
+  oficiais (legado só no teste de equivalência). (3) Amostra de conveniência declarada. (4) Desenho de índices e
+  combinações permanecem como capacidades, marcadas experimentais até validação em uso.
+- **v0.4.7 (11/09/2026)** — figuras oficiais redefinidas (decisão do Thalles): `lineage` (árvore genealógica: raiz por ano, redundantes pendurados com ρ, cor = veredito, tipo declarado ao lado da raiz), `target_control` (mapa do controle negativo: escore no controle × escore no alvo, diagonal, barra do IC), `exponents` (matriz agrupada por linhagem + tipo declarado/R² + Σ do estrato), `scorecard`. `predicted_observed` passa a suplementar. Paleta padrão = cores da logo (verde específico, violeta controle); `classic` = azul/laranja. Coluna `target_kind` em `algebra.csv`.
+- **v0.4.6 (11/09/2026)** — `target_kind` no catálogo e `declarations.target_kinds` na configuração: aviso de orientação
+  quando um índice declarado para um tipo (ex.: gordura) é auditado contra alvo de outro tipo (ex.: massa magra); catálogo
+  1.2.x com `derivation_sample` separado de `validity` (v1.2.0), PhA/LMI reverificados, Piccoli como componentes BIVA,
+  Rsp/Xcsp na escala publicada (Ω·cm, L = 1,1·H).
+- **v0.4.5 (11/09/2026)** — catálogo 1.1.0 (curadoria por fonte primária): regra de exatidão do vetor (§2.3; PhA e Z
+  proibidos em `vector`; `vector_tol` ≤ 1e-4); PhA (Baumgartner 1988) e LMI (Levi Micheli 2022) passam a `composite`
+  com vetor ajustado e R²; entrada `Hoffer1969_H2Z` (H²/|Z| a 100 kHz, fonte primária lida, exemplo numérico da
+  Tabela 1) como antecessor de Lukaski 1985; `Z100` nas variáveis extra; `history` no catálogo; teste de migração
+  contra fixture congelada.
 - **v0.4.4 (10/09/2026)** — experiência do usuário: `bioms-zaku init` (constrói o YAML a partir do CSV; sugere colunas por nome só quando não há ambiguidade e exige confirmação; nunca adivinha em silêncio) e `bioms-zaku check` (valida dados + configuração sem rodar: linhas, estratos, classes, pareamento, colinearidade alvo↔controle, métodos avaliáveis/pulados, viabilidade do bootstrap, partição do desenho, declaração de circularidade; código de saída ≠ 0 bloqueia). Bloco `declarations.targets_independent_of_variables` obrigatório `true` para `design`.
 - **v0.4.3 (10/09/2026)** — regra de entrada (§1.3): **o alvo não pode ser calculado a partir de nenhuma variável mapeada** (circularidade). O controle negativo detecta confundimento, não circularidade; a responsabilidade é do pesquisador e a declaração vai no manifesto (`targets_independent_of_variables: true`, campo obrigatório no YAML quando há `design`). Caso que motivou: VO2máx estimado do NHANES é calculado pelo CDC a partir das FC de estágio; a FC de recuperação correlaciona 0,92 com a FC do estágio 2 e produziu um índice "específico" por circularidade; com FC de aquecimento (0,39) o índice volta a "medir o controle".
 - **v0.4.2 (10/09/2026)** — decisão: o framework tem **três figuras oficiais** (mapa de expoentes; previsto × observado; quadro de vereditos). Faixas de precedência, transferência de Σ, ganho por combinação e bússola são suplementares, geradas só com `output.supplementary_figures: true`.

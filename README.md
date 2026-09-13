@@ -14,18 +14,25 @@ Status: pre-alpha · License: MIT · Contracts: `CONTRATOS.md` · Plan: `PROJETO
 
 ## What it does / Qué hace / O que faz
 
-1. **Algebraic part.** Every index or equation is written as a product of powers of the measured variables and represented
-   by its **vector of exponents**. The covariance matrix Σ of the log-variables in a population predicts the correlation
-   between any two indices *before either is computed* — an exact identity for the Pearson correlation of the logs.
-   This reveals **redundancy** (with publication precedence) and shows how it depends on the population (Σ transfer).
-2. **Predictive part.** Each index is audited out of sample against a **target** and a **negative control** with a paired
-   bootstrap (same resamples on both sides): *specific* if it predicts the target and not the control; *measures the
-   control* if the opposite; plus **added value** over covariates and **gain** from combining indices.
-3. **Design.** A new index for a context (e.g. VO₂max) is fitted on a design partition and audited on a disjoint one.
+1. **Decomposition.** Every index or equation is written as a product of powers of the measured variables and represented
+   by its **vector of exponents**. The covariance matrix Σ of the log-variables in a population predicts the Pearson
+   correlation of the logs between any two indices *before either is computed*: aᵀΣb / √(aᵀΣa · bᵀΣb), an identity that
+   holds for any distribution. Observed redundancy is measured with Spearman's rank correlation (threshold 0.95) and the
+   earlier publication keeps precedence. Indices that are not exact products get a fitted vector with its fit R².
+2. **Conditional negative control (contract v0.5).** The researcher declares a target and a negative control. On identical
+   out-of-bag resamples the framework fits the control as a predictor of the target with and without the index (gain S1),
+   and the target as a predictor of the control with and without the index (gain S2). Verdicts: *specific* (S1 present,
+   S2 absent), *tracks the control* (the reverse), *measures both*, *no signal*; a gain is present when its mean exceeds
+   0.03, its 95 % interval excludes 0 and P(d > 0) ≥ 0.95. Plus **added value** over basic covariates.
+3. **Transfer of Σ.** The Σ of one stratum applied to another, reported as own error vs transferred error, pair-wise
+   excess with a person bootstrap, and the fraction of pairs within a fixed tolerance (none of it depends on n).
+4. **Design (experimental).** A new index is fitted on a design partition and audited on a disjoint one; requires the
+   declaration that the target is not computed from the mapped variables.
 
-Outputs are aggregate tables (full precision), a manifest (hashes, versions, seeds), a summary, three figures
-(`exponents`, `predicted_observed`, `scorecard`) and a single-file `report.html` with everything embedded. Row-level data
-never leave the run. Figures accept `figures: {title, subtitle, language: en|es|pt, palette: default|brand, …}`.
+Outputs are aggregate tables (full precision), a manifest (hashes, versions, seeds), a summary, four figures
+(`lineage` family tree, `target_control` paired bars, `exponents` + Σ, `scorecard`) and a single-file `report.html`.
+Row-level data never leave the run. Figures accept `figures: {title, subtitle, language: en|es|pt, palette, captions}`.
+How to read each figure: `docs/index.html`, section 3.
 
 ## Install / Instalar
 
@@ -36,11 +43,20 @@ pip install -e ".[plots,dev]"     # from a clone of this repository
 
 Python ≥ 3.10. Dependencies: numpy, pandas, scipy, scikit-learn, pyyaml (+ matplotlib for figures).
 
-## Five-line example / Ejemplo / Exemplo
+## Example data / Datos de ejemplo / Dados de exemplo
+
+`examples/nhanes_sintetico.csv` — 8 000 **synthetic** rows (4 000 per sex). They are draws from a multivariate log-normal
+whose mean vector and log-covariance Σ were estimated, per sex, from a **convenience sample** of NHANES 1999–2004 (adults
+18–49 y, measured DXA, 50 kHz BIA; n = 2 792 women, 3 036 men). No real row is reproduced; only μ and Σ left the source, and
+they are published in `examples/nhanes_sintetico_params.json` (with the skew and kurtosis of the source logs, so the
+log-normal approximation can be judged) together with the generator `tools/make_synthetic_nhanes.py` and its seed. The
+file carries R, Xc, height, weight, age, three circumferences, DXA lean/appendicular/fat indices and one declared
+synthetic binary label. Use it to learn the method, to test the tool, and to decompose Σ by hand.
 
 ```bash
-bioms-zaku run examples/minimo.yaml      # 150 synthetic rows, preset quick, ~15 s
-ls zaku_out/minimo                        # algebra.csv pairs.csv redundancy.csv audit.csv utility.csv screening.csv manifest.json summary.md figures/
+bioms-zaku run examples/nhanes_sintetico.yaml   # 7 curated indices, preset quick, ~20 s
+bioms-zaku run examples/minimo.yaml             # 150 rows, the smallest possible run
+ls zaku_out/nhanes_sintetico                    # algebra.csv pairs.csv redundancy.csv audit.csv utility.csv sigma_transfer.csv manifest.json summary.md report.html figures/
 ```
 
 Your own data — three commands / tres comandos / três comandos:
@@ -83,10 +99,15 @@ preset: article          # 5×50 CV, B = 2000 (quick = 5×5, B = 200, for demos 
 
 ## Catalog / Catálogo
 
-Five public bioimpedance indices are included and verified at the source: impedance index H²/R (Lukaski 1985), phase
-angle (Baumgartner 1988), R/H and Xc/H (Piccoli 1994), LMI (Levi Micheli 2022). Further indices and predictive equations
-enter one at a time, each with DOI, formula source, a published numeric example checked at load, and review
-(`CONTRATOS.md` §2). The catalog file also carries entries under curation; they are not evaluated unless explicitly included.
+Eight public bioimpedance indices, each re-verified on its primary source (`catalogo/fontes_primarias_indices/LEITURAS.md`):
+H²/|Z| at 100 kHz (Hoffer 1969), impedance index H²/R (Lukaski 1985), whole-body phase angle (Baumgartner 1988), the BIVA
+components R/H and Xc/H (Piccoli 1994), specific resistivity and reactivity Rsp/Xcsp (Marini 2013; validated on NHANES by
+Buffa 2013) and LMI (Levi Micheli 2022); the impedance ratio Z200/Z5 is listed with low confidence (commercial origin, no
+derivation paper). Each entry records the derivation sample separately from the author-stated validity (outside it the
+framework flags †, never blocks), the declared kind of target (`target_kind`: a fat-mass index audited against a lean-mass
+target gets an orientation warning), and every curation event in the catalog `history`. Phase angle and LMI contain atan
+and are therefore `composite`: their exponent vector is fitted per stratum and the fit R² is reported (exactness rule,
+`CONTRATOS.md` §2.3). The catalog file also carries entries under curation; they are not evaluated unless explicitly included.
 
 ## Reproducibility / Reproducibilidad / Reprodutibilidade
 

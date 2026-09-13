@@ -34,11 +34,11 @@ try:
 except ImportError as e:  # pragma: no cover
     raise ImportError("plots require matplotlib (pip install 'bioms-zaku[plots]')") from e
 
-C = {"specific": "#2a78d6", "control": "#eb6834", "muted": "#9a9893", "ink": "#0b0b0b", "ink2": "#52514e", "grid": "#e6e5e1", "surface": "#fcfcfb"}
+C = {"specific": "#22c55e", "control": "#9333ea", "muted": "#9a9893", "ink": "#0b0b0b", "ink2": "#52514e", "grid": "#e6e5e1", "surface": "#fcfcfb"}
 
 # EN: user style (from config["figures"]); applied by `apply_style` before drawing. ES/PT: estilo do usuário.
 STYLE = {"title": None, "subtitle": None, "language": "en", "labels": "full", "font": "DejaVu Sans", "font_size": 8.5,
-         "dpi": 300, "formats": ["png", "pdf"], "footer": True}
+         "dpi": 300, "formats": ["png", "pdf"], "footer": True, "captions": False}
 
 # EN: axis/legend texts in three languages. ES/PT: textos dos eixos e legendas.
 I18N = {
@@ -63,25 +63,25 @@ I18N = {
 SC = {
     "en": {"title": "Verdicts", "col_o": "originality", "col_s": "specificity", "col_u": "added value", "method": "method",
            "original": "Original", "repeats": "Repeats", "identical": "Identical to", "specific": "Specific", "tracks": "Tracks control",
-           "inconc": "Inconclusive", "adds": "Adds value", "noadd": "No added value", "notest": "Not tested", "over": "over {c}",
+           "inconc": "Inconclusive", "both": "Measures both", "neither": "No signal", "adds": "Adds value", "noadd": "No added value", "notest": "Not tested", "over": "over {c}",
            "leg1": "Originality: an index is original when no earlier method orders people almost identically (|Spearman| < {thr}); otherwise it repeats that method.",
-           "leg2": "Specificity: out-of-sample {m} for the target ({t}) minus {m} for the negative control ({c}); the interval is the 95% bootstrap range.",
+           "leg2": "Specificity (conditional control): green bar = gain in {m} for the target ({t}) when the index is added to the control ({c}); violet bar = gain for the control when added to the target. Specific = green present, violet absent; tracks control = the reverse; measures both = both present; no signal = neither. Number = green bar with 95% bootstrap interval; margin {mg}.",
            "leg3": "Added value: gain in {m} when the index is added to {cov}. † applied outside the method's declared validity · * formula provenance not high.",
            "po_x": "correlation predicted by the algebra (from Σ)", "po_y": "correlation measured in the data", "po_note": "points on the line: prediction confirmed",
            "exp_read": "positive exponent: the index grows with the variable · negative: it decreases · fit R²: how closely a sum-type equation behaves as a product (fixed = exact)"},
     "es": {"title": "Veredictos", "col_o": "originalidad", "col_s": "especificidad", "col_u": "valor agregado", "method": "método",
            "original": "Original", "repeats": "Repite", "identical": "Idéntico a", "specific": "Específico", "tracks": "Sigue control",
-           "inconc": "No concluyente", "adds": "Agrega valor", "noadd": "No agrega valor", "notest": "No evaluado", "over": "sobre {c}",
+           "inconc": "No concluyente", "both": "Mide los dos", "neither": "Sin señal", "adds": "Agrega valor", "noadd": "No agrega valor", "notest": "No evaluado", "over": "sobre {c}",
            "leg1": "Originalidad: un índice es original cuando ningún método anterior ordena a las personas casi igual (|Spearman| < {thr}); si no, repite ese método.",
-           "leg2": "Especificidad: {m} fuera de muestra para el objetivo ({t}) menos {m} para el control negativo ({c}); el intervalo es el rango bootstrap 95%.",
+           "leg2": "Especificidad (control condicional): barra verde = ganancia en {m} para el objetivo ({t}) al añadir el índice al control ({c}); barra violeta = ganancia para el control al añadirlo al objetivo. Específico = verde presente, violeta ausente; sigue control = lo inverso; mide los dos = ambas presentes; sin señal = ninguna. Número = barra verde con intervalo bootstrap 95%; margen {mg}.",
            "leg3": "Valor agregado: ganancia en {m} al añadir el índice a {cov}. † aplicado fuera de la validez declarada · * procedencia de la fórmula no alta.",
            "po_x": "correlación predicha por el álgebra (desde Σ)", "po_y": "correlación medida en los datos", "po_note": "puntos sobre la línea: predicción confirmada",
            "exp_read": "exponente positivo: el índice crece con la variable · negativo: decrece · fit R²: cuán bien una ecuación aditiva se comporta como producto (fijo = exacto)"},
     "pt": {"title": "Vereditos", "col_o": "originalidade", "col_s": "especificidade", "col_u": "valor acrescentado", "method": "método",
            "original": "Original", "repeats": "Repete", "identical": "Idêntico a", "specific": "Específico", "tracks": "Acompanha ctrl",
-           "inconc": "Inconclusivo", "adds": "Acrescenta valor", "noadd": "Não acrescenta", "notest": "Não avaliado", "over": "sobre {c}",
+           "inconc": "Inconclusivo", "both": "Mede os dois", "neither": "Sem sinal", "adds": "Acrescenta valor", "noadd": "Não acrescenta", "notest": "Não avaliado", "over": "sobre {c}",
            "leg1": "Originalidade: um índice é original quando nenhum método anterior ordena as pessoas quase igual (|Spearman| < {thr}); senão, repete esse método.",
-           "leg2": "Especificidade: {m} fora da amostra para o alvo ({t}) menos {m} para o controle negativo ({c}); o intervalo é a faixa bootstrap 95%.",
+           "leg2": "Especificidade (controle condicional): barra verde = ganho em {m} para o alvo ({t}) ao juntar o índice ao controle ({c}); barra violeta = ganho para o controle ao juntá-lo ao alvo. Específico = verde presente, violeta ausente; acompanha controle = o inverso; mede os dois = as duas presentes; sem sinal = nenhuma. Número = barra verde com intervalo bootstrap 95%; margem {mg}.",
            "leg3": "Valor acrescentado: ganho em {m} ao juntar o índice a {cov}. † aplicado fora da validade declarada · * procedência da fórmula não alta.",
            "po_x": "correlação prevista pela álgebra (a partir de Σ)", "po_y": "correlação medida nos dados", "po_note": "pontos sobre a linha: previsão confirmada",
            "exp_read": "expoente positivo: o índice cresce com a variável · negativo: decresce · fit R²: o quanto uma equação de soma se comporta como produto (fixo = exato)"},
@@ -99,8 +99,9 @@ def S(key: str, **kw) -> str:
 # EN: named palettes. "default" = validated blue/orange (CONTRATOS §4.4). "brand" = biomspro.com violet/green — validated
 #     for CVD (ΔE 33.8 deutan, 46.3 normal); the green sits below 3:1 contrast on light surfaces, which the direct labels
 #     on every mark compensate (relief rule). ES/PT: paletas nomeadas; "brand" = identidade BioMS.
-PALETTES = {"default": {"specific": "#2a78d6", "control": "#eb6834", "muted": "#9a9893"},
-            "brand": {"specific": "#22c55e", "control": "#9333ea", "muted": "#9a9893"}}
+PALETTES = {"default": {"specific": "#22c55e", "control": "#9333ea", "muted": "#9a9893"},   # EN: logo colours (green specific, violet control), CVD-validated
+            "brand": {"specific": "#22c55e", "control": "#9333ea", "muted": "#9a9893"},
+            "classic": {"specific": "#2a78d6", "control": "#eb6834", "muted": "#9a9893"}}
 BRAND = {"violet": "#9333ea", "green": "#22c55e", "violet_light": "#c084fc", "green_light": "#4ade80", "ink": "#1d1d1f"}
 
 
@@ -128,6 +129,7 @@ def _margins(meta: dict | None, caption: bool) -> tuple[float, float]:
     ES: espacio vertical (pulgadas) reservado sobre los ejes (título/subtítulo) y debajo (leyenda/pie).
     PT: espaço vertical (polegadas) reservado acima dos eixos (título/subtítulo) e abaixo (legenda/rodapé).
     Computed before the figure exists so the figure height can include it; drawn afterwards by `_frame`."""
+    caption = bool(caption) and bool(STYLE["captions"])
     head = 0.12 + 0.26 + (0.22 if STYLE["subtitle"] else 0.0) + 0.10
     foot = 0.08 + (0.22 if (STYLE["footer"] and meta) else 0.0) + (0.22 if caption else 0.0)
     return head, foot
@@ -145,7 +147,7 @@ def _frame(fig, default_title: str, meta: dict | None, caption: str | None = Non
     if STYLE["footer"] and meta:
         fig.text(0.01, b / H, T("footer", v=meta.get("version", ""), p=meta.get("preset", ""), d=meta.get("date", ""), c=meta.get("seed_cv", ""), b=meta.get("seed_boot", "")),
                  fontsize=6, color=C["ink2"], ha="left", va="bottom"); b += 0.22
-    if caption:
+    if caption and STYLE["captions"]:
         fig.text(0.01, b / H, caption, fontsize=6.8, color=C["ink2"], ha="left", va="bottom")
 
 
@@ -164,16 +166,263 @@ def _title(fig, default: str) -> None:
         fig.text(0.01, 1 - 0.42 / H, STYLE["subtitle"], fontsize=8.5, color=C["ink2"], ha="left", va="top")
 
 
-DIV = LinearSegmentedColormap.from_list("div", ["#eb6834", "#f3d9cf", "#f0f0ee", "#cfe0f5", "#2a78d6"])
+DIV = LinearSegmentedColormap.from_list("div", ["#9333ea", "#f0f0ee", "#22c55e"])
 SEQ = LinearSegmentedColormap.from_list("seq", ["#f0f0ee", "#2a78d6"])
 plt.rcParams.update({"font.family": "DejaVu Sans", "font.size": 8.5, "axes.spines.top": False, "axes.spines.right": False,
                      "axes.edgecolor": C["grid"], "axes.labelcolor": C["ink2"], "xtick.color": C["ink2"], "ytick.color": C["ink2"],
                      "grid.color": C["grid"], "grid.linewidth": 0.6, "figure.facecolor": C["surface"], "axes.facecolor": C["surface"]})
 
+# EN: three new/revised official figures for BioMS Zaku — appended to plots.py by the patch script.
+# ES/PT: três figuras oficiais novas/revistas — anexadas a plots.py.
+
+# ---------- i18n additions ----------
+FIG = {
+    "en": {"tc_title": 'What each index adds: to the target beyond the control, and to the control beyond the target', "tc_xbar": 'gain in out-of-sample {m} when the index is added', "tc_key1": 'adds to the prediction of the TARGET ({t}) beyond the control ({c})', "tc_key2": 'adds to the prediction of the CONTROL ({c}) beyond the target ({t})', "tc_note": 'whiskers = 95 % bootstrap interval (paired resamples) · dashed = margin {mg} · * provenance not high',
+           "lin_title": "Family tree of the indices: who came first, who repeats whom, who is specific", "lin_x": "year of publication",
+           "lin_l1": "Each row starts with an original index (filled); later indices that order people almost identically (|Spearman| ≥ {thr}) hang from it, with the correlation on the branch.",
+           "lin_l2": "Colour = specificity verdict for the target ({t}) against the control ({c}): green specific · violet tracks the control · dark grey both · light grey no signal. Hollow edge = provenance not high · † outside declared validity · ◆ identity.",
+           "ex_title": "Exponent vectors and the log-covariance Σ of the stratum", "ex_read": "rows grouped by lineage (original, then the indices redundant with it) · right: what the authors say it measures, and fit R² when the index is not an exact product",
+           "ex_sigma": "correlation of logs (Σ)", "fixed": "exact product", "approx": "≈ product, R² {r:.2f}", "kind": {"lean_mass": "lean mass", "fat_mass": "fat mass", "body_water": "body water", "hydration": "hydration", "cell_mass": "cell mass", "other": "other", None: "—"}},
+    "es": {"tc_title": 'Qué añade cada índice: al objetivo más allá del control, y al control más allá del objetivo', "tc_xbar": 'ganancia en {m} fuera de muestra al añadir el índice', "tc_key1": 'añade a la predicción del OBJETIVO ({t}) más allá del control ({c})', "tc_key2": 'añade a la predicción del CONTROL ({c}) más allá del objetivo ({t})', "tc_note": 'bigotes = intervalo bootstrap 95 % (remuestras pareadas) · discontinua = margen {mg} · * procedencia no alta',
+           "lin_title": "Árbol genealógico de los índices: quién vino primero, quién repite a quién, quién es específico", "lin_x": "año de publicación",
+           "lin_l1": "Cada fila empieza con un índice original (relleno); los índices posteriores que ordenan a las personas casi igual (|Spearman| ≥ {thr}) cuelgan de él, con la correlación en la rama.",
+           "lin_l2": "Color = veredicto de especificidad para el objetivo ({t}) contra el control ({c}): verde específico · violeta sigue el control · gris oscuro ambos · gris claro sin señal. Borde hueco = procedencia no alta · † fuera de la validez · ◆ identidad.",
+           "ex_title": "Vectores de exponentes y la covarianza de logs Σ del estrato", "ex_read": "filas agrupadas por linaje (original, luego los índices redundantes con él) · derecha: qué dicen los autores que mide, y R² de ajuste cuando no es un producto exacto",
+           "ex_sigma": "correlación de logs (Σ)", "fixed": "producto exacto", "approx": "≈ producto, R² {r:.2f}", "kind": {"lean_mass": "masa magra", "fat_mass": "masa grasa", "body_water": "agua corporal", "hydration": "hidratación", "cell_mass": "masa celular", "other": "otro", None: "—"}},
+    "pt": {"tc_title": 'O que cada índice acrescenta: ao alvo além do controle, e ao controle além do alvo', "tc_xbar": 'ganho em {m} fora da amostra ao juntar o índice', "tc_key1": 'acrescenta à predição do ALVO ({t}) além do controle ({c})', "tc_key2": 'acrescenta à predição do CONTROLE ({c}) além do alvo ({t})', "tc_note": 'bigodes = intervalo bootstrap 95 % (reamostras pareadas) · tracejado = margem {mg} · * procedência não alta',
+           "lin_title": "Árvore genealógica dos índices: quem veio antes, quem repete quem, quem é específico", "lin_x": "ano de publicação",
+           "lin_l1": "Cada linha começa com um índice original (cheio); os índices posteriores que ordenam as pessoas quase igual (|Spearman| ≥ {thr}) pendem dele, com a correlação no ramo.",
+           "lin_l2": "Cor = veredito de especificidade para o alvo ({t}) contra o controle ({c}): verde específico · violeta acompanha o controle · cinza escuro ambos · cinza claro sem sinal. Borda vazada = procedência não alta · † fora da validade · ◆ identidade.",
+           "ex_title": "Vetores de expoentes e a covariância dos logs Σ do estrato", "ex_read": "linhas agrupadas por linhagem (original, depois os índices redundantes com ele) · à direita: o que os autores dizem que mede, e R² do ajuste quando não é produto exato",
+           "ex_sigma": "correlação dos logs (Σ)", "fixed": "produto exato", "approx": "≈ produto, R² {r:.2f}", "kind": {"lean_mass": "massa magra", "fat_mass": "massa gorda", "body_water": "água corporal", "hydration": "hidratação", "cell_mass": "massa celular", "other": "outro", None: "—"}},
+}
+
+
+def F(key: str, **kw):
+    v = FIG.get(STYLE["language"], FIG["en"])[key]
+    return v.format(**kw) if isinstance(v, str) else v
+
+
+def _short(lab: dict[str, str]) -> dict[str, str]:
+    """EN: 'II h²/R (Lukaski 1985)' -> 'II h²/R' ; keeps the method name only."""
+    return {k: re.sub(r"\s*\([^)]*\)\s*$", "", v).split(" [")[0].split(", ")[0] for k, v in lab.items()}
+
+
+def _verdict_colour(v: str) -> str:
+    return {"SPECIFIC": C["specific"], "TRACKS_CONTROL": C["control"], "MEASURES_CONTROL": C["control"], "BOTH": C["ink2"]}.get(v, C["muted"])
+
+
+def _lineages(r: pd.DataFrame, order: list[str]) -> tuple[list[str], dict[str, list[str]]]:
+    """EN: root of each method by following predecessor/identity links; returns (roots in precedence order, root -> members)."""
+    def root(m):
+        seen = set()
+        while m in r.index and m not in seen:
+            seen.add(m)
+            nxt = r.loc[m, "identity_of"] if pd.notna(r.loc[m, "identity_of"]) else (r.loc[m, "predecessor_id"] if bool(r.loc[m, "redundant"]) else None)
+            if not isinstance(nxt, str):
+                return m
+            m = nxt
+        return m
+    lanes: dict[str, list[str]] = {}
+    for m in order:
+        if m in r.index:
+            lanes.setdefault(root(m), []).append(m)
+    return [m for m in order if m in lanes], lanes
+
+
+def target_control(aud: pd.DataFrame, alg: pd.DataFrame, out_dir: Path, primary_target: str, meta: dict | None = None, margin: float = 0.03) -> None:
+    """
+    EN: the conditional negative-control figure (v0.5) as PAIRED BARS. One row per index, sorted by S1. Green bar = S1,
+        what the index adds to the prediction of the TARGET beyond the control; violet bar = S2, what it adds to the
+        prediction of the CONTROL beyond the target. Whiskers = 95 % paired-bootstrap interval; dashed line = margin;
+        verdict pill at the end of the row. One panel per stratum. Reads without a legend: long green + short violet =
+        specific; the reverse = tracks the control; both long = measures both; both short = no signal.
+    PT: controle negativo condicional em barras pareadas — verde = acrescenta ao alvo além do controle; violeta =
+        acrescenta ao controle além do alvo.
+    """
+    if aud.empty or alg.empty or "s1_mean" not in aud:
+        return
+    from matplotlib.patches import FancyBboxPatch
+    a = aud[(aud.target == primary_target) & np.isfinite(aud.s1_mean)]
+    if a.empty:
+        return
+    strata = sorted(a.stratum.unique()); lab = _label(alg); short = _short(lab)
+    conf = alg.drop_duplicates("method_id").set_index("method_id").provenance_confidence.to_dict()
+    n = int(a.groupby("stratum").size().max()); row_h = 0.44
+    head, foot = _margins(meta, caption=True); panel_top, panel_bot = 0.30, 0.45
+    if STYLE["captions"]:
+        head += 0.24
+    H = head + panel_top + row_h * n + panel_bot + foot
+    ns = len(strata); panel_w = 2.9
+    W = min(10.0, 1.6 + ns * (panel_w + 1.6))
+    fig, axes = plt.subplots(1, ns, figsize=(W, H), squeeze=False, gridspec_kw={"wspace": 0.9})
+    metric = a.metric.iloc[0]; control = a.control.iloc[0]
+    xmax = float(max(a.s1_hi.max(), a.s2_hi.max(), margin * 2)) * 1.12; xmin = float(min(a.s1_lo.min(), a.s2_lo.min(), 0.0)) - 0.02
+    words = {"SPECIFIC": (S("specific"), C["specific"]), "TRACKS_CONTROL": (S("tracks"), C["control"]), "MEASURES_CONTROL": (S("tracks"), C["control"]),
+             "BOTH": (S("both"), C["ink2"]), "NEITHER": (S("neither"), C["muted"])}
+    for ax, st in zip(axes[0], strata):
+        q = a[a.stratum == st].sort_values("s1_mean", ascending=True).reset_index(drop=True)
+        ax.axvline(0, color=C["grid"], lw=1.0, zorder=1); ax.axvline(margin, color=C["ink2"], lw=0.8, ls="--", zorder=1)
+        ax.grid(axis="x"); ax.set_axisbelow(True)
+        for i, row in q.iterrows():
+            y = i; hollow = conf.get(row.method_id, "high") != "high"
+            # S1 (green) above, S2 (violet) below, within the row
+            ax.barh(y + 0.19, row.s1_mean, height=0.34, color=C["specific"], alpha=0.35 if hollow else 0.9, zorder=2)
+            ax.barh(y - 0.19, row.s2_mean, height=0.34, color=C["control"], alpha=0.35 if hollow else 0.9, zorder=2)
+            ax.plot([row.s1_lo, row.s1_hi], [y + 0.19, y + 0.19], color=C["ink"], lw=0.9, zorder=3)
+            ax.plot([row.s2_lo, row.s2_hi], [y - 0.19, y - 0.19], color=C["ink"], lw=0.9, zorder=3)
+            ax.text(max(row.s1_hi, 0) + 0.006, y + 0.19, f"{row.s1_mean:+.2f}", fontsize=6.2, va="center", color=C["ink2"])
+            ax.text(max(row.s2_hi, 0) + 0.006, y - 0.19, f"{row.s2_mean:+.2f}", fontsize=6.2, va="center", color=C["ink2"])
+            word, col = words.get(row.verdict, (row.verdict, C["muted"]))
+            ax.text(1.02, y, word, transform=ax.get_yaxis_transform(), fontsize=7.2, va="center", ha="left", color="white", fontweight="bold",
+                    bbox=dict(boxstyle="round,pad=0.35,rounding_size=0.8", fc=col, ec="none"))
+        ax.set_yticks(range(len(q))); ax.set_yticklabels([short.get(m, m) + ("*" if conf.get(m, "high") != "high" else "") for m in q.method_id], fontsize=7.4)
+        ax.set_ylim(-0.6, len(q) - 0.4); ax.set_xlim(xmin, xmax); ax.tick_params(axis="y", length=0)
+        ax.set_xlabel(F("tc_xbar", m=metric), fontsize=7.5)
+        ax.set_title(f"{T('stratum')} {st}", fontsize=9, loc="left")
+        for sp in ("left", "top", "right"):
+            ax.spines[sp].set_visible(False)
+    # in-figure key only when captions are requested (default: the documentation text explains the colours)
+    kx = 0.01; ky = 1 - (head - 0.12) / H
+    if STYLE["captions"]: fig.patches.append(FancyBboxPatch((kx, ky - 0.006), 0.010, 0.012, boxstyle="square,pad=0", fc=C["specific"], ec="none", transform=fig.transFigure, figure=fig))
+    if STYLE["captions"]:
+        fig.text(kx + 0.014, ky, F("tc_key1", t=primary_target, c=control), fontsize=7.4, va="center", color=C["ink"])
+        fig.patches.append(FancyBboxPatch((kx + 0.42, ky - 0.006), 0.010, 0.012, boxstyle="square,pad=0", fc=C["control"], ec="none", transform=fig.transFigure, figure=fig))
+        fig.text(kx + 0.434, ky, F("tc_key2", t=primary_target, c=control), fontsize=7.4, va="center", color=C["ink"])
+    _frame(fig, F("tc_title"), meta, caption=F("tc_note", mg=margin))
+    fig.subplots_adjust(left=0.17, right=0.87, top=1 - (head + panel_top) / H, bottom=(foot + panel_bot) / H)
+    _save(fig, out_dir, "target_control")
+
+
+def lineage_tree(red: pd.DataFrame, alg: pd.DataFrame, aud: pd.DataFrame, out_dir: Path, primary_target: str, threshold: float = 0.95,
+                 meta: dict | None = None) -> None:
+    """
+    EN: the family tree — one row per original index (filled node at its year); redundant indices hang from it with the
+        Spearman correlation on the branch. Node colour = specificity verdict; hollow edge = provenance not high;
+        † = outside declared validity; ◆ = identity. One figure per stratum.
+    PT: árvore genealógica — uma linha por índice original; redundantes pendem dele com o ρ no ramo; cor = veredito.
+    """
+    if red.empty or alg.empty:
+        return
+    A = alg.drop_duplicates("method_id").set_index("method_id"); yr = A.year.to_dict(); lab = _label(alg); short = _short(lab); order = _order(alg)
+    conf = alg.set_index(["method_id", "stratum"]).provenance_confidence.to_dict()
+    oovd = alg.set_index(["method_id", "stratum"]).get("out_of_validity_frac", pd.Series(dtype=float)).to_dict()
+    kinds = A.get("target_kind", pd.Series(dtype=object)).to_dict() if "target_kind" in A else {}
+    for s in sorted(red.stratum.unique()):
+        r = red[red.stratum == s].set_index("method_id")
+        v = aud[(aud.stratum == s) & (aud.target == primary_target)].set_index("method_id").verdict.to_dict() if not aud.empty else {}
+        control = aud[(aud.stratum == s) & (aud.target == primary_target)].control.iloc[0] if not aud.empty and ((aud.stratum == s) & (aud.target == primary_target)).any() else ""
+        roots, lanes = _lineages(r, order)
+        if not roots:
+            continue
+        n = len(roots); row_h = 0.62
+        head, foot = _margins(meta, caption=False); foot += 0.42 if STYLE["captions"] else 0.0   # two legend lines (captions only)
+        H = head + 0.35 + row_h * n + 0.5 + foot
+        fig, ax = plt.subplots(figsize=(10, H))
+        years = [yr.get(m, np.nan) for m in order if m in r.index]
+        x0, x1 = float(np.nanmin(years)) - 3, float(np.nanmax(years)) + 3
+        for i, rt in enumerate(roots):
+            yy = n - 1 - i; members = lanes[rt]; xs = [yr.get(m, np.nan) for m in members]
+            if len(members) > 1:
+                ax.plot([min(xs), max(xs)], [yy, yy], color=C["grid"], lw=1.4, zorder=1)
+            k = 0
+            for m, x in zip(members, xs):
+                is_root = m == rt; ident = pd.notna(r.loc[m, "identity_of"]); col = _verdict_colour(v.get(m, ""))
+                hollow = conf.get((m, s), "high") != "high"; flag = "†" if oovd.get((m, s), 0) > 0.5 else ""
+                mk = "D" if ident else "o"
+                ax.plot(x, yy, mk, ms=8 if is_root else 6, mfc=C["surface"] if hollow else col, mec=col, mew=1.6, zorder=3)
+                if is_root:
+                    kind = F("kind").get(kinds.get(m), "—") if kinds else ""
+                    name = f"{short.get(m, m)} {int(x) if pd.notna(x) else ''}{flag}"
+                    if kind and kind != "—":
+                        ax.annotate(kind, (x, yy), xytext=(-10, 0), textcoords="offset points", fontsize=7.0, color=C["ink2"], ha="right", va="center")
+                        ax.annotate(name + "  ·  ", (x, yy), xytext=(-10 - 4.3 * len(kind), 0), textcoords="offset points", fontsize=7.6, color=C["ink"], ha="right", va="center", fontweight="bold")
+                    else:
+                        ax.annotate(name, (x, yy), xytext=(-10, 0), textcoords="offset points", fontsize=7.6, color=C["ink"], ha="right", va="center", fontweight="bold")
+                else:
+                    rho = r.loc[m, "rho_sp_max"]; dy = 0.22 if k % 2 == 0 else -0.22; k += 1
+                    ax.annotate(f"{short.get(m, m)} {int(x) if pd.notna(x) else ''}{flag}", (x, yy), xytext=(0, 9 if dy > 0 else -9), textcoords="offset points",
+                                fontsize=6.6, color=C["ink2"], ha="center", va="bottom" if dy > 0 else "top")
+                    ax.annotate(f"ρ {rho:.2f}" if np.isfinite(rho) else "≡", ((x + yr.get(rt, x)) / 2, yy), xytext=(0, 4), textcoords="offset points",
+                                fontsize=7.2, color=C["ink"], ha="center", va="bottom")
+        ax.set_yticks([]); ax.set_ylim(-0.6, n - 0.4); ax.set_xlim(x0, x1); ax.grid(axis="x"); ax.set_axisbelow(True)
+        ax.set_xlabel(F("lin_x")); ax.set_title(f"{T('stratum')} {s} · {T('target')} {primary_target} vs {T('control')} {control}", fontsize=9, loc="left")
+        for sp in ("left", "top", "right"):
+            ax.spines[sp].set_visible(False)
+        _frame(fig, F("lin_title"), meta)
+        if STYLE["captions"]:
+            fig.text(0.01, (0.30 + 0.20) / H, F("lin_l1", thr=threshold), fontsize=6.8, color=C["ink2"], va="bottom")
+            fig.text(0.01, 0.30 / H, F("lin_l2", t=primary_target, c=control), fontsize=6.8, color=C["ink2"], va="bottom")
+        fig.subplots_adjust(left=0.30, right=0.98, top=1 - (head + 0.35) / H, bottom=(foot + 0.5) / H)
+        _save(fig, out_dir, f"lineage_{s}")
+
+
+def exponents_sigma(alg: pd.DataFrame, red: pd.DataFrame, sigma: pd.DataFrame | None, out_dir: Path, meta: dict | None = None) -> None:
+    """
+    EN: exponent heat-map with rows grouped by lineage, a right-hand column (declared kind · exact / fit R²), and the
+        stratum's log-correlation matrix Σ beside it. One panel pair per stratum.
+    PT: mapa de expoentes agrupado por linhagem, coluna com tipo declarado e R², e a Σ do estrato ao lado.
+    """
+    if alg.empty:
+        return
+    cols = [c for c in alg.columns if c.startswith("e_")]; strata = sorted(alg.stratum.unique()); order = _order(alg); lab = _label(alg); short = _short(lab)
+    A = alg.drop_duplicates("method_id").set_index("method_id"); kinds = A.target_kind.to_dict() if "target_kind" in A else {}
+    n = len(order); head, foot = _margins(meta, caption=True); panel_top, panel_bot = 0.30, 0.30
+    k = len(cols); ns = len(strata)
+    row_in = max(0.30 * n, 0.55 * k) + panel_top + panel_bot
+    H = head + row_in * ns + foot
+    wr = [0.9 * k + 3.4, 0.55 * k + 0.6]
+    fig, axes = plt.subplots(ns, 2, figsize=(min(10.0, sum(wr) + 2.2), H), squeeze=False, gridspec_kw={"width_ratios": wr, "wspace": 0.10, "hspace": 0.55})
+    for j, s in enumerate(strata):
+        ax, axs = axes[j][0], axes[j][1]
+        a = alg[alg.stratum == s].set_index("method_id")
+        r = red[red.stratum == s].set_index("method_id") if not red.empty else pd.DataFrame()
+        roots, lanes = _lineages(r, order) if not r.empty else ([m for m in order if m in a.index], {m: [m] for m in order if m in a.index})
+        ids = [m for rt in roots for m in lanes[rt] if m in a.index]
+        M = a.loc[ids, cols].to_numpy(float); vmax = float(np.nanmax(np.abs(M))) or 1.0
+        ax.imshow(M, cmap=DIV, norm=TwoSlopeNorm(vcenter=0, vmin=-vmax, vmax=vmax), aspect="auto")
+        for i in range(M.shape[0]):
+            for c in range(M.shape[1]):
+                ax.text(c, i, f"{M[i, c]:+.2f}", ha="center", va="center", fontsize=6.5, color=C["ink"])
+            src = a.loc[ids[i], "vector_source"]; fr = a.loc[ids[i], "fit_r2"]
+            kind = F("kind").get(kinds.get(ids[i]), "—") if kinds else "—"
+            ax.text(k - 0.4, i, f"{kind}  ·  " + (F("fixed") if src == "catalog" else F("approx", r=fr)), fontsize=6.2, va="center", ha="left", color=C["ink2"])
+        # lineage separators
+        pos = 0
+        for rt in roots:
+            m = len([x for x in lanes[rt] if x in a.index])
+            if pos > 0:
+                ax.axhline(pos - 0.5, color=C["surface"], lw=2.5)
+            pos += m
+        ylabels = [(short.get(m, m) + f" {int(a.loc[m, 'year'])}" if pd.notna(a.loc[m, "year"]) else short.get(m, m)) if m in [rt for rt in roots] else "   ↳ " + short.get(m, m) for m in ids]
+        ax.set_xticks(range(k)); ax.set_xticklabels([c[2:] for c in cols]); ax.set_yticks(range(len(ids))); ax.set_yticklabels(ylabels, fontsize=7)
+        ax.set_xlim(-0.5, k + 4.2); ax.set_title(f"{T('stratum')} {s}", fontsize=9, loc="left"); ax.tick_params(length=0)
+        for sp in ax.spines.values():
+            sp.set_visible(False)
+        # Σ as correlation of logs
+        if sigma is not None and not sigma.empty and (sigma.stratum == s).any():
+            sg = sigma[sigma.stratum == s].pivot(index="var_i", columns="var_j", values="cov_log")
+            vs = [c[2:] for c in cols if c[2:] in sg.index]; Sm = sg.loc[vs, vs].to_numpy(float)
+            d = np.sqrt(np.diag(Sm)); R = Sm / np.outer(d, d)
+            axs.imshow(R, cmap=DIV, norm=TwoSlopeNorm(vcenter=0, vmin=-1, vmax=1), aspect="equal")
+            for i in range(len(vs)):
+                for c in range(len(vs)):
+                    axs.text(c, i, f"{R[i, c]:+.2f}", ha="center", va="center", fontsize=5.8, color=C["ink"])
+            axs.set_xticks(range(len(vs))); axs.set_xticklabels(vs, fontsize=6.5); axs.set_yticks(range(len(vs))); axs.set_yticklabels(vs, fontsize=6.5)
+            axs.set_title(F("ex_sigma"), fontsize=7.5, loc="left"); axs.tick_params(length=0)
+            for sp in axs.spines.values():
+                sp.set_visible(False)
+        else:
+            axs.axis("off")
+    _frame(fig, F("ex_title"), meta, caption=F("ex_read"))
+    fig.subplots_adjust(left=0.20, right=0.99, top=1 - (head + panel_top) / H, bottom=(foot + panel_bot) / H)
+    _save(fig, out_dir, "exponents")
+
+
 CAPTIONS = {
-    "scorecard": ("Verdict sheet. One row per method in publication order; three cells. Originality: original, or repeats an earlier method (with its name and the Spearman correlation). Specificity: specific for the target, tracks the negative control, or inconclusive; the number is score(target) − score(control) with its 95% bootstrap interval. Added value: gain in out-of-sample score when the index is added to the covariates. † applied outside declared validity · * provenance not high.",
-                  "Ficha de veredictos. Una fila por método en orden de publicación; tres celdas. Originalidad: original, o repite un método anterior (con su nombre y la correlación de Spearman). Especificidad: específico para el objetivo, sigue el control negativo, o no concluyente; el número es puntaje(objetivo) − puntaje(control) con su intervalo bootstrap 95%. Valor agregado: ganancia fuera de muestra al añadir el índice a las covariables. † fuera de la validez declarada · * procedencia no alta.",
-                  "Ficha de vereditos. Uma linha por método em ordem de publicação; três células. Originalidade: original, ou repete um método anterior (com o nome e a correlação de Spearman). Especificidade: específico para o alvo, acompanha o controle negativo, ou inconclusivo; o número é escore(alvo) − escore(controle) com o intervalo bootstrap 95%. Valor acrescentado: ganho fora da amostra ao juntar o índice às covariáveis. † fora da validade declarada · * procedência não alta."),
+    "scorecard": ("Verdict sheet. One row per method in publication order; three cells. Originality: original, or repeats an earlier method (with its name and the Spearman correlation). Specificity (conditional control): specific, tracks the control, both, or no signal; S1 = gain for the target when the index is added to the control, S2 = gain for the control when added to the target, with 95% bootstrap intervals. Added value: gain in out-of-sample score when the index is added to the covariates. † applied outside declared validity · * provenance not high.",
+                  "Ficha de veredictos. Una fila por método en orden de publicación; tres celdas. Originalidad: original, o repite un método anterior (con su nombre y la correlación de Spearman). Especificidad (control condicional): específico, sigue el control, ambos, o sin señal; S1 = ganancia para el objetivo al añadir el índice al control, S2 = ganancia para el control al añadirlo al objetivo, con intervalos bootstrap 95%. Valor agregado: ganancia fuera de muestra al añadir el índice a las covariables. † fuera de la validez declarada · * procedencia no alta.",
+                  "Ficha de vereditos. Uma linha por método em ordem de publicação; três células. Originalidade: original, ou repete um método anterior (com o nome e a correlação de Spearman). Especificidade (controle condicional): específico, acompanha o controle, ambos, ou sem sinal; S1 = ganho para o alvo ao juntar o índice ao controle, S2 = ganho para o controle ao juntá-lo ao alvo, com intervalos bootstrap 95%. Valor acrescentado: ganho fora da amostra ao juntar o índice às covariáveis. † fora da validade declarada · * procedência não alta."),
     "board": ("Verdict board. One row per method, ordered by publication (earliest at top). Left: originality = 1 − max|Spearman| with an earlier method (log scale; left of the dashed line = redundant). Centre: specificity = score(target) − score(control) with 95% bootstrap interval; blue = specific, orange = measures the control, grey = inconclusive. Right: added value over the covariates with interval; dashed = margin. Hollow markers = formula provenance not high. ◆ = exact transformation of another method (identity). † = applied mostly outside the method's declared validity range (age, BMI or sex).",
               "Cuadro de veredictos. Una fila por método, en orden de publicación. Izquierda: originalidad = 1 − máx|Spearman| con un método anterior (escala log; a la izquierda de la línea discontinua = redundante). Centro: especificidad = puntaje(objetivo) − puntaje(control) con intervalo bootstrap 95%; azul = específico, naranja = mide el control, gris = no concluyente. Derecha: valor agregado sobre las covariables con intervalo; discontinua = margen. Marcadores huecos = procedencia de la fórmula no alta. ◆ = transformación exacta de otro método.",
               "Quadro de vereditos. Uma linha por método, em ordem de publicação. Esquerda: originalidade = 1 − máx|Spearman| com um método anterior (escala log; à esquerda da linha tracejada = redundante). Centro: especificidade = escore(alvo) − escore(controle) com intervalo bootstrap 95%; azul = específico, laranja = mede o controle, cinza = inconclusivo. Direita: valor acrescentado sobre as covariáveis com intervalo; tracejada = margem. Marcadores vazados = procedência da fórmula não alta. ◆ = transformação exata de outro método."),
@@ -183,7 +432,10 @@ CAPTIONS = {
     "predicted_observed": ("Algebraic check. Each point is a pair of methods: the correlation predicted from the covariance of the log-variables (before computing any index) against the correlation observed. Points on the diagonal confirm the prediction; the labelled points are the largest gaps.",
                            "Verificación algebraica. Cada punto es un par de métodos: correlación predicha desde la covarianza de los log-variables (antes de calcular índice alguno) contra la observada. Puntos en la diagonal confirman la predicción; los etiquetados son las mayores brechas.",
                            "Verificação algébrica. Cada ponto é um par de métodos: correlação prevista pela covariância dos log-variáveis (antes de calcular qualquer índice) contra a observada. Pontos na diagonal confirmam a previsão; os rotulados são as maiores lacunas."),
-    "lineage": ("Precedence lanes. Each lane starts with an original method (leftmost, filled) and lists, by year, the later methods statistically indistinguishable from it (|Spearman| ≥ threshold with that lineage). A method appears in the lane of its earliest predecessor. ◆ = identity.",
+    "target_control": ("Conditional negative-control map. y = S1, the gain in out-of-sample score for the target when the index is added to a model that already has the control; x = S2, the gain for the control when the index is added to a model that already has the target. Bars = 95 % paired-bootstrap intervals; dashed lines = margin. Upper-left: specific (adds to the target, not to the control). Lower-right: tracks the control. Upper-right: carries information neither explains (e.g. body size). Lower-left: no signal beyond what target and control already share. Colour = verdict; hollow marker = provenance not high.",
+                       "Mapa del control negativo condicional. y = S1, ganancia fuera de muestra para el objetivo al añadir el índice a un modelo que ya tiene el control; x = S2, ganancia para el control al añadir el índice a un modelo que ya tiene el objetivo. Barras = intervalos bootstrap pareados 95 %; discontinuas = margen. Arriba-izquierda: específico. Abajo-derecha: sigue el control. Arriba-derecha: información que ninguno explica (p. ej. tamaño corporal). Abajo-izquierda: sin señal. Color = veredicto; marcador hueco = procedencia no alta.",
+                       "Mapa do controle negativo condicional. y = S1, ganho fora da amostra para o alvo ao juntar o índice a um modelo que já tem o controle; x = S2, ganho para o controle ao juntar o índice a um modelo que já tem o alvo. Barras = intervalos bootstrap pareados 95 %; tracejado = margem. Alto-esquerda: específico (acrescenta ao alvo, não ao controle). Baixo-direita: acompanha o controle. Alto-direita: informação que nenhum explica (por exemplo tamanho corporal). Baixo-esquerda: sem sinal além do que alvo e controle já compartilham. Cor = veredito; marcador vazado = procedência não alta."),
+    "lineage": ("Family tree. One row per original index (filled node at its year); later indices that order people almost identically (|Spearman| ≥ threshold) hang from it with the correlation on the branch. Node colour = specificity verdict for the target against the control (green specific, violet tracks the control, grey inconclusive); hollow edge = provenance not high; † = outside declared validity; ◆ = identity. Next to the root: what its authors say it measures. Precedence lanes. Each lane starts with an original method (leftmost, filled) and lists, by year, the later methods statistically indistinguishable from it (|Spearman| ≥ threshold with that lineage). A method appears in the lane of its earliest predecessor. ◆ = identity.",
                 "Carriles de precedencia. Cada carril empieza con un método original (izquierda, relleno) y lista, por año, los métodos posteriores estadísticamente indistinguibles de él. Un método aparece en el carril de su predecesor más antiguo. ◆ = identidad.",
                 "Faixas de precedência. Cada faixa começa com um método original (à esquerda, preenchido) e lista, por ano, os métodos posteriores estatisticamente indistinguíveis dele. Um método aparece na faixa do seu antecessor mais antigo. ◆ = identidade."),
     "sigma_transfer": ("Transfer of Σ. Rows: the population whose covariance was used to predict; columns: the population where correlations were observed. Cell = median |predicted − observed|. Small values off the diagonal mean redundancy transfers between populations.",
@@ -259,7 +511,7 @@ def board(alg: pd.DataFrame, red: pd.DataFrame, aud: pd.DataFrame, uti: pd.DataF
         for yi, m in zip(y, ids):
             if m not in a.index:
                 continue
-            row = a.loc[m]; col = {"SPECIFIC": C["specific"], "MEASURES_CONTROL": C["control"]}.get(row.verdict, C["muted"])
+            row = a.loc[m]; col = _verdict_colour(row.verdict)
             ax.plot([row.disc_lo, row.disc_hi], [yi, yi], color=col, lw=1.4, alpha=0.9)
             ax.plot(row.disc_mean, yi, "o", ms=5, mfc=C["surface"] if conf.get((m, s), "high") != "high" else col, mec=col, mew=1.2)
         ax.axvline(0, color=C["ink2"], lw=0.8); ax.set_xlabel(T("spec", m=a.metric.iloc[0]))
@@ -286,7 +538,7 @@ def board(alg: pd.DataFrame, red: pd.DataFrame, aud: pd.DataFrame, uti: pd.DataF
 
 
 def scorecard(alg: pd.DataFrame, red: pd.DataFrame, aud: pd.DataFrame, uti: pd.DataFrame | None, out_dir: Path, primary_target: str,
-              threshold: float = 0.95, meta: dict | None = None) -> None:
+              threshold: float = 0.95, meta: dict | None = None, margin: float = 0.03) -> None:
     """
     EN: the readable verdict sheet — one row per method, three cells with a coloured pill and a short technical phrase;
         numbers are evidence, set small. Replaces the board as an official figure (board stays supplementary).
@@ -306,14 +558,16 @@ def scorecard(alg: pd.DataFrame, red: pd.DataFrame, aud: pd.DataFrame, uti: pd.D
         if not ids:
             continue
         metric = a.metric.iloc[0] if len(a) else "R2"; control = a.control.iloc[0] if len(a) else ""
+        smax = float(np.nanmax(np.concatenate([aud.s1_hi.to_numpy(float), aud.s2_hi.to_numpy(float)]))) if "s1_hi" in aud else 1.0
         covs = u.covariates.iloc[0].replace("+", " + ") if u is not None and len(u) else ""
         n = len(ids)
         # EN: fixed geometry in inches: header (title+subtitle+column names) 1.25, rows 0.42 each, legend+footer 1.15
-        row_h, head_in, foot_in = 0.42, 1.25, 1.15
-        W, H = 13.0, head_in + row_h * n + foot_in
+        row_h, head_in = 0.42, 1.10 if STYLE["subtitle"] else 0.90
+        foot_in = 1.15 if STYLE["captions"] else 0.45
+        W, H = 10.0, head_in + row_h * n + foot_in
         fig = plt.figure(figsize=(W, H))
         ax = fig.add_axes([0.0, foot_in / H, 1.0, row_h * n / H]); ax.set_xlim(0, 100); ax.set_ylim(0, n); ax.axis("off")
-        x_m, x_o, x_s, x_u = 1.0, 24.0, 49.0, 75.0; pw = 9.0
+        x_m, x_o, x_s, x_u = 1.0, 24.0, 46.0, 77.0; pw = 10.0
         # column headers (figure coords, just above the rows)
         yh = (foot_in + row_h * n + 0.12) / H
         for x, txt in ((x_m, S("method")), (x_o, S("col_o")), (x_s, f"{S('col_s')} · {primary_target} vs {control}"), (x_u, f"{S('col_u')} · {S('over', c=covs) if covs else ''}")):
@@ -343,17 +597,26 @@ def scorecard(alg: pd.DataFrame, red: pd.DataFrame, aud: pd.DataFrame, uti: pd.D
             if m in a.index:
                 row = a.loc[m]; v = row.verdict
                 if v == "SPECIFIC": pill(x_s, y, S("specific"), C["specific"])
-                elif v == "MEASURES_CONTROL": pill(x_s, y, S("tracks"), C["control"])
-                else: pill(x_s, y, S("inconc"), C["muted"])
-                ax.text(x_s + pw + 0.8, y, f"{row.disc_mean:+.2f} [{row.disc_lo:+.2f}, {row.disc_hi:+.2f}]", fontsize=7, color=C["ink2"], va="center")
+                elif v in ("TRACKS_CONTROL", "MEASURES_CONTROL"): pill(x_s, y, S("tracks"), C["control"])
+                elif v == "BOTH": pill(x_s, y, S("both"), C["ink2"])
+                else: pill(x_s, y, S("neither"), C["muted"])
+                if np.isfinite(row.s1_mean):
+                    # EN: two mini bars in the cell: green = adds to the target beyond the control (S1); violet = adds to the
+                    #     control beyond the target (S2); scaled to the largest |gain| in the sheet; number = S1 with its interval.
+                    bx = x_s + pw + 1.0; bw = 7.0; sc = bw / max(smax, 1e-9)
+                    ax.add_patch(FancyBboxPatch((bx, y + 0.02), max(row.s1_mean, 0) * sc, 0.24, boxstyle="square,pad=0", fc=C["specific"], ec="none"))
+                    ax.add_patch(FancyBboxPatch((bx, y - 0.26), max(row.s2_mean, 0) * sc, 0.24, boxstyle="square,pad=0", fc=C["control"], ec="none"))
+                    ax.plot([bx + max(row.s1_lo, 0) * sc, bx + max(row.s1_hi, 0) * sc], [y + 0.14, y + 0.14], color=C["ink"], lw=0.6)
+                    ax.text(bx + bw + 0.8, y, f"{row.s1_mean:+.2f} [{row.s1_lo:+.2f}, {row.s1_hi:+.2f}]", fontsize=6.2, color=C["ink2"], va="center")
             if u is not None and m in u.index:
                 row = u.loc[m]
                 pill(x_u, y, S("adds") if bool(row.useful) else S("noadd"), C["specific"] if bool(row.useful) else C["muted"])
                 ax.text(x_u + pw + 0.8, y, f"{row.delta_mean:+.2f} [{row.delta_lo:+.2f}, {row.delta_hi:+.2f}]", fontsize=7, color=C["ink2"], va="center")
             else:
                 pill(x_u, y, S("notest"), C["muted"])
-        for k, txt in enumerate((S("leg1", thr=threshold), S("leg2", m=metric, t=primary_target, c=control), S("leg3", m=metric, cov=covs or "—"))):
-            fig.text(0.01, (foot_in - 0.28 - 0.2 * k) / H, txt, fontsize=6.8, color=C["ink2"], va="center")
+        for k, txt in enumerate((S("leg1", thr=threshold), S("leg2", m=metric, t=primary_target, c=control, mg=margin), S("leg3", m=metric, cov=covs or "—"))):
+            if STYLE["captions"]:
+                fig.text(0.01, (foot_in - 0.28 - 0.2 * k) / H, txt, fontsize=6.8, color=C["ink2"], va="center")
         _title(fig, f"{S('title')} — {T('stratum')} {st} · {T('target')} {primary_target} vs {T('control')} {control}")
         _footer(fig, meta)
         _save(fig, out_dir, f"scorecard_{st}")
@@ -486,7 +749,7 @@ def combination_gain(comb: pd.DataFrame, out_dir: Path) -> None:
         return
     fig, ax = plt.subplots(figsize=(4.6, 3.6)); ax.grid(True); ax.set_axisbelow(True)
     ax.axhline(0, color=C["ink2"], lw=0.8)
-    x = np.abs(comb.rho_sp_predicted)
+    x = np.abs(comb.r_log_predicted)
     ax.errorbar(x, comb.gain_mean, yerr=[comb.gain_mean - comb.gain_lo, comb.gain_hi - comb.gain_mean], fmt="o", ms=3.5, color=C["specific"], alpha=0.65, lw=0.7, ecolor=C["specific"])
     ax.set_xlabel("|predicted Spearman| between host and added index (0 = orthogonal)"); ax.set_ylabel("gain from adding (score B − A), 95% interval")
     ax.set_title("Combination gain vs predicted orthogonality", fontsize=9, loc="left")
@@ -514,15 +777,15 @@ def compass(alg: pd.DataFrame, out_dir: Path) -> None:
 def write_captions(out_dir: Path) -> None:
     order = {"en": (0, 1, 2), "es": (1, 0, 2), "pt": (2, 0, 1)}[STYLE["language"] if STYLE["language"] in ("en", "es", "pt") else "en"]
     L = ["# Figures — how to read them / cómo leerlas / como ler", "",
-         "Official (the framework's three): exponents · predicted_observed · scorecard. Supplementary (on request): board · lineage · sigma_transfer · combination_gain · compass.", ""]
+         "Official: lineage · target_control · exponents · scorecard. Supplementary (on request): predicted_observed · board · sigma_transfer · combination_gain · compass.", ""]
     for name, caps in CAPTIONS.items():
         tags = ("EN", "ES", "PT")
         L += [f"## {name}", ""] + [x for i in order for x in (f"**{tags[i]}** — {caps[i]}", "")]
     (out_dir / "README.md").write_text("\n".join(L), encoding="utf-8")
 
 
-OFFICIAL = ("exponents", "predicted_observed", "scorecard")        # EN: the framework's three figures (decision 2026-09-10, revised)
-SUPPLEMENTARY = ("board", "lineage", "sigma_transfer", "combination_gain", "compass")
+OFFICIAL = ("lineage", "target_control", "exponents", "scorecard")   # EN: decision 2026-09-11 — tree, negative-control map, exponents+Σ, verdict sheet
+SUPPLEMENTARY = ("predicted_observed", "board", "sigma_transfer", "combination_gain", "compass")
 
 
 def make_all(out_dir: Path, tables: dict, cfg: dict, *, supplementary: bool | None = None) -> None:
@@ -538,14 +801,16 @@ def make_all(out_dir: Path, tables: dict, cfg: dict, *, supplementary: bool | No
             "seed_cv": cfg.get("seeds", {}).get("cv", ""), "seed_boot": cfg.get("seeds", {}).get("bootstrap", "")}
     alg, red, aud, uti = (tables.get(k, pd.DataFrame()) for k in ("algebra", "redundancy", "audit", "utility"))
     primary = aud.target.iloc[0] if not aud.empty else None
-    exponents(alg, fd, meta); predicted_observed(tables.get("pairs", pd.DataFrame()), alg, fd, meta)
+    exponents_sigma(alg, red, tables.get("sigma"), fd, meta)
     if primary:
-        scorecard(alg, red, aud, uti, fd, primary, threshold=cfg["algebra"]["redundancy_threshold"], meta=meta)
+        lineage_tree(red, alg, aud, fd, primary, threshold=cfg["algebra"]["redundancy_threshold"], meta=meta)
+        target_control(aud, alg, fd, primary, meta, margin=cfg["audit"]["verdict"]["margin"])
+        scorecard(alg, red, aud, uti, fd, primary, threshold=cfg["algebra"]["redundancy_threshold"], meta=meta, margin=cfg["audit"]["verdict"]["margin"])
     if supplementary is None:
         supplementary = bool(cfg.get("output", {}).get("supplementary_figures", False))
     if supplementary:
         sd = fd / "supplementary"; sd.mkdir(exist_ok=True)
         if primary:
             board(alg, red, aud, uti, sd, primary, threshold=cfg["algebra"]["redundancy_threshold"], margin=cfg["audit"]["utility_margin"], meta=meta)
-        lineage(red, alg, sd); sigma_transfer(tables.get("sigma_transfer"), sd); combination_gain(tables.get("combinations"), sd); compass(alg, sd)
+        predicted_observed(tables.get("pairs", pd.DataFrame()), alg, sd, meta); sigma_transfer(tables.get("sigma_transfer"), sd); combination_gain(tables.get("combinations"), sd); compass(alg, sd)
     write_captions(fd)

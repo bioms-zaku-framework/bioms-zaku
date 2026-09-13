@@ -19,7 +19,7 @@ import numpy as np
 import pandas as pd
 
 from . import algebra as A
-from .audit import AuditConfig, AuditError, audit_method, combination_gain, default_estimator, utility_method
+from .audit import verdict_sensitivity, AuditConfig, AuditError, audit_method, combination_gain, default_estimator, utility_method
 from .catalog import BUILTIN_PATH, Catalog, build_catalog
 from .config import resolve
 from .design import design_index, holdout_split, by_stratum_split
@@ -162,13 +162,24 @@ def run(config: dict | str | Path, *, printer: Callable[[str], None] = print) ->
     # ---- per stratum
     lab_map = {str(k): str(v) for k, v in (cfg.get("strata_labels") or {}).items()}
     strata = [(lab_map.get(str(s), str(s)), frame[frame[ds.strata] == s].reset_index(drop=True)) for s in sorted(frame[ds.strata].dropna().unique())] if ds.strata else [("all", frame)]
-    T = {k: [] for k in ("algebra", "sigma", "pairs", "redundancy", "audit", "utility", "combinations")}
-    vecs_by, sig_by, pairs_by, skipped_all = {}, {}, {}, {}
+    T = {k: [] for k in ("algebra", "sigma", "pairs", "redundancy", "audit", "utility", "combinations", "sensitivity")}
+    vecs_by, sig_by, pairs_by, vals_by, design_by, skipped_all = {}, {}, {}, {}, {}, {}
+    # EN: target-kind orientation (§2.1 / §3.2): a method whose author-declared kind equals the kind of the CONTROL and
+    #     differs from the kind of the TARGET is expected to "track the control" by design; say so before the verdicts.
+    # PT: orientação por tipo de alvo: índice de gordura auditado contra alvo de massa magra "acompanha o controle" por desenho.
+    kinds = {k: v for k, v in ((cfg.get("declarations") or {}).get("target_kinds") or {}).items()}
+    for t, c in ds.pairing.items():
+        kt, kc = kinds.get(t), kinds.get(c)
+        if kt and kc and kt != kc:
+            for e in cat.entries:
+                if e.status == "active" and e.target_kind == kc and e.target_kind != kt and not any(w.startswith(f"{e.id}: declared as") for w in warnings):
+                    warnings.append(f"{e.id}: declared as a {kc} index by its authors; audited here against a {kt} target with a {kc} control, "
+                                    f"so 'tracks control' is its design, not a defect — swap target and control to audit it on its own terms")
     acfg = AuditConfig(task=cfg["audit"]["task"], cv_folds=cfg["audit"]["cv"]["folds"], cv_repeats=cfg["audit"]["cv"]["repeats"],
                        B=cfg["audit"]["bootstrap"]["B"], min_oob=cfg["audit"]["bootstrap"]["min_oob"], max_attempts_factor=cfg["audit"]["bootstrap"]["max_attempts_factor"],
                        seed_cv=cfg["seeds"]["cv"], seed_bootstrap=cfg["seeds"]["bootstrap"], ci=cfg["audit"]["verdict"]["ci"],
                        p_specific=cfg["audit"]["verdict"]["p_specific"], p_control=cfg["audit"]["verdict"]["p_control"],
-                       utility_margin=cfg["audit"]["utility_margin"], impute=d["impute"], min_n=d["min_n"])
+                       utility_margin=cfg["audit"]["utility_margin"], specificity_margin=cfg["audit"]["verdict"]["margin"], impute=d["impute"], min_n=d["min_n"])
     total = sum(1 for _ in strata) ; done_methods = 0
     for stratum, fr in strata:
         vals, skipped = _values(cat, ds, fr)
@@ -197,7 +208,7 @@ def run(config: dict | str | Path, *, printer: Callable[[str], None] = print) ->
                        stratum=stratum, n=vf.n, n_nonpositive_pred=vf.n_nonpositive_pred, fit_r2=vf.fit_r2,
                        poor_monomial=bool(vf.fit_r2 < cfg["algebra"]["min_fit_r2"]), vector_source=vf.source,
                        out_of_validity_frac=oov.get(mid, (0.0, ""))[0], out_of_validity_fields=oov.get(mid, (0.0, ""))[1],
-                       provenance_confidence=conf.get(mid, "low"))
+                       provenance_confidence=conf.get(mid, "low"), target_kind=(cat[mid].target_kind if mid in cat.ids() else None))
             row.update({f"e_{v}": float(x) for v, x in zip(vf.variables, vf.vector)})
             T["algebra"].append(row)
         for i, vi in enumerate(design_vars):
@@ -207,7 +218,8 @@ def run(config: dict | str | Path, *, printer: Callable[[str], None] = print) ->
         pairs = A.pairs_table(pcat, vecs, vals, S, stratum, min_pair_n=cfg["algebra"]["min_pair_n"], alpha=cfg["algebra"]["fisher_alpha"])
         red = A.redundancy_table(pcat, pairs, stratum, threshold=cfg["algebra"]["redundancy_threshold"]) if not pairs.empty else pd.DataFrame()
         T["pairs"].append(pairs); T["redundancy"].append(red)
-        vecs_by[stratum], sig_by[stratum], pairs_by[stratum] = vecs, S, pairs
+        vecs_by[stratum], sig_by[stratum], pairs_by[stratum], vals_by[stratum] = vecs, S, pairs, {k: v for k, v in vals.items() if k in vecs}
+        design_by[stratum] = np.log(fr.loc[:, list(design_vars)].to_numpy(dtype=float))   # EN: v0.5 Σ-transfer bootstrap recomputes Σ_t per resample
 
         # ---- audit
         targets = {t: fr[t].to_numpy(float) for t in ds.targets}
@@ -231,6 +243,28 @@ def run(config: dict | str | Path, *, printer: Callable[[str], None] = print) ->
             T["audit"] += rows; T["utility"] += urows
             if warn:
                 warnings.append(warn)
+        # ---- sensitivity to the estimator (§3.2): same resamples, second estimator, reported next to the primary, never selected
+        sens = cfg["audit"].get("sensitivity") or {}
+        if sens.get("estimator"):
+            if sens.get("nested_tuning"):
+                warnings.append(f"{stratum}: sensitivity.nested_tuning requested but not implemented in this version; running the declared estimator with fixed params")
+            jobs_s = [(mid, stratum, vals[mid], targets, controls, ds.pairing, acfg, sens, task, groups, None, [], targets) for mid in vecs]
+            if cfg["n_jobs"] > 1:
+                with ProcessPoolExecutor(max_workers=cfg["n_jobs"]) as ex:
+                    results_s = list(ex.map(_audit_one, jobs_s))
+            else:
+                results_s = [_audit_one(jb) for jb in jobs_s]
+            prim = {(r["method_id"], r["stratum"], r["target"]): r for r in T["audit"] if r["stratum"] == stratum}
+            for rows_s, _, warn in results_s:
+                if warn:
+                    warnings.append("sensitivity " + warn); continue
+                for r in rows_s:
+                    p = prim.get((r["method_id"], r["stratum"], r["target"]))
+                    if p is None:
+                        continue
+                    T["sensitivity"].append({**r, "estimator_primary": p["estimator"], "verdict_primary": p["verdict"], "verdict_changed": r["verdict"] != p["verdict"],
+                                             "s1_primary": p["s1_mean"], "s1_delta": r["s1_mean"] - p["s1_mean"], "s2_primary": p["s2_mean"], "s2_delta": r["s2_mean"] - p["s2_mean"],
+                                             "disc_primary": p["disc_mean"], "disc_delta": r["disc_mean"] - p["disc_mean"]})
         # ---- combinations (pairs of methods), boosting estimator, same resamples
         if cfg["audit"]["combinations"]:
             ids = list(vecs)
@@ -246,19 +280,25 @@ def run(config: dict | str | Path, *, printer: Callable[[str], None] = print) ->
                     except AuditError as e:
                         warnings.append(f"{stratum}/{hi}+{ad}: combination skipped — {e}"); continue
                     for r in rows:
-                        r["rho_sp_predicted"] = float(rp.rho_sp_converted.iloc[0]) if len(rp) else np.nan
+                        r["r_log_predicted"] = float(rp.r_log_predicted.iloc[0]) if len(rp) else np.nan
                     T["combinations"] += rows
 
+    # ---- sensitivity to the verdict thresholds (§3.2, v0.5.1): reclassification of stored S1/S2 under a grid, no refit
+    T["threshold_sensitivity"] = verdict_sensitivity(T["audit"], margins=tuple(cfg["audit"]["verdict"].get("sensitivity_margins", (0.02, 0.03, 0.05))),
+                                                     p_levels=tuple(cfg["audit"]["verdict"].get("sensitivity_p", (0.90, 0.95, 0.99))))
     tables = {k: (pd.concat(v, ignore_index=True) if v and isinstance(v[0], pd.DataFrame) else pd.DataFrame(v)) for k, v in T.items()}
     if cfg["algebra"]["transfer"] and len(strata) > 1:
-        tables["sigma_transfer"] = A.sigma_transfer_table(vecs_by, sig_by, pairs_by)
+        tables["sigma_transfer"] = A.sigma_transfer_table(vecs_by, sig_by, vals_by, design_by_stratum=design_by, identity_ids={e.id for e in cat.entries if e.identity_of},
+                                                          tol=cfg["algebra"]["transfer_tol"], B=cfg["algebra"]["transfer_B"],
+                                                          seed=cfg["seeds"]["bootstrap"], min_pair_n=cfg["algebra"]["min_pair_n"])
     primary = ds.targets[0]
     tables["screening"] = screening_table(tables["redundancy"], tables["audit"], tables.get("utility"), primary_target=primary) if not tables["audit"].empty else pd.DataFrame()
 
     # ---- write
     sort_keys = {"algebra": ["stratum", "method_id"], "sigma": ["stratum", "var_i", "var_j"], "pairs": ["stratum", "a_id", "b_id"],
                  "redundancy": ["stratum", "method_id"], "audit": ["stratum", "method_id", "target"], "utility": ["stratum", "method_id", "target"],
-                 "combinations": ["stratum", "host_id", "added_id", "target"], "sigma_transfer": ["sigma_from", "observed_in"], "screening": ["stratum", "method_id"]}
+                 "combinations": ["stratum", "host_id", "added_id", "target"], "sigma_transfer": ["sigma_from", "observed_in"], "screening": ["stratum", "method_id"],
+                 "sensitivity": ["stratum", "method_id", "target"], "threshold_sensitivity": ["stratum", "method_id", "target", "margin", "p_specific"]}
     for name, df in tables.items():
         write_table(df, out_dir / f"{name}.csv", sort_keys.get(name, []))
     manifest.update(strata_used={s: int(len(fr)) for s, fr in strata}, methods_evaluated=sorted(set(tables["algebra"].method_id)) if not tables["algebra"].empty else [],

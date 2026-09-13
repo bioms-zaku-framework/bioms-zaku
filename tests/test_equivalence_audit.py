@@ -58,7 +58,7 @@ def test_block_B_specificity_matches_previous_engine(ref):
             r = rows[t]
             assert abs(r.disc_mean - ref[f"disc_{k}"]) < TOL and abs(r.disc_lo - ref[f"disc_{k}_lo"]) < TOL and abs(r.disc_hi - ref[f"disc_{k}_hi"]) < TOL, (label, t)
             assert abs(r.p_disc - ref[f"P_{k}"]) < TOL
-            assert {"SPECIFIC": "ESPECÍFICO", "MEASURES_CONTROL": "MEDE GORDURA", "INCONCLUSIVE": "INCONCLUSIVO"}[r.verdict] == ref[f"verd_{k}"], (label, t)
+            assert {"SPECIFIC": "ESPECÍFICO", "MEASURES_CONTROL": "MEDE GORDURA", "INCONCLUSIVE": "INCONCLUSIVO"}[r.verdict_marginal] == ref[f"verd_{k}"], (label, t)
 
 
 @pytest.mark.slow

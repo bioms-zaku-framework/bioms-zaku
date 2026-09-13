@@ -29,7 +29,7 @@ def screening_table(redundancy: pd.DataFrame, audit: pd.DataFrame, utility: pd.D
         df["useful"] = False
     df["useful"] = df["useful"].fillna(False).astype(bool)
     df["identity"] = df["identity_of"].notna()
-    df["specific"] = df["verdict"].map({"SPECIFIC": True, "MEASURES_CONTROL": False})   # NaN when inconclusive/absent
+    df["specific"] = df["verdict"].map({"SPECIFIC": True, "TRACKS_CONTROL": False, "MEASURES_CONTROL": False})   # NaN when BOTH/NEITHER/absent
     df["class"] = [_cls(i, rd, sp, us) for i, rd, sp, us in zip(df["identity"], df["redundant"], df["specific"], df["useful"])]
     return df[["method_id", "stratum", "redundant", "specific", "useful", "identity", "class"]].sort_values(["stratum", "method_id"]).reset_index(drop=True)
 

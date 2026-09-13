@@ -22,12 +22,18 @@ from .expr import CompiledExpr, ExpressionError, compile_expr
 # PT: nomes canônicos disponíveis quando as quatro variáveis BIA estão mapeadas (50 kHz).
 CANONICAL_BASE = ("R", "Xc", "H", "W")
 DERIVED = ("H_m", "PhA", "II", "Z")
+NON_MONOMIAL_DERIVED = ("PhA", "Z")   # EN: usable in expressions, never in a monomial `vector` (§2.3)
+VECTOR_TOL_MAX = 1e-4                 # EN: numeric slack for the log-linear identity check only, not an approximation budget
 FORMS = ("monomial", "composite", "closed")
 KINDS = ("index", "equation")
 SOURCES = ("pdf_table", "pdf_text", "pmc_text", "abstract", "review_table")
 CONFIDENCE = ("high", "medium", "low")
 DEFAULT_CONFIDENCE = {"pdf_table": "high", "pdf_text": "high", "pmc_text": "high", "abstract": "medium", "review_table": "low"}
 REQUIRED = ("id", "label", "authors", "year", "doi", "kind", "target", "form", "frequency_khz", "validity", "provenance")
+# EN: what the author says the method measures, as a category the report can compare with the declared kind of the
+#     audit target/control (§2.1). A fat index audited against a lean-mass target is expected to "track the control".
+# ES/PT: o que o autor diz que o método mede, como categoria comparável ao tipo declarado do alvo/controle da auditoria.
+TARGET_KINDS = ("lean_mass", "fat_mass", "body_water", "hydration", "cell_mass", "other")
 
 BUILTIN_PATH = Path(__file__).resolve().parents[2] / "data" / "catalog_v1.json"
 
@@ -71,6 +77,12 @@ class Entry:
     see: float | None = None
     device: str | None = None
     reference_method: str | None = None
+    # EN: who the method was fitted on (descriptive only; never produces a flag). `validity` is the applicability the
+    #     author states or tested; outside it the framework flags † and never blocks (§2.1).
+    # ES: muestra de derivación (solo descriptiva). `validity` = aplicabilidad declarada o probada; fuera → marca †, nunca bloquea.
+    # PT: amostra de derivação (só descritiva). `validity` = aplicabilidade declarada ou testada; fora → marca †, nunca bloqueia.
+    derivation_sample: dict | None = None
+    target_kind: str | None = None           # EN: one of TARGET_KINDS or None (not declared)
     notes: str | None = None
 
     @property
@@ -209,6 +221,8 @@ def _parse_entry(e: dict, i: int, canon: tuple[str, ...], rng_seed: int) -> Entr
     # PT: a confiança pode ser rebaixada, nunca elevada acima do padrão da fonte.
     if CONFIDENCE.index(prov["confidence"]) < CONFIDENCE.index(DEFAULT_CONFIDENCE[prov["formula_source"]]):
         raise CatalogError(f"{where}: confidence {prov['confidence']!r} exceeds what source {prov['formula_source']!r} allows")
+    if e.get("target_kind") is not None and e["target_kind"] not in TARGET_KINDS:
+        raise CatalogError(f"{where}: target_kind must be one of {TARGET_KINDS}")
     if e.get("status", "active") not in ("active", "excluded"):
         raise CatalogError(f"{where}: status must be active or excluded")
     if e.get("status") == "excluded" and not e.get("exclusion_reason"):
@@ -252,6 +266,15 @@ def _parse_entry(e: dict, i: int, canon: tuple[str, ...], rng_seed: int) -> Entr
             raise CatalogError(f"{where}: monomial requires vector")
         if branch_group is not None:
             raise CatalogError(f"{where}: monomial cannot have branches")
+        # EN: §2.3 exactness — a catalog vector is exact or it is not a vector. Non-monomial derived names (PhA = atan,
+        #     Z = sqrt of a sum) cannot appear in `vector`; such methods are `composite` and get a fitted vector with R².
+        # ES: §2.3 exactitud — el vector del catálogo es exacto o no es vector; PhA y Z no pueden aparecer en `vector`.
+        # PT: §2.3 exatidão — o vetor do catálogo é exato ou não é vetor; PhA e Z não podem aparecer em `vector`.
+        bad = sorted(k for k in vector if k in NON_MONOMIAL_DERIVED)
+        if bad:
+            raise CatalogError(f"{where}: {bad} are not monomials in the base variables; declare form 'composite' (fitted vector, fit R² reported)")
+        if vector_tol > VECTOR_TOL_MAX:
+            raise CatalogError(f"{where}: vector_tol {vector_tol} exceeds {VECTOR_TOL_MAX}; a monomial vector must be exact")
         _check_vector(where, exprs[None], vector, vector_tol, rng_seed)
     elif vector:
         raise CatalogError(f"{where}: vector only allowed for monomial")
@@ -261,8 +284,8 @@ def _parse_entry(e: dict, i: int, canon: tuple[str, ...], rng_seed: int) -> Entr
         target=e["target"], form=e["form"], frequency_khz=tuple(float(x) for x in (fk if isinstance(fk, (list, tuple)) else [fk])), validity=val, provenance=prov,
         vector=vector, vector_tol=vector_tol, group_coding=group_coding, branch_group=branch_group, exprs=exprs,
         extra_inputs=extra_inputs, identity_of=e.get("identity_of"), status=e.get("status", "active"),
-        exclusion_reason=e.get("exclusion_reason"), pmid=e.get("pmid"), date=e.get("date"),
-        check_example=e.get("check_example"), n=e.get("n"), r2=e.get("r2"), see=e.get("see"),
+        exclusion_reason=e.get("exclusion_reason"), pmid=e.get("pmid"), date=e.get("date"), derivation_sample=e.get("derivation_sample"),
+        check_example=e.get("check_example"), n=e.get("n"), r2=e.get("r2"), see=e.get("see"), target_kind=e.get("target_kind"),
         device=e.get("device"), reference_method=e.get("reference_method"), notes=e.get("notes"),
     )
     if ent.check_example is not None:
@@ -304,10 +327,6 @@ def _check_vector(where: str, ce: CompiledExpr, vector: dict, tol: float, seed: 
             expect["H"] += v
         elif k == "II":
             expect["H"] += 2 * v; expect["R"] -= v
-        elif k == "PhA":
-            expect["Xc"] += v; expect["R"] -= v      # EN: linearised atan(Xc/R) ≈ Xc/R (declare vector_tol accordingly)
-        elif k == "Z":
-            expect["R"] += v                         # EN: Z ≈ R when Xc << R (declare vector_tol accordingly)
         elif k in expect:
             expect[k] += v
         else:

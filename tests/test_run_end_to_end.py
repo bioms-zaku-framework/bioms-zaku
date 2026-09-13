@@ -38,7 +38,7 @@ def test_end_to_end_minimal_example_writes_all_outputs(tmp_path):
     m = json.loads((out / "manifest.json").read_text())
     assert m["preset"] == "quick" and m["input_sha256"] and m["outputs_sha256"]["audit.csv"] and m["versions"]["sklearn"]
     assert "PRESET `quick`" in (out / "summary.md").read_text(encoding="utf-8")
-    for f in ("scorecard_all", "exponents", "predicted_observed"):
+    for f in ("scorecard_all", "exponents", "lineage_all", "target_control"):
         assert (out / "figures" / f"{f}.png").exists() and (out / "figures" / f"{f}.pdf").exists(), f
     assert not any(c.startswith("seqn") for c in pd.read_csv(out / "audit.csv").columns)   # no row-level data
 
@@ -66,6 +66,32 @@ def test_strata_transfer_classification_and_design(tmp_path):
     cfg2["data"]["columns"]["controls"] = {"DIAB_PERM": "diab_perm"}; cfg2["data"]["min_n"] = 30
     a = run(cfg2, printer=lambda s: None)["tables"]["audit"]
     assert set(a.metric) == {"AUROC"} and (a.score_cv_control.between(0.3, 0.7)).all()
+
+
+def test_target_kind_orientation_warning(tmp_path):
+    # EN: contract v0.4.6 — a fat-mass index (PhA, Baumgartner 1988) audited against a lean-mass target with a fat-mass
+    #     control gets an orientation warning (never a block); without declarations nothing is added.
+    from bioms_zaku.run import run
+    cfg = _cfg(tmp_path, "tk"); t = next(iter(cfg["data"]["columns"]["targets"])); c = next(iter(cfg["data"]["columns"]["controls"]))
+    cfg["declarations"] = {"targets_independent_of_variables": True, "target_kinds": {t: "lean_mass", c: "fat_mass"}}
+    w = run(cfg, printer=lambda s: None)["manifest"]["warnings"]
+    assert any(x.startswith("Baumgartner1988_PhA:") and "tracks control" in x for x in w), w
+    assert not any(x.startswith("Lukaski1985_II:") for x in w)
+    cfg2 = _cfg(tmp_path, "tk2"); cfg2["declarations"] = {"targets_independent_of_variables": True}
+    assert not any("tracks control" in x for x in run(cfg2, printer=lambda s: None)["manifest"]["warnings"])
+
+
+def test_sensitivity_tables(tmp_path):
+    # EN: v0.5.1 — threshold sensitivity is a pure reclassification (default grid point reproduces the verdict); estimator
+    #     sensitivity runs the second estimator on the same resamples and reports deltas without changing the primary verdict.
+    from bioms_zaku.run import run
+    cfg = _cfg(tmp_path, "sens"); cfg["audit"]["sensitivity"] = {"estimator": "hgb", "params": {"max_depth": 2, "max_iter": 30}}
+    res = run(cfg, printer=lambda s: None); t = res["tables"]
+    ts = t["threshold_sensitivity"]; base = ts[(ts.margin == 0.03) & (ts.p_specific == 0.95)]
+    assert len(base) and (base.verdict == base.verdict_default).all()
+    se = t["sensitivity"]; assert len(se) == len(t["audit"]) and se.estimator.iloc[0] == "HistGradientBoostingRegressor"
+    assert (se.verdict_primary.to_numpy() == t["audit"].set_index(["method_id", "stratum", "target"]).loc[list(zip(se.method_id, se.stratum, se.target))].verdict.to_numpy()).all()
+    assert (res["out_dir"] / "sensitivity.csv").exists() and (res["out_dir"] / "threshold_sensitivity.csv").exists()
 
 
 def test_cli_runs(tmp_path):

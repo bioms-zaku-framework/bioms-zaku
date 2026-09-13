@@ -48,6 +48,7 @@ class AuditConfig:
     p_specific: float = 0.95
     p_control: float = 0.05
     utility_margin: float = 0.03
+    specificity_margin: float = 0.03      # EN: §3.2 (v0.5) — an increment below this is practically nil, however "significant"
     impute: bool = False                  # explicit only (§1.4); default complete-case
     min_n: int = 30                       # minimum complete-case rows for a method to be audited
 
@@ -132,11 +133,13 @@ def cv_score(X: np.ndarray, y: np.ndarray, task: str, estimator, cfg: AuditConfi
 
 
 def oob_scores(configs: dict[str, np.ndarray], Y: np.ndarray, task: str, estimator, cfg: AuditConfig,
-               progress: Callable[[int, int], None] | None = None) -> tuple[dict[str, np.ndarray], int, int]:
+               progress: Callable[[int, int], None] | None = None, plan: dict[str, list[int]] | None = None) -> tuple[dict[str, np.ndarray], int, int]:
     """
     EN: paired OOB bootstrap. `configs` maps a name to a design matrix (same rows); `Y` is (n, k) targets. Returns
-        ({name: (B_eff, k) scores}, B_eff, B_dropped). All configs and targets use the same resamples.
-    ES/PT: bootstrap OOB pareado; todas as configurações e alvos usam as mesmas reamostras.
+        ({name: (B_eff, k) scores}, B_eff, B_dropped). All configs and targets use the same resamples. `plan` (optional)
+        restricts which outcome columns are fitted for each config (unfitted cells stay NaN); default: every config on
+        every outcome.
+    ES/PT: bootstrap OOB pareado; todas as configurações e alvos usam as mesmas reamostras; `plan` restringe os ajustes.
     """
     n = Y.shape[0]
     tr, oob = resamples(n, cfg.seed_bootstrap, cfg.B, cfg.min_oob, cfg.max_attempts_factor)
@@ -148,7 +151,7 @@ def oob_scores(configs: dict[str, np.ndarray], Y: np.ndarray, task: str, estimat
     dropped = 0
     for b, (ii, oo) in enumerate(zip(tr, oob)):
         for k, X in configs.items():
-            for t in range(Y.shape[1]):
+            for t in (plan.get(k, range(Y.shape[1])) if plan else range(Y.shape[1])):
                 if task == "classification" and len(np.unique(Y[oo, t])) < 2:
                     continue
                 m = clone(pipe).fit(X[ii], Y[ii, t])
@@ -156,7 +159,9 @@ def oob_scores(configs: dict[str, np.ndarray], Y: np.ndarray, task: str, estimat
         if progress and (b + 1) % max(1, len(tr) // 20) == 0:
             progress(b + 1, len(tr))
     if task == "classification":
-        keep = ~np.isnan(np.stack([store[k] for k in configs], axis=0)).any(axis=(0, 2))
+        # EN: a resample is dropped when any PLANNED cell is NaN (single-class OOB); unplanned cells are ignored.
+        planned = np.stack([np.isnan(store[k][:, list(plan.get(k, range(Y.shape[1])) if plan else range(Y.shape[1]))]).any(axis=1) for k in configs], axis=0)
+        keep = ~planned.any(axis=0)
         dropped = int((~keep).sum())
         store = {k: v[keep] for k, v in store.items()}
     return store, len(tr) - dropped, dropped
@@ -187,6 +192,46 @@ def verdict(c: dict, cfg: AuditConfig) -> str:
     return "INCONCLUSIVE"
 
 
+def _positive(c: dict, cfg: AuditConfig) -> bool:
+    """EN: an increment counts as present when its mean exceeds the margin, its CI excludes 0 and P(d>0) ≥ p_specific."""
+    return bool(c.get("n", 1) > 0 and np.isfinite(c["mean"]) and c["mean"] > cfg.specificity_margin and c["lo"] > 0 and c["p"] >= cfg.p_specific)
+
+
+def verdict_conditional(s1: dict, s2: dict, cfg: AuditConfig) -> str:
+    """
+    EN: §3.2 (v0.5) conditional negative control. s1 = score(target | control + index) − score(target | control):
+        signal about the target that the control does not carry. s2 = score(control | target + index) −
+        score(control | target): signal about the control that the target does not explain.
+        SPECIFIC = s1 present, s2 absent · TRACKS_CONTROL = s2 present, s1 absent · BOTH = both present (the index
+        carries information shared by neither, e.g. body size measured better than either) · NEITHER = none.
+    ES: control negativo condicional (v0.5). PT: controle negativo condicional (v0.5).
+    """
+    a, b = _positive(s1, cfg), _positive(s2, cfg)
+    return "SPECIFIC" if a and not b else "TRACKS_CONTROL" if b and not a else "BOTH" if a and b else "NEITHER"
+
+
+def verdict_sensitivity(rows, margins=(0.02, 0.03, 0.05), p_levels=(0.90, 0.95, 0.99)) -> list[dict]:
+    """
+    EN: §3.2 (v0.5.1) threshold sensitivity — re-apply the conditional rule to the stored S1/S2 summaries under a grid of
+        margins and P levels. Pure reclassification (no refit): the CI is fixed (95 %), only the margin and the P
+        threshold vary. One row per (audit row, margin, p). `changed` = differs from the verdict under the contract defaults.
+    ES/PT: sensibilidade aos limiares — reclassifica S1/S2 gravados sob uma grade de margens e níveis de P; sem reajuste.
+    """
+    out = []
+    for r in rows:
+        d = r if isinstance(r, dict) else asdict(r)
+        if not np.isfinite(d.get("s1_mean", float("nan"))):
+            continue
+        s1 = dict(mean=d["s1_mean"], lo=d["s1_lo"], hi=d["s1_hi"], p=d["p_s1"], n=1)
+        s2 = dict(mean=d["s2_mean"], lo=d["s2_lo"], hi=d["s2_hi"], p=d["p_s2"], n=1)
+        for mg in margins:
+            for pl in p_levels:
+                v = verdict_conditional(s1, s2, AuditConfig(specificity_margin=mg, p_specific=pl))
+                out.append(dict(method_id=d["method_id"], stratum=d["stratum"], target=d["target"], control=d["control"], margin=mg, p_specific=pl,
+                                verdict=v, verdict_default=d["verdict"], changed=(v != d["verdict"])))
+    return out
+
+
 @dataclass
 class AuditRow:
     method_id: str
@@ -208,7 +253,20 @@ class AuditRow:
     disc_lo: float
     disc_hi: float
     p_disc: float
-    verdict: str
+    verdict: str                          # EN: v0.5 conditional verdict (SPECIFIC / TRACKS_CONTROL / BOTH / NEITHER)
+    verdict_marginal: str = "INCONCLUSIVE"   # EN: pre-v0.5 rule on disc = score(target|idx) − score(control|idx); descriptive
+    score_oob_control_to_target: float = float("nan")      # EN: score(target | control)
+    score_oob_idx_control_to_target: float = float("nan")  # EN: score(target | control + index)
+    score_oob_target_to_control: float = float("nan")      # EN: score(control | target)
+    score_oob_idx_target_to_control: float = float("nan")  # EN: score(control | target + index)
+    s1_mean: float = float("nan")
+    s1_lo: float = float("nan")
+    s1_hi: float = float("nan")
+    p_s1: float = float("nan")
+    s2_mean: float = float("nan")
+    s2_lo: float = float("nan")
+    s2_hi: float = float("nan")
+    p_s2: float = float("nan")
 
 
 def audit_method(method_id: str, stratum: str, x: np.ndarray, targets: dict[str, np.ndarray], controls: dict[str, np.ndarray],
@@ -231,15 +289,37 @@ def audit_method(method_id: str, stratum: str, x: np.ndarray, targets: dict[str,
         task = infer_task(Y[:, 0])
     est = estimator if estimator is not None else default_estimator(task)
     cv = {k: cv_score(X, Y[:, i], task, est, cfg, g) for i, k in enumerate(names)}
-    st, b_eff, b_drop = oob_scores({"idx": X}, Y, task, est, cfg, progress)
+    # EN: v0.5 — besides the index alone, fit the control as predictor of the target (and with the index), and the target as
+    #     predictor of the control (and with the index), on the SAME resamples. `plan` avoids degenerate fits (y from y).
+    configs: dict[str, np.ndarray] = {"idx": X}; plan: dict[str, list[int]] = {"idx": list(range(len(names)))}
+    for t, c in pairing.items():
+        if t == c:
+            continue
+        it, ic = names.index(t), names.index(c)
+        configs[f"ctrl:{c}"] = Y[:, [ic]]; plan.setdefault(f"ctrl:{c}", []).append(it)
+        configs[f"idx+ctrl:{c}"] = np.column_stack([X, Y[:, ic]]); plan.setdefault(f"idx+ctrl:{c}", []).append(it)
+        configs[f"tgt:{t}"] = Y[:, [it]]; plan.setdefault(f"tgt:{t}", []).append(ic)
+        configs[f"idx+tgt:{t}"] = np.column_stack([X, Y[:, it]]); plan.setdefault(f"idx+tgt:{t}", []).append(ic)
+    plan = {k: sorted(set(v)) for k, v in plan.items()}
+    st, b_eff, b_drop = oob_scores(configs, Y, task, est, cfg, progress, plan=plan)
     S = st["idx"]
     for t, c in pairing.items():
         it, ic = names.index(t), names.index(c)
         d = S[:, it] - S[:, ic]
         cs = contrast(d, cfg)
-        rows.append(AuditRow(method_id, stratum, t, c, task, "R2" if task == "regression" else "AUROC", type(est).__name__,
-                             int(ok.sum()), cfg.B, b_eff, b_drop, cv[t], cv[c], float(np.nanmean(S[:, it])), float(np.nanmean(S[:, ic])),
-                             cs["mean"], cs["lo"], cs["hi"], cs["p"], verdict(cs, cfg)))
+        row = AuditRow(method_id, stratum, t, c, task, "R2" if task == "regression" else "AUROC", type(est).__name__,
+                       int(ok.sum()), cfg.B, b_eff, b_drop, cv[t], cv[c], float(np.nanmean(S[:, it])), float(np.nanmean(S[:, ic])),
+                       cs["mean"], cs["lo"], cs["hi"], cs["p"], "INCONCLUSIVE", verdict_marginal=verdict(cs, cfg))
+        if t != c:
+            ct, ict = st[f"ctrl:{c}"][:, it], st[f"idx+ctrl:{c}"][:, it]
+            tc, itc = st[f"tgt:{t}"][:, ic], st[f"idx+tgt:{t}"][:, ic]
+            s1, s2 = contrast(ict - ct, cfg), contrast(itc - tc, cfg)
+            row.score_oob_control_to_target, row.score_oob_idx_control_to_target = float(np.nanmean(ct)), float(np.nanmean(ict))
+            row.score_oob_target_to_control, row.score_oob_idx_target_to_control = float(np.nanmean(tc)), float(np.nanmean(itc))
+            row.s1_mean, row.s1_lo, row.s1_hi, row.p_s1 = s1["mean"], s1["lo"], s1["hi"], s1["p"]
+            row.s2_mean, row.s2_lo, row.s2_hi, row.p_s2 = s2["mean"], s2["lo"], s2["hi"], s2["p"]
+            row.verdict = verdict_conditional(s1, s2, cfg)
+        rows.append(row)
     return rows
 
 

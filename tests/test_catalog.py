@@ -20,11 +20,32 @@ def _with(**changes):
     return raw
 
 
-def test_builtin_catalog_loads_with_31_entries():
+def test_builtin_catalog_loads_with_curated_entries():
     c = load_catalog()
-    assert len(c.entries) == 31
+    assert len(c.entries) == 32
+    h = c["Hoffer1969_H2Z"]
+    assert h.form == "monomial" and h.year == 1969 and h.confidence == "high" and "Z100" in h.inputs
+    assert c["Baumgartner1988_PhA"].form == "composite" and c["LMI"].form == "composite"
     assert c["Schifferli2020_FFM_adj"].identity_of == "Schifferli2011_FFM"
     assert c["Segal1988_spec_LBM"].branch_group == "fat_class"
+
+
+def test_target_kind_is_validated():
+    with pytest.raises(CatalogError, match="target_kind"):
+        build_catalog(_with(target_kind="muscle"))
+    assert build_catalog(_with(target_kind="fat_mass"))["X1"].target_kind == "fat_mass"
+    assert load_catalog()["Rsp"].target_kind == "fat_mass"
+
+
+def test_non_monomial_derived_names_cannot_be_vectors():
+    # EN: §2.3 exactness — atan(Xc/R) and sqrt(R²+Xc²) are not monomials; declaring them as such is refused.
+    with pytest.raises(CatalogError, match="composite"):
+        build_catalog(_with(expr="atan(Xc / R) * 180 / pi", vector={"PhA": 1}))
+    with pytest.raises(CatalogError, match="composite"):
+        build_catalog(_with(expr="H**2 / Z", vector={"Z": -1, "H": 2}))
+    with pytest.raises(CatalogError, match="exact"):
+        build_catalog(_with(vector_tol=0.03))
+    build_catalog(_with(expr="atan(Xc / R) * 180 / pi", form="composite", vector=None))  # ok as composite
 
 
 def test_vector_consistency_is_checked():

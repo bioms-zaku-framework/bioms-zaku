@@ -25,7 +25,8 @@ from .catalog import Catalog, Entry
 
 # EN: how a derived name in a catalog `vector` maps onto base variables (log-linear identities).
 # ES/PT: cómo un nombre derivado del `vector` se expresa en variables base (identidades log-lineales).
-_DERIVED_TO_BASE = {"H_m": {"H": 1.0}, "II": {"H": 2.0, "R": -1.0}, "PhA": {"Xc": 1.0, "R": -1.0}, "Z": {"R": 1.0}}
+# EN: exact re-expressions only (H_m = H/100, II = H²/R). PhA and Z are not monomials and never reach a catalog vector (§2.3).
+_DERIVED_TO_BASE = {"H_m": {"H": 1.0}, "II": {"H": 2.0, "R": -1.0}}
 
 
 @dataclass
@@ -160,8 +161,9 @@ def compute_vectors(cat: Catalog, values: dict[str, np.ndarray], frame: pd.DataF
 def pairs_table(cat: Catalog, vecs: dict[str, VectorFit], values: dict[str, np.ndarray], sigma: np.ndarray,
                 stratum: str, *, min_pair_n: int = 30, alpha: float = 0.05) -> pd.DataFrame:
     """
-    EN: all method pairs in a stratum: predicted Pearson-on-logs (exact), observed Pearson-on-logs, observed Spearman,
-        converted Spearman, Fisher CI on the observed Spearman, identity flag.
+    EN: all method pairs in a stratum: predicted Pearson-on-logs (exact identity), observed Pearson-on-logs, observed
+        Spearman with its Fisher interval (descriptive), identity flag. No Spearman conversion (v0.5: the identity is stated
+        and checked on the Pearson-of-logs scale only).
     ES/PT: todos os pares no estrato com previsto/observado e flag de identidade.
     """
     ids = [e.id for e in cat.entries if e.id in vecs]
@@ -181,8 +183,7 @@ def pairs_table(cat: Catalog, vecs: dict[str, VectorFit], values: dict[str, np.n
         #     whose pairs duplicate the original's; such pairs are excluded from prediction statistics and figures.
         is_id = identity.get(a) == b or identity.get(b) == a or a in identity or b in identity
         rows.append(dict(a_id=a, b_id=b, stratum=stratum, n_pair=n, r_log_predicted=r_pred, r_log_observed=r_obs,
-                         rho_sp_observed=rho_obs, rho_sp_converted=pearson_to_spearman(r_pred), ci_lo=lo, ci_hi=hi,
-                         within_ci=bool(lo <= pearson_to_spearman(r_pred) <= hi), abs_err_log=abs(r_pred - r_obs), identity=is_id))
+                         rho_sp_observed=rho_obs, ci_lo=lo, ci_hi=hi, abs_err_log=abs(r_pred - r_obs), identity=is_id))
     return pd.DataFrame(rows)
 
 
@@ -215,10 +216,86 @@ def redundancy_table(cat: Catalog, pairs: pd.DataFrame, stratum: str, *, thresho
 
 
 def sigma_transfer_table(vecs_by_stratum: dict[str, dict[str, VectorFit]], sigma_by_stratum: dict[str, np.ndarray],
+                         values_by_stratum: dict[str, dict[str, np.ndarray]], *, design_by_stratum: dict[str, np.ndarray] | None = None,
+                         identity_ids: set[str] | frozenset[str] = frozenset(),
+                         tol: float = 0.05, B: int = 200, seed: int = 42, min_pair_n: int = 30) -> pd.DataFrame:
+    """
+    EN: §4.1 (v0.5) transfer of Σ, in an n-fair metric. For each source stratum s and observed stratum t:
+        transfer error = |ρ predicted with Σ_s and s's vectors − ρ observed in t| (Pearson of logs, pair-wise complete case);
+        own error = the same with Σ_t and t's vectors (exactly 0 for exact monomials: the identity; > 0 only for fitted
+        vectors); excess = transfer − own, pair by pair. Summaries: median, 90th percentile, max, fraction within a fixed
+        tolerance `tol` (independent of n), and a percentile bootstrap (B resamples of the PERSONS of t, seed fixed) for
+        the median transfer error and the median excess. In each resample Σ_t is recomputed from the resampled rows of
+        `design_by_stratum[t]` (log-variables aligned with the values), so the own prediction keeps its identity property
+        inside the resample; Σ_s (the transferred one) and all vectors stay fixed. Without `design_by_stratum` the own Σ
+        is kept fixed (then the own error carries sampling noise; documented). No Spearman conversion, no Fisher interval.
+    ES: transferencia de Σ en métrica justa respecto a n (v0.5). PT: transferência de Σ em métrica justa quanto a n (v0.5).
+    """
+    rows = []
+    rng_master = np.random.default_rng(seed)
+    for t, vals_t in values_by_stratum.items():
+        vt = vecs_by_stratum[t]; St = sigma_by_stratum[t]
+        ids = [m for m in vt if m in vals_t and m not in identity_ids]
+        if len(ids) < 2:
+            continue
+        L = np.column_stack([np.where(np.isfinite(vals_t[m]) & (vals_t[m] > 0), np.log(np.where(vals_t[m] > 0, vals_t[m], 1.0)), np.nan) for m in ids])
+        n = L.shape[0]
+        pairs = [(i, j) for i in range(len(ids)) for j in range(i + 1, len(ids))
+                 if int((np.isfinite(L[:, i]) & np.isfinite(L[:, j])).sum()) >= min_pair_n]
+        if not pairs:
+            continue
+        def observed(Lm: np.ndarray) -> np.ndarray:
+            C = pd.DataFrame(Lm).corr(min_periods=min_pair_n).to_numpy()
+            return np.array([C[i, j] for i, j in pairs])
+        obs = observed(L)
+        own_pred = np.array([predicted_pearson_log(vt[ids[i]].vector, vt[ids[j]].vector, St) for i, j in pairs])
+        err_own = np.abs(own_pred - obs)
+        rng = np.random.default_rng(rng_master.integers(0, 2**32 - 1))
+        boot_idx = [rng.integers(0, n, n) for _ in range(B)] if B > 0 else []
+        boot_obs = [observed(L[ii]) for ii in boot_idx]
+        D = design_by_stratum.get(t) if design_by_stratum else None
+        def own_pred_for(ii):
+            if D is None:
+                return own_pred
+            Dr = D[ii]; Dr = Dr[np.isfinite(Dr).all(axis=1)]
+            if Dr.shape[0] < 3:
+                return own_pred
+            Sb = np.cov(Dr.T, ddof=1)
+            return np.array([predicted_pearson_log(vt[ids[i]].vector, vt[ids[j]].vector, Sb) for i, j in pairs])
+        boot_own = [own_pred_for(ii) for ii in boot_idx]
+        for s, vs in vecs_by_stratum.items():
+            Ss = sigma_by_stratum[s]
+            usable = [k for k, (i, j) in enumerate(pairs) if ids[i] in vs and ids[j] in vs]
+            if not usable:
+                continue
+            pred = np.array([predicted_pearson_log(vs[ids[i]].vector, vs[ids[j]].vector, Ss) for i, j in (pairs[k] for k in usable)])
+            o = obs[usable]; eo = err_own[usable]
+            err = np.abs(pred - o); exc = err - eo
+            finite = np.isfinite(err) & np.isfinite(exc)
+            if not finite.any():
+                continue
+            med_b, exc_b = [], []
+            for bo, op in zip(boot_obs, boot_own):
+                ob = bo[usable]; eo_b = np.abs(op[usable] - ob)
+                e = eo_b if s == t else np.abs(pred - ob)      # EN: own row: Σ_t recomputed in the resample (identity kept)
+                f = np.isfinite(e) & np.isfinite(eo_b)
+                if f.any():
+                    med_b.append(float(np.median(e[f]))); exc_b.append(float(np.median(e[f]) - np.median(eo_b[f])))
+            q = lambda a, p: float(np.percentile(a, p)) if len(a) else float("nan")
+            rows.append(dict(sigma_from=s, observed_in=t, type=("own" if s == t else "transfer"), pairs=int(finite.sum()),
+                             median_abs_err=float(np.median(err[finite])), p90_abs_err=float(np.percentile(err[finite], 90)),
+                             max_abs_err=float(np.max(err[finite])), frac_within_tol=float((err[finite] <= tol).mean()), tol=tol,
+                             own_median_abs_err=float(np.median(eo[finite])), excess_median=float(np.median(err[finite]) - np.median(eo[finite])),
+                             median_abs_err_lo=q(med_b, 2.5), median_abs_err_hi=q(med_b, 97.5),
+                             excess_lo=q(exc_b, 2.5), excess_hi=q(exc_b, 97.5), boot_B=len(med_b)))
+    return pd.DataFrame(rows)
+
+
+def sigma_transfer_table_legacy(vecs_by_stratum: dict[str, dict[str, VectorFit]], sigma_by_stratum: dict[str, np.ndarray],
                          pairs_by_stratum: dict[str, pd.DataFrame], *, exclude_identity: bool = True) -> pd.DataFrame:
     """
-    EN: apply Σ of stratum s (with s's fitted vectors) to predict the correlations observed in stratum t.
-        type = 'own' when s == t. Reports median and max absolute error on Pearson-of-logs and Spearman-in-CI fraction.
+    EN: PRE-v0.5 metric, kept ONLY for the equivalence test with the previous engine (§5): Spearman conversion under
+        bivariate normality and "fraction within the Fisher CI", which depends on n. Not used in any official output.
     ES/PT: aplica Σ do estrato s aos vetores de s e compara com o observado no estrato t.
     """
     rows = []

@@ -1,5 +1,5 @@
 {
- "catalog_version": "1.0.0",
+ "catalog_version": "1.3.3",
  "conventions": {
   "units": {
    "R": "ohm",
@@ -8,12 +8,14 @@
    "W": "kg",
    "PhA": "deg",
    "II": "cm2/ohm",
-   "Z": "ohm"
+   "Z": "ohm",
+   "Z100": "ohm"
   },
   "frequency_khz_default": 50,
   "extra_variables": [
    "Z5",
    "Z50",
+   "Z100",
    "Z200",
    "Z250",
    "C_arm",
@@ -42,32 +44,95 @@
    "sexo": "male=1, female=0",
    "fat_class": "M_lean=1, M_obese=2, F_lean=3, F_obese=4 — from sex and an anthropometric/BIA-only proxy, never from the reference criterion",
    "idade": "years"
-  }
+  },
+  "notes": "Z (derived) is |Z| at 50 kHz computed from R and Xc; Z50 in extra_variables is the same quantity when a device reports it directly. Zf for other frequencies must be mapped explicitly. PhA and Z are not monomials: methods using them are 'composite' and receive a fitted exponent vector with its fit R²."
  },
  "entries": [
   {
+   "id": "Hoffer1969_H2Z",
+   "label": "H²/Z (Hoffer 1969)",
+   "authors": "Hoffer, Meador, Simpson",
+   "year": 1969,
+   "doi": "10.1152/jappl.1969.27.4.531",
+   "kind": "index",
+   "target": "TBW",
+   "form": "monomial",
+   "frequency_khz": 100,
+   "expr": "H**2 / Z100",
+   "vector": {
+    "Z100": -1,
+    "H": 2
+   },
+   "vector_tol": 1e-06,
+   "extra_inputs": [
+    "Z100"
+   ],
+   "validity": {
+    "age": [
+     18,
+     77
+    ],
+    "bmi": null,
+    "sex": "both",
+    "population": "tested: 20 healthy men plus 34 patients of both sexes with abnormal hydration (congestive heart failure, renal failure, Cushing's syndrome, obesity); proposed as a bedside method for fluid management (p. 534), with the caveat that refinement is needed"
+   },
+   "provenance": {
+    "formula_source": "pdf_text",
+    "source_detail": "J Appl Physiol 27(4):531-534. Eq. 3 (V = ρL²/Z, p. 531); Table 3 (TBW vs T²/Z, r 0.92 normals / 0.93 patients, p. 533); TBW = A·T²/Z + B (p. 534). |Z| at 100 kHz, 100 µA, tetrapolar right hand–left foot, supine. Numeric example: Table 1, subject 1 (height 181.6 cm, Z 427 Ω).",
+    "verified_by": "TM",
+    "verified_on": "2026-09-11",
+    "confidence": "high"
+   },
+   "check_example": {
+    "inputs": {
+     "H": 181.6,
+     "Z100": 427
+    },
+    "expected": 77.233,
+    "tol": 0.001
+   },
+   "device": "HP 200CD oscillator + vacuum-tube voltmeters (custom setup)",
+   "reference_method": "tritium dilution (TBW)",
+   "n": 20,
+   "notes": "Requires |Z| at 100 kHz mapped as variable Z100; not evaluable from 50 kHz R/Xc alone. The paper does not separate R and Xc. Height unit in the paper is ambiguous (T in metres in the Thomasset comparison); the catalog uses cm, which changes only a constant factor. Antecedents cited by the paper: Thomasset 1962-1965 (needle electrodes, 1 kHz), Nyboer 1959.",
+   "derivation_sample": {
+    "n": 20,
+    "sex": "male",
+    "age": [
+     21,
+     38
+    ],
+    "condition": "healthy medical students",
+    "country": "USA"
+   },
+   "target_kind": "body_water"
+  },
+  {
    "id": "Lukaski1985_II",
    "label": "II h²/R (Lukaski 1985)",
-   "authors": "Lukaski",
+   "authors": "Lukaski, Johnson, Bolonchuk, Lykken",
    "year": 1985,
    "doi": "10.1093/ajcn/41.4.810",
    "kind": "index",
-   "target": "FFM/TBW",
+   "target": "FFM (also TBW, TBK)",
    "form": "monomial",
    "frequency_khz": 50,
    "expr": "H**2 / R",
    "validity": {
-    "age": null,
+    "age": [
+     19,
+     42
+    ],
     "bmi": null,
-    "sex": null,
-    "population": null
+    "sex": "male",
+    "population": "apparently healthy men (height 163.1-194.8 cm, mass 51.8-135.4 kg, body fat 7.8-43.0 %); the authors state that validity in women, patients with abnormal body composition and training/weight loss is not established (p. 816)"
    },
    "provenance": {
-    "formula_source": "abstract",
-    "source_detail": "index definition",
+    "formula_source": "pdf_text",
+    "source_detail": "Am J Clin Nutr 41(4):810-817. Eq. 4 V = ρL²/R (p. 811; from Nyboer's V = ρL²/Z assuming Xc << R, justified by r(R,Z) = 0.99 vs r(Xc,Z) = 0.70, p. 813). Predictor Ht²/R in cm²/Ω (Fig. 2, p. 815; Table 4, p. 814: r with FFM 0.98, TBW 0.95, TBK 0.96, FM 0.49, %fat −0.22 ns). R at 50 kHz, 800 µA, RJL four-terminal plethysmograph, lowest of four electrode placements (p. 813).",
     "verified_by": "TM",
-    "verified_on": "2026-09-08",
-    "confidence": "medium"
+    "verified_on": "2026-09-11",
+    "confidence": "high"
    },
    "vector": {
     "R": -1,
@@ -75,127 +140,195 @@
     "H": 2,
     "W": 0
    },
-   "vector_tol": 1e-06
+   "vector_tol": 1e-06,
+   "notes": "Same monomial as Hoffer1969_H2Z (H²/|Z| at 100 kHz, 1969) with resistance R at 50 kHz in place of |Z|; the paper cites Hoffer (ref. 13) and Nyboer (ref. 15) as antecedents. Precedence within the catalog therefore belongs to Hoffer 1969 when both are evaluable; the redundancy rule decides on the data. Regression equations of Fig. 2 (FFM = 3.04 + 0.85·Ht²/R, SEE 2.61 kg; TBW = 2.03 + 0.63·Ht²/R, SEE 2.09 L; TBK = −23.09 + 2.56·Ht²/R, SEE 10.70 g) are equations, not indices, and are left for the equation curation stage.",
+   "device": "RJL Systems four-terminal impedance plethysmograph (Detroit, MI)",
+   "reference_method": "hydrodensitometry (FFM, Brozek), D2O dilution (TBW), 40K whole-body counting (TBK)",
+   "n": 37,
+   "consistency_note": "No individual example is published. Mean height 180.7 cm and mean lowest R 443.0 Ω (Tables 1-2) give 73.70 cm²/Ω, inside the Fig. 2 range (about 55-110 cm²/Ω). Not used as check_example because it is not a published value.",
+   "derivation_sample": {
+    "n": 37,
+    "sex": "male",
+    "age": [
+     19,
+     42
+    ],
+    "condition": "apparently healthy",
+    "country": "USA"
+   },
+   "target_kind": "lean_mass"
   },
   {
    "id": "Baumgartner1988_PhA",
-   "label": "PhA (Baumgartner 1988)",
-   "authors": "Baumgartner",
+   "label": "PhA whole body (Baumgartner 1988)",
+   "authors": "Baumgartner, Chumlea, Roche",
    "year": 1988,
    "doi": "10.1093/ajcn/48.1.16",
    "kind": "index",
-   "target": "cell integrity",
-   "form": "monomial",
+   "target": "%BF (negative association); weak positive with FFM in males only",
+   "form": "composite",
    "frequency_khz": 50,
    "expr": "atan(Xc / R) * 180 / pi",
    "validity": {
-    "age": null,
+    "age": [
+     9,
+     62
+    ],
     "bmi": null,
-    "sex": null,
-    "population": null
+    "sex": "both",
+    "population": "healthy white individuals of both sexes, 9-62 y, whole range of adiposity; the authors propose the trunk phase angle for clinical and survey use, and report the whole-body phase angle as a weaker predictor"
    },
    "provenance": {
-    "formula_source": "abstract",
-    "source_detail": "index definition",
+    "formula_source": "pdf_text",
+    "source_detail": "Am J Clin Nutr 48(1):16-23. Eq. 3, p. 18: φ = atan(Xc/R) in radians, converted to degrees by ×57.297 (the catalog uses the exact 180/π; difference 0.002 %, a constant factor). Table 7, p. 20 (age-adjusted, whole body): %BF −0.34 men / −0.46 women; FFM +0.50 men / n.s. women; S²/R +0.52 men. Table 8 and Fig. 2: the predictor the authors recommend is the TRUNK phase angle (segmental), which adds R² 0.10-0.15 to %BF after age, skinfolds and W/S²; whole-body φ is weaker (sex + age + φw explain 31.5 % of %BF vs 55.8 % with trunk φ). RJL BIA 101, 800 µA at 50 kHz, right side, 12 h fasting, supine.",
     "verified_by": "TM",
-    "verified_on": "2026-09-08",
-    "confidence": "medium"
+    "verified_on": "2026-09-11",
+    "confidence": "high"
    },
-   "vector": {
-    "R": -1,
-    "Xc": 1,
-    "H": 0,
-    "W": 0
+   "notes": "PhA = atan(Xc/R) in degrees, as published. Not a monomial in R and Xc: the exponent vector is fitted per stratum and its fit R² is reported. Rank-equivalent to Xc/R (atan is monotone), so Spearman-based redundancy and AUROC are identical to tan(PhA). Precedence: the phase angle as a physiological measurement dates from Brazier 1935 and Barnett 1936-1937 (thyroid function); Baumgartner 1988 is the first use for body composition. The paper's own index is the trunk (segmental) phase angle, outside the framework's whole-body scope; the catalog evaluates the whole-body phase angle defined in the same paper. Table 5 gives r(R, Xc) for the whole body by group (boys 0.76, girls 0.56, men 0.38, women 0.71): the R-Xc covariance is conditional on sex and age, which is the framework's reason for Σ per stratum. Lukaski, Kyle & Kondrup 2017 (review) state that the phase angle is a composite of R and Xc that 'includes contributions from fluids and cells', that hydration is a confounder of its nutritional reading (a natural negative control), that it 'is not diagnostic', and that values differ between instruments (Genton et al. 2017, Clin Nutr) and with electrode type (Nescolarde et al. 2016, Eur J Clin Nutr 70:1401): one device per dataset.",
+   "derivation_sample": {
+    "n": 122,
+    "sex": "both",
+    "age": [
+     9,
+     62
+    ],
+    "condition": "white males (53) and females (69) not selected by body composition; 48 under 18 y; body fat <5 % to >50 %",
+    "country": "USA"
    },
-   "vector_tol": 0.03,
-   "notes": "Monomial only approximately: atan(x) ≈ x for small phase angles; vector_tol relaxed accordingly."
+   "device": "RJL Systems BIA 101 (Detroit, MI)",
+   "reference_method": "hydrodensitometry (Siri; age/sex corrections of FFM density below 25 y), skinfolds",
+   "n": 122,
+   "consistency_note": "No individual R/Xc values are published; whole-body means (Table 2): men 7.01 ± 0.88°, women 6.31 ± 0.69°, boys 6.25°, girls 6.21°. Definitional check only: atan(Xc/R)·180/π.",
+   "target_kind": "fat_mass"
   },
   {
    "id": "Piccoli1994_RH",
-   "label": "R/H (Piccoli 1994)",
-   "authors": "Piccoli",
+   "label": "R/H, BIVA component (Piccoli 1994)",
+   "authors": "Piccoli, Rossi, Pillon, Bucciante",
    "year": 1994,
    "doi": "10.1038/ki.1994.305",
    "kind": "index",
-   "target": "hydration",
+   "target": "hydration status / body fluid variation, assessed as the bivariate vector (R/H, Xc/H); the components are not proposed by the authors as stand-alone indices",
    "form": "monomial",
    "frequency_khz": 50,
    "expr": "R / H_m",
    "validity": {
-    "age": null,
+    "age": [
+     16,
+     75
+    ],
     "bmi": null,
-    "sex": null,
-    "population": null
+    "sex": "both",
+    "population": "caucasian adults, healthy and with renal disease or obesity; the authors state that populations of other races may yield ellipses of different shape and size, and that the method was designed to find thresholds for fluid overload (dehydration needs further study)"
    },
    "provenance": {
-    "formula_source": "abstract",
-    "source_detail": "index definition",
+    "formula_source": "pdf_text",
+    "source_detail": "Kidney Int 46(2):534-539 (technical note). Methods, p. 534: R and Xc standardised by height, R/H and Xc/H in Ω/m; bivariate normal assumption; 95 % confidence ellipses (group means) and 75 %/95 % tolerance ellipses (individuals). Table 1, p. 537: healthy means, men R/H 292.6 and Xc/H 30.2 Ω/m, women 374.3 and 36.6 Ω/m. Table 2, p. 537: r(R/H, Xc/H) healthy 0.477 (men 0.323, women 0.333), CRF 0.556, nephrotic 0.667, obese 0.712. RJL/Akern BIA-109, 800 µA at 50 kHz, tetrapolar right hand-foot.",
     "verified_by": "TM",
-    "verified_on": "2026-09-08",
-    "confidence": "medium"
+    "verified_on": "2026-09-11",
+    "confidence": "high"
    },
    "vector": {
     "R": 1,
     "Xc": 0,
-    "H": -1,
+    "H_m": -1,
     "W": 0
    },
-   "vector_tol": 1e-06
+   "vector_tol": 1e-06,
+   "derivation_sample": {
+    "n": 217,
+    "sex": "both",
+    "age": [
+     16,
+     75
+    ],
+    "condition": "86 healthy controls (38 M, 48 F, 16-66 y), 55 chronic renal failure, 36 nephrotic syndrome, 40 obese (BMI > 31); caucasian adults",
+    "country": "Italy"
+   },
+   "device": "RJL/Akern BIA-109 (Detroit, MI)",
+   "reference_method": "none for body composition; clinical validation (apparent oedema, disease group)",
+   "n": 217,
+   "consistency_note": "No individual values are published. Healthy means (Table 1): men R/H 292.6 Ω/m at mean height 176.2 cm; women 374.3 Ω/m at 161.9 cm. The catalog expression uses height in metres so values are on the paper's Ω/m scale.",
+   "notes": "The paper proposes the impedance VECTOR (R/H, Xc/H) read on sex-specific ellipses; direction = phase angle, length = hydration. The authors explicitly caution (p. 537) that, because R and Xc are mutually correlated, individual components should not be read as changes in specific fluid compartments. The framework audits each component as an exact monomial and does not reproduce the bivariate ellipse analysis; on NHANES the redundancy rule relates R/H to H²/R (ρ ≈ 0.96), which documents the authors' caution with numbers. Table 2 gives r(R/H, Xc/H) from 0.32 (healthy men) to 0.71 (obese): the covariance is conditional on clinical status as well as sex, which is the framework's reason for Σ per stratum. Height-standardisation of R appears earlier as H²/R (Hoffer 1969, Lukaski 1985); R/H (exponent −1 on H) is Piccoli's.",
+   "target_kind": "hydration"
   },
   {
    "id": "Piccoli1994_XcH",
-   "label": "Xc/H (Piccoli 1994)",
-   "authors": "Piccoli",
+   "label": "Xc/H, BIVA component (Piccoli 1994)",
+   "authors": "Piccoli, Rossi, Pillon, Bucciante",
    "year": 1994,
    "doi": "10.1038/ki.1994.305",
    "kind": "index",
-   "target": "cell mass",
+   "target": "hydration status / body fluid variation, assessed as the bivariate vector (R/H, Xc/H); the components are not proposed by the authors as stand-alone indices",
    "form": "monomial",
    "frequency_khz": 50,
    "expr": "Xc / H_m",
    "validity": {
-    "age": null,
+    "age": [
+     16,
+     75
+    ],
     "bmi": null,
-    "sex": null,
-    "population": null
+    "sex": "both",
+    "population": "caucasian adults, healthy and with renal disease or obesity; the authors state that populations of other races may yield ellipses of different shape and size, and that the method was designed to find thresholds for fluid overload (dehydration needs further study)"
    },
    "provenance": {
-    "formula_source": "abstract",
-    "source_detail": "index definition",
+    "formula_source": "pdf_text",
+    "source_detail": "Kidney Int 46(2):534-539 (technical note). Methods, p. 534: R and Xc standardised by height, R/H and Xc/H in Ω/m; bivariate normal assumption; 95 % confidence ellipses (group means) and 75 %/95 % tolerance ellipses (individuals). Table 1, p. 537: healthy means, men R/H 292.6 and Xc/H 30.2 Ω/m, women 374.3 and 36.6 Ω/m. Table 2, p. 537: r(R/H, Xc/H) healthy 0.477 (men 0.323, women 0.333), CRF 0.556, nephrotic 0.667, obese 0.712. RJL/Akern BIA-109, 800 µA at 50 kHz, tetrapolar right hand-foot.",
     "verified_by": "TM",
-    "verified_on": "2026-09-08",
-    "confidence": "medium"
+    "verified_on": "2026-09-11",
+    "confidence": "high"
    },
    "vector": {
     "R": 0,
     "Xc": 1,
-    "H": -1,
+    "H_m": -1,
     "W": 0
    },
-   "vector_tol": 1e-06
+   "vector_tol": 1e-06,
+   "derivation_sample": {
+    "n": 217,
+    "sex": "both",
+    "age": [
+     16,
+     75
+    ],
+    "condition": "86 healthy controls (38 M, 48 F, 16-66 y), 55 chronic renal failure, 36 nephrotic syndrome, 40 obese (BMI > 31); caucasian adults",
+    "country": "Italy"
+   },
+   "device": "RJL/Akern BIA-109 (Detroit, MI)",
+   "reference_method": "none for body composition; clinical validation (apparent oedema, disease group)",
+   "n": 217,
+   "consistency_note": "No individual values are published. Healthy means (Table 1): men R/H 292.6 Ω/m at mean height 176.2 cm; women 374.3 Ω/m at 161.9 cm. The catalog expression uses height in metres so values are on the paper's Ω/m scale.",
+   "notes": "The paper proposes the impedance VECTOR (R/H, Xc/H) read on sex-specific ellipses; direction = phase angle, length = hydration. The authors explicitly caution (p. 537) that, because R and Xc are mutually correlated, individual components should not be read as changes in specific fluid compartments. The framework audits each component as an exact monomial and does not reproduce the bivariate ellipse analysis; on NHANES the redundancy rule relates R/H to H²/R (ρ ≈ 0.96), which documents the authors' caution with numbers. Table 2 gives r(R/H, Xc/H) from 0.32 (healthy men) to 0.71 (obese): the covariance is conditional on clinical status as well as sex, which is the framework's reason for Σ per stratum. Height-standardisation of R appears earlier as H²/R (Hoffer 1969, Lukaski 1985); R/H (exponent −1 on H) is Piccoli's.",
+   "target_kind": "hydration"
   },
   {
    "id": "Rsp",
-   "label": "Rsp (Marini/Buffa 2013)",
-   "authors": "Buffa/Marini",
+   "label": "Rsp, specific resistivity (Marini 2013)",
+   "authors": "Marini, Sergi, Succa, Saragat, Sarti, Coin, Manzato, Buffa",
    "year": 2013,
-   "doi": "10.1371/journal.pone.0058533",
+   "doi": "10.1007/s12603-012-0411-7",
    "kind": "index",
-   "target": "%FM",
+   "target": "percent fat mass by DXA (positive association; r 0.85-0.87); also read on the specific tolerance ellipses",
    "form": "composite",
    "frequency_khz": 50,
-   "expr": "R * (0.45*(C_arm/100)**2/(4*pi) + 0.10*(C_waist/100)**2/(4*pi) + 0.45*(C_calf/100)**2/(4*pi)) / H_m",
+   "expr": "R * (0.45*(C_arm/100)**2/(4*pi) + 0.10*(C_waist/100)**2/(4*pi) + 0.45*(C_calf/100)**2/(4*pi)) / (1.1 * H_m) * 100",
    "validity": {
-    "age": null,
+    "age": [
+     21,
+     93
+    ],
     "bmi": null,
-    "sex": null,
-    "population": null
+    "sex": "both",
+    "population": "healthy elderly Italians 65-93 y (derivation, Marini 2013) and U.S. adults 21-49 y, ethnic groups pooled (validation, Buffa 2013); each study's caveats apply within its own range"
    },
    "provenance": {
-    "formula_source": "pmc_text",
-    "source_detail": "index definition",
+    "formula_source": "pdf_text",
+    "source_detail": "Marini et al., J Nutr Health Aging 17(6):515-521 (received June 2012). Methods p. 516: R and Xc multiplied by A/L; A = 0.45·arm area + 0.10·waist area + 0.45·calf area (m², area = C²/4π), weights from the resistance partition arms 45 % / legs 45 % / trunk 10 %; L = 1.1·H, 1.1 = (arm length + acromial height)/stature in a Sardinian sample; ×100 to Ω·cm. Table 3, p. 519: men Rsp 334.7 (fat < Q1) vs 450.3 (> Q3), Xcsp 31.3 vs 44.8; women 434.7 vs 550.1, 45.6 vs 58.2; classic R/H and Xc/H not different. Fig. 3: r with DXA %fat, Rsp 0.75 men / 0.69 women, Xcsp 0.53 / 0.48, R/H −0.13 / −0.16 n.s. Akern BIA 101, 50 kHz; DXA Hologic QDR 4500W. Validation in the general adult U.S. population: Buffa et al. 2013, PLoS ONE 8(3):e58533 (NHANES 2003-2004, n 1590, r with %fat 0.85/0.87, ROC 0.84-0.92).",
     "verified_by": "TM",
-    "verified_on": "2026-09-08",
+    "verified_on": "2026-09-11",
     "confidence": "high"
    },
    "extra_inputs": [
@@ -203,30 +336,48 @@
     "C_waist",
     "C_calf"
    ],
-   "notes": "Specific BIVA: A = 0.45·arm area + 0.10·waist area + 0.45·calf area (m²), area = C²/4π with C in cm; L = height (m). Requires circumferences C_arm, C_waist, C_calf (cm)."
+   "notes": "Specific BIVA: whole-body resistivity estimate R·A/L (Ohm's law), independent of body size by construction; A from three circumferences (weights 0.45/0.10/0.45 for differential current flow), L = 1.1·H. Requires C_arm, C_waist, C_calf (cm). Not a monomial (A is a weighted sum of squares): fitted vector, fit R² reported. Designed to measure FAT: against a lean-mass target with a fat control it tracks the control by design (target_kind = fat_mass). The paper shows classic R/H and Xc/H at chance level for %fat (ROC 0.49-0.61), confirming Piccoli's caution. r(R/H, Xc/H) = 0.74 in NHANES vs 0.32 in healthy Italians (Piccoli 1994): Σ is population-specific. Same public data source as the framework's NHANES demonstration (2003-2004 subset; dataset also deposited at veprints.unica.it/809). Origin of the weights 0.45/0.10/0.45 (resistance partition arms/trunk/legs) and of the factor 1.1 (Sardinian anthropometry) is stated in Marini 2013, p. 516. Antecedent: Chumlea, Baumgartner & Roche 1988 (Am J Clin Nutr 48:7-15) proposed specific resistivity from segmental BIA to discriminate fatness. Correlation with DXA %fat: 0.75/0.69 in Italian elderly vs 0.85/0.87 in U.S. adults — same sign, different magnitude: Σ is population-specific.",
+   "derivation_sample": {
+    "n": 202,
+    "sex": "both",
+    "age": [
+     65,
+     93
+    ],
+    "condition": "free-living healthy elderly attending mild fitness programmes (75 men, 132 women recruited; 5 dehydrated outliers removed); no cardiovascular, uncontrolled metabolic, inflammatory or oncological disease",
+    "country": "Italy"
+   },
+   "device": "Akern BIA 101 (derivation); Xitron HYDRA 4200 50 kHz values (NHANES validation)",
+   "reference_method": "DXA (Hologic QDR 4500W in Marini 2013; QDR-4500A in Buffa 2013)",
+   "n": 202,
+   "target_kind": "fat_mass",
+   "consistency_note": "Men's means (Table 1): R 463.5 Ω, H 175.7 cm, arm 33.8, waist 95.7, calf 39.1 cm give 404.2 Ω·cm vs 402.4 published (ratio of means vs mean of ratios). Marini 2013 men's means (Table 1): R 486.97 Ω, H 169.85 cm, arm 29.68, waist 95.43, calf 36.08 cm give 392.6 Ω·cm; the paper reports 334.7 (fat < Q1) and 450.3 (fat > Q3), so the mean lies between the quartile groups as expected."
   },
   {
    "id": "Xcsp",
-   "label": "Xcsp (Marini/Buffa 2013)",
-   "authors": "Buffa/Marini",
+   "label": "Xcsp, specific reactivity (Marini 2013)",
+   "authors": "Marini, Sergi, Succa, Saragat, Sarti, Coin, Manzato, Buffa",
    "year": 2013,
-   "doi": "10.1371/journal.pone.0058533",
+   "doi": "10.1007/s12603-012-0411-7",
    "kind": "index",
-   "target": "ECW/ICW",
+   "target": "percent fat mass by DXA (positive, r 0.68-0.77) and ECW/ICW ratio (negative, r −0.48 to −0.51)",
    "form": "composite",
    "frequency_khz": 50,
-   "expr": "Xc * (0.45*(C_arm/100)**2/(4*pi) + 0.10*(C_waist/100)**2/(4*pi) + 0.45*(C_calf/100)**2/(4*pi)) / H_m",
+   "expr": "Xc * (0.45*(C_arm/100)**2/(4*pi) + 0.10*(C_waist/100)**2/(4*pi) + 0.45*(C_calf/100)**2/(4*pi)) / (1.1 * H_m) * 100",
    "validity": {
-    "age": null,
+    "age": [
+     21,
+     93
+    ],
     "bmi": null,
-    "sex": null,
-    "population": null
+    "sex": "both",
+    "population": "healthy elderly Italians 65-93 y (derivation, Marini 2013) and U.S. adults 21-49 y, ethnic groups pooled (validation, Buffa 2013); each study's caveats apply within its own range"
    },
    "provenance": {
-    "formula_source": "pmc_text",
-    "source_detail": "index definition",
+    "formula_source": "pdf_text",
+    "source_detail": "Marini et al., J Nutr Health Aging 17(6):515-521 (received June 2012). Methods p. 516: R and Xc multiplied by A/L; A = 0.45·arm area + 0.10·waist area + 0.45·calf area (m², area = C²/4π), weights from the resistance partition arms 45 % / legs 45 % / trunk 10 %; L = 1.1·H, 1.1 = (arm length + acromial height)/stature in a Sardinian sample; ×100 to Ω·cm. Table 3, p. 519: men Rsp 334.7 (fat < Q1) vs 450.3 (> Q3), Xcsp 31.3 vs 44.8; women 434.7 vs 550.1, 45.6 vs 58.2; classic R/H and Xc/H not different. Fig. 3: r with DXA %fat, Rsp 0.75 men / 0.69 women, Xcsp 0.53 / 0.48, R/H −0.13 / −0.16 n.s. Akern BIA 101, 50 kHz; DXA Hologic QDR 4500W. Validation in the general adult U.S. population: Buffa et al. 2013, PLoS ONE 8(3):e58533 (NHANES 2003-2004, n 1590, r with %fat 0.85/0.87, ROC 0.84-0.92).",
     "verified_by": "TM",
-    "verified_on": "2026-09-08",
+    "verified_on": "2026-09-11",
     "confidence": "high"
    },
    "extra_inputs": [
@@ -234,49 +385,75 @@
     "C_waist",
     "C_calf"
    ],
-   "notes": "Specific BIVA reactance; see Rsp."
+   "notes": "Specific BIVA reactance (see Rsp): Xc·A/L in Ω·cm, L = 1.1·H. Designed to read fat (positive) and ECW/ICW (negative) on the specific ellipses; not a monomial; target_kind = fat_mass. Origin of the weights 0.45/0.10/0.45 (resistance partition arms/trunk/legs) and of the factor 1.1 (Sardinian anthropometry) is stated in Marini 2013, p. 516. Antecedent: Chumlea, Baumgartner & Roche 1988 (Am J Clin Nutr 48:7-15) proposed specific resistivity from segmental BIA to discriminate fatness. Correlation with DXA %fat: 0.75/0.69 in Italian elderly vs 0.85/0.87 in U.S. adults — same sign, different magnitude: Σ is population-specific.",
+   "derivation_sample": {
+    "n": 202,
+    "sex": "both",
+    "age": [
+     65,
+     93
+    ],
+    "condition": "free-living healthy elderly attending mild fitness programmes (75 men, 132 women recruited; 5 dehydrated outliers removed); no cardiovascular, uncontrolled metabolic, inflammatory or oncological disease",
+    "country": "Italy"
+   },
+   "device": "Akern BIA 101 (derivation); Xitron HYDRA 4200 50 kHz values (NHANES validation)",
+   "reference_method": "DXA (Hologic QDR 4500W in Marini 2013; QDR-4500A in Buffa 2013)",
+   "n": 202,
+   "target_kind": "fat_mass",
+   "consistency_note": "Men's means (Table 1): Xc 60.2 Ω with the same A/L give 52.5 Ω·cm vs 52.5 published. Marini 2013 men's means: Xc 49.12 Ω with the same A/L give 39.6 Ω·cm, between the published quartile-group means 31.3 and 44.8."
   },
   {
    "id": "LMI",
    "label": "LMI (Levi Micheli 2022)",
-   "authors": "Levi Micheli",
+   "authors": "Levi Micheli, Cannataro, Gulisano, Mascherini",
    "year": 2022,
    "doi": "10.3390/biology11081182",
    "kind": "index",
-   "target": "muscle",
-   "form": "monomial",
+   "target": "muscle mass in athletes; validated by the authors against BIA-derived body cell mass (Kotler 1996 equation) and phase angle, with no independent reference method",
+   "form": "composite",
    "frequency_khz": 50,
    "expr": "PhA * H / R",
    "validity": {
-    "age": null,
+    "age": [
+     18,
+     35
+    ],
     "bmi": null,
     "sex": "male",
-    "population": "footballers"
+    "population": "male caucasian competitive footballers measured with foot-to-hand BIA at 50 kHz; the authors state the results cannot be extended to other impedance technologies and that use in children, underweight and elderly people is a future direction, not a validation"
    },
    "provenance": {
-    "formula_source": "pmc_text",
-    "source_detail": "index definition",
+    "formula_source": "pdf_text",
+    "source_detail": "Biology 11(8):1182. Definition p. 3: LMI = (PA × H)/R, PA in degrees (atan(Xc/R)·180/π), H in cm; unit °·cm·Ω⁻¹. Table 2, p. 4: group means, elite 3.08 ± 0.35, high 2.87 ± 0.30, medium 2.71 ± 0.36. Table 3, p. 4: r with BCM 0.908, BCMI 0.925, PA 0.704, FM 0.035 (BCM and FM from the Kotler 1996 BIA equation). Limitations, p. 5-6: foot-to-hand 50 kHz only; single country; 'the calculation of the accuracy of LMI ... was carried out through the values of BCM and PA, both measured with BIA'. Akern BIA-101, 800 µA at 50 kHz, right side, supine, daily calibration (380 Ω / 47 Ω).",
     "verified_by": "TM",
-    "verified_on": "2026-09-08",
+    "verified_on": "2026-09-11",
     "confidence": "high"
    },
-   "vector": {
-    "R": -2,
-    "Xc": 1,
-    "H": 1,
-    "W": 0
+   "notes": "LMI = PA·H/R as published (PA in degrees, H in cm). Contains atan, therefore not a monomial: exponent vector fitted per stratum, fit R² reported. With PA ≈ Xc/R the index is approximately Xc·H/R² = (Xc/H)/(R/H)², a monomial in Piccoli's BIVA components. Circularity at the source: the validation criteria (BCM, FM, PA) are functions of the same R, Xc, H, so the reported correlations are largely predictable from Σ; the framework's declaration `targets_independent_of_variables` would be false for that design. No antecedent with this vector in the catalog; on NHANES (DXA criterion) LMI was not redundant with any earlier method (max |ρ| 0.86) and was specific for lean mass. Data available on request from the corresponding author.",
+   "derivation_sample": {
+    "n": 664,
+    "sex": "male",
+    "age": [
+     18,
+     35
+    ],
+    "condition": "caucasian competitive footballers (Serie A-D, ≥10 y of practice), in-season, single operator",
+    "country": "Italy"
    },
-   "vector_tol": 0.03,
-   "notes": "vector assumes PhA ≈ Xc/R (linearised atan); vector_tol relaxed accordingly."
+   "device": "Akern BIA-101 (Florence, Italy)",
+   "reference_method": "none independent of BIA; body cell mass and fat mass from the Kotler 1996 equation, and phase angle, all derived from the same R and Xc",
+   "n": 664,
+   "consistency_note": "Group means (Table 2): elite PA 7.7°, H 181.9 cm, R 458.1 Ω give 3.06 vs 3.08 published; medium 7.2°, 179.3 cm, 483.7 Ω give 2.67 vs 2.71. Consistent, but a mean of ratios is not the ratio of means, so not used as check_example.",
+   "target_kind": "lean_mass"
   },
   {
    "id": "IR",
-   "label": "Impedance ratio Z200/Z5 (Lukaski 2017)",
-   "authors": "Lukaski",
-   "year": 2017,
-   "doi": "10.1097/MCO.0000000000000387",
+   "label": "Impedance ratio Z200/Z5 (Bodystat; rev. Mulasi 2015, Lukaski 2017)",
+   "authors": "commercial origin (Bodystat Ltd, Douglas, UK); reviews: Mulasi, Kuchnia, Cole, Earthman 2015; Lukaski, Kyle, Kondrup 2017",
+   "year": 2015,
+   "doi": "10.1177/0884533614568155",
    "kind": "index",
-   "target": "ECW/TBW",
+   "target": "fluid distribution (interpreted as total body water / extracellular water); prognosis marker",
    "form": "monomial",
    "frequency_khz": [
     5,
@@ -291,9 +468,9 @@
    },
    "provenance": {
     "formula_source": "review_table",
-    "source_detail": "index definition",
+    "source_detail": "Mulasi et al., Nutr Clin Pract 30(2):180-193, p. 8: 'the ratio of impedance measured at 200 kHz to impedance measured at 5 kHz ... termed impedance ratio (IR) or prediction marker (introduced as such by Bodystat, Douglas, UK)'. Reference values from a conference abstract: ≤0.78 men, ≤0.82 women in healthy volunteers (Plank 2013). Lukaski et al. 2017 (Curr Opin Clin Nutr Metab Care 20:330) repeat the definition. No derivation paper exists for the 200/5 form: attribution chain is manufacturer → abstracts (Earthman 2011, Plank 2013) → reviews. Scientific antecedent: Jenin et al. 1975 (Aviat Space Environ Med 46:152), ratio of impedances at 5 and 100 kHz for the extracellular fraction — abstract only read.",
     "verified_by": "TM",
-    "verified_on": "2026-09-08",
+    "verified_on": "2026-09-11",
     "confidence": "low"
    },
    "vector": {
@@ -305,7 +482,8 @@
     "Z200",
     "Z5"
    ],
-   "notes": "Multi-frequency; requires impedance at 200 and 5 kHz mapped as variables Z200, Z5."
+   "notes": "Multi-frequency: requires |Z| at 200 and 5 kHz mapped as Z200 and Z5. Exact monomial (Z200 +1, Z5 −1). Physical reading: at 5 kHz current flows almost only through extracellular water, at 200 kHz through cells as well; the ratio approaches 1 with extracellular expansion. Applied to post-operative oedema (Itobi 2006), renal worsening in heart failure (cut-off 0.85; Valdespino-Trejo 2013), NYHA class (Castillo Martínez 2007), hospital malnutrition (Earthman 2011, abstract). Both reviews state that consensus cut-offs are lacking. Confidence stays low: no primary derivation paper. NHANES 1999-2004 BIX files carry R and Xc at 5, 50 and 200 kHz, so the ratio is evaluable on the demonstration data once Z5 and Z200 are added to the demo CSV.",
+   "target_kind": "hydration"
   },
   {
    "id": "Lukaski1986_FFM",
@@ -1168,6 +1346,74 @@
    ],
    "notes": "Sex coding presumed male=1; verify in full text.",
    "expr": "-17.612 + 3.397*sexo + 0.037*(H**2/Xc) + 3.509*PhA - 0.052*idade"
+  }
+ ],
+ "history": [
+  {
+   "version": "1.0.0",
+   "date": "2026-09-08",
+   "by": "TM",
+   "change": "31 entries migrated from catalogo/metodos_bia.json (tools/migrate_catalog.py); frozen in tests/fixtures/catalog_v1_migrated_2026-09-08.json"
+  },
+  {
+   "version": "1.1.0",
+   "date": "2026-09-11",
+   "by": "TM",
+   "change": "Exactness rule: PhA (Baumgartner 1988) and LMI (Levi Micheli 2022) declared composite (atan is not a monomial; vectors are fitted, fit R² reported). Added Hoffer1969_H2Z (primary source read; H²/|Z| at 100 kHz; numeric example from Table 1). Added Z100 to extra_variables. Lukaski1985_II annotated as the 50 kHz resistance version of Hoffer's monomial."
+  },
+  {
+   "version": "1.1.1",
+   "date": "2026-09-11",
+   "by": "TM",
+   "change": "Lukaski1985_II re-verified on the primary PDF: provenance pdf_text/high, validity, device, reference methods, n = 37, antecedents (Hoffer 1969, Nyboer). Regression equations of Fig. 2 noted for the equation stage."
+  },
+  {
+   "version": "1.2.0",
+   "date": "2026-09-11",
+   "by": "TM",
+   "change": "Schema: `derivation_sample` (descriptive) separated from `validity` (author-stated or tested applicability; flag †, never a block). Hoffer 1969 validity corrected to both sexes, 18-77 y, healthy and patients with abnormal hydration (tested); Lukaski 1985 validity kept as stated by the authors (healthy men 19-42)."
+  },
+  {
+   "version": "1.2.1",
+   "date": "2026-09-11",
+   "by": "TM",
+   "change": "Baumgartner1988_PhA re-verified on the primary PDF: label 'PhA whole body', provenance pdf_text/high, derivation sample and validity (both sexes, 9-62 y), device, reference method, precedence (Brazier 1935/Barnett 1936 for the phase angle; first body-composition use 1988), note that the paper's recommended predictor is the trunk phase angle."
+  },
+  {
+   "version": "1.2.2",
+   "date": "2026-09-11",
+   "by": "TM",
+   "change": "Piccoli1994_RH / Piccoli1994_XcH re-verified on the primary PDF: labelled as BIVA components (not proposed as stand-alone indices; authors' caution recorded), provenance pdf_text/high, derivation sample and validity (caucasian adults 16-75, healthy/renal/obese), device, no body-composition reference, height in metres (Ω/m), Table 2 correlations recorded as evidence of Σ conditional on clinical status. Decision: kept in the catalog as components audited individually."
+  },
+  {
+   "version": "1.2.3",
+   "date": "2026-09-11",
+   "by": "TM",
+   "change": "LMI re-verified on the primary PDF: provenance pdf_text/high, derivation sample and validity (male caucasian footballers 18-35, foot-to-hand 50 kHz), device, no independent reference (validated against BIA-derived BCM/PA; circularity recorded), consistency note from group means, approximate monomial form noted."
+  },
+  {
+   "version": "1.3.0",
+   "date": "2026-09-11",
+   "by": "TM",
+   "change": "Schema: `target_kind` (author-declared kind; orientation warning in the run when it matches the control's kind). Rsp/Xcsp re-verified on Buffa 2013 (primary PDF): labels, expression on the published Ω·cm scale (A/(1.1·H)·100), provenance pdf_text/high, derivation sample NHANES 2003-2004 (n 1590), validity 21-49 y both sexes, DXA/BIS references, consistency notes, target_kind fat_mass. target_kind set for the seven curated indices."
+  },
+  {
+   "version": "1.3.1",
+   "date": "2026-09-11",
+   "by": "TM",
+   "change": "Lukaski 2017 (review) read: IR entry relabelled (Mulasi 2015 as primary source, Jenin 1975 as antecedent), target_kind hydration, confidence kept low (secondary source); PhA note on hydration as declared confounder and on device/electrode differences. NHANES BIX carries 5/50/200 kHz, so IR is evaluable on the demo once Z5/Z200 are added."
+  },
+  {
+   "version": "1.3.2",
+   "date": "2026-09-11",
+   "by": "TM",
+   "change": "Marini 2013 (primary source of specific BIVA) read: Rsp/Xcsp attributed to Marini 2013 (DOI 10.1007/s12603-012-0411-7), Buffa 2013 moved to the note as NHANES validation; derivation sample elderly Italians (n 202, 65-93), validity 21-93 both sexes (union of the two studies), origin of weights and factor 1.1, Chumlea 1988 as antecedent, consistency notes."
+  },
+  {
+   "version": "1.3.3",
+   "date": "2026-09-11",
+   "by": "TM",
+   "change": "Mulasi 2015 (review) read: IR has a commercial origin (Bodystat) and no primary derivation paper; entry relabelled, attribution chain and reference cut-offs recorded, confidence kept low, validity null; Jenin 1975 marked as abstract-only."
   }
  ]
 }
