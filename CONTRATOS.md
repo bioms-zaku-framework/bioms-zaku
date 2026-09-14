@@ -200,6 +200,11 @@ audit:
   verdict: {p_specific: 0.95, p_control: 0.05, ci: 0.95}
   multiplicity: none             # none | bh  (bh = Benjamini–Hochberg entre métodos, como sensibilidade)
   combinations: false
+geometry:                        # v0.6 — diagnóstico alvo↔controle no espaço das variáveis mapeadas
+  enabled: true
+  parallel_to_control: 0.90      # |cos_Σ(índice, controle^)| ≥ → PARALLEL_TO_CONTROL
+  coupled_target_control: 0.80   # |cos_Σ(alvo^, controle^)| ≥ → COUPLED_TARGET_CONTROL
+  min_fit_r2: 0.50               # projeção com R² abaixo → cossenos reportados, bandeiras NÃO acendem (poor_projection)
 seeds: {cv: 42, bootstrap: 42}
 preset: full                     # quick (cv 5x5, B 200) | full
 threads: 1
@@ -249,6 +254,61 @@ compartilhadas = comportamento da referência + condição de pareamento.
 
 ---
 
+### 3.3 Geometria alvo↔controle (v0.6 — aprovado pelo Thalles em 14/09/2026)
+
+**Problema que resolve.** Alvo e controle costumam vir da mesma medida de referência e da mesma normalização (ex.: massa
+magra/H² e massa gorda/H² do mesmo scan DXA; magro + gordo + osso = peso, com H e W mapeadas). No espaço das variáveis
+mapeadas eles podem apontar quase na mesma direção. Nesse caso um índice próximo dessa direção (ex.: W/H²) prediz os
+dois por aritmética, e o veredito do controle negativo é correto pela razão errada. A v0.6 mede isso e imprime ao lado
+do veredito. **Nunca altera um veredito**: o veredito é empírico (fora da amostra); a geometria explica por quê.
+
+**Definições (por estrato, caso completo, mesmas variáveis do espaço dos índices: `variables` + `extra_log_variables`).**
+1. *Vetor implícito* de um alvo ou controle y: coeficientes da regressão linear de ln y nas log-variáveis, com
+   intercepto (`fit_log_linear`, a mesma função dos métodos `composite` e do desenho §2.7). Registra-se o R² do ajuste.
+   É a melhor aproximação monomial de y no espaço medido; não é y.
+2. *Cosseno sob Σ* de dois vetores a, b: cos_Σ(a, b) = aᵀΣb / √(aᵀΣa · bᵀΣb) — a mesma fórmula de `r_log_predicted`
+   (§4.1). É a correlação de Pearson (nos logs) entre as duas combinações lineares.
+3. Para cada índice i, alvo t e controle c (pares declarados em `pairing`): cos_Σ(i, t^), cos_Σ(i, c^) e cos_Σ(t^, c^).
+4. **Identidade de verificação (exata, in-sample):** como um índice MONOMIAL pertence ao subespaço gerado pelas
+   log-variáveis e o resíduo ln y − ln y^ é ortogonal a esse subespaço, r_log(i, y) = cos_Σ(i, y^) · √R²_y. A tabela grava
+   r_log(i, y) observado, o produto previsto e a lacuna; para índices de vetor exato (`vector_source = catalog`) a lacuna
+   tem de ser < 1e-9 (teste; no exemplo sai ~1e-15). Para índices compostos (PhA, LMI, Rsp, Xcsp: vetor ajustado) a
+   lacuna é o resíduo da projeção do próprio índice e é reportada, não testada. Tudo para um índice é calculado nas
+   linhas completas de (índice > 0, alvo > 0, controle > 0, variáveis), para a identidade ser exata por construção.
+
+**Bandeiras (nomes fixos; limiares declarados no YAML e gravados no manifesto).**
+- `PARALLEL_TO_CONTROL`: |cos_Σ(i, c^)| ≥ `parallel_to_control` (padrão 0,90 = 81 % de variância compartilhada com a
+  projeção do controle). Leitura: o índice aponta para onde o controle aponta; "acompanha o controle" ou "ambos" era
+  esperado pela geometria.
+- `COUPLED_TARGET_CONTROL`: |cos_Σ(t^, c^)| ≥ `coupled_target_control` (padrão 0,80 = 64 %). Leitura: o contraste
+  inteiro é fraco por construção; acende ANTES do outro porque a consequência é maior (vale para todos os índices).
+- `poor_projection`: R² da projeção < `min_fit_r2` (padrão 0,50) para t ou c. Cossenos continuam na tabela; bandeiras
+  não acendem, porque o cosseno entre projeções pobres fala de ruído.
+- Os limiares são auxílios de leitura, não testes de hipótese: os cossenos vão sempre na tabela, com precisão completa.
+
+**Onde aparece.** `implicit_vectors.csv` e `geometry.csv` (§4.1); bloco "Geometria" no resumo (§4.3: cos alvo–controle
+por estrato, lista dos índices com bandeira); marcador ‡ no scorecard e contorno tracejado no mapa alvo×controle (§4.4);
+`report.html` herda as tabelas. Zero computação nova: são reutilizadas `fit_log_linear`, `log_covariance` e
+`predicted_pearson_log`.
+
+**Alvos em quilogramas (opção, não regra).** Um alvo em kg (massa magra absoluta) em vez de índice (massa/H²) remove a
+altura dos dois lados e reduz cos_Σ(t^, c^); NÃO remove o acoplamento por W (magro + gordo + osso = peso) e torna o alvo
+mais "tamanho", o que favorece índices de volume (H²/R). É escolha declarada do pesquisador; o framework aceita qualquer
+coluna e imprime a geometria de cada escolha. O exemplo embarcado passa a trazer `lean_kg`, `alm_kg` e `fat_kg`, derivados
+por índice × (H/100)² no gerador (colunas registradas em `example_data_params.json` como derivadas; sem sorteio novo).
+
+**Justificativa.** A crítica "alvo e controle são aritmética sobre a medida de referência" é a que um revisor faria. A
+resposta científica não é negá-la nem tentar "desacoplar tudo": é medir o acoplamento com a álgebra que o método já usa
+e imprimi-lo ao lado do veredito, para o pesquisador decidir com o número na mão. O eixo de utilidade (§3.2, ganho
+sobre W e H) continua sendo o que condiciona no tamanho; a geometria diz quanto do veredito é geometria.
+
+**Verdades conhecidas exigidas (portão):** lição 12 do caderno (cosseno sob Σ à mão, 1e-9); alvo construído como
+monômio ⇒ vetor implícito recupera os expoentes exatos e cos = 1 (1e-9); controle construído paralelo ao alvo ⇒ bandeira
+acende, ortogonal ⇒ apagada; identidade do item 4 no exemplo embarcado (1e-9); os cossenos do exemplo (F: alvo–controle
+0,90; Rsp–controle 0,93 · M: 0,86; 0,91, calculados à mão em 14/09) reproduzidos pela tabela; determinismo e hash.
+
+---
+
 ## 4. Contrato de SAÍDAS
 
 ### 4.1 Tabelas (CSV UTF-8, `,` e `.`, precisão completa, ordenação determinística; **só agregados**)
@@ -265,6 +325,8 @@ compartilhadas = comportamento da referência + condição de pareamento.
 | `sensitivity.csv` | como `audit.csv` | + `estimator_primary, verdict_primary, verdict_changed, s1_primary, s1_delta, s2_primary, s2_delta, disc_primary, disc_delta` |
 | `threshold_sensitivity.csv` | método × estrato × alvo × margem × P | `verdict, verdict_default, changed` (reclassificação, sem reajuste) |
 | `screening.csv` | método × estrato | `method_id, stratum, redundant, specific, useful, identity, class` |
+| `implicit_vectors.csv` (v0.6) | estrato × papel × nome | `stratum, role (target/control), name, n, fit_r2, poor_projection, e_<var>…` |
+| `geometry.csv` (v0.6) | método × estrato × alvo | `method_id, stratum, target, control, n, vector_source, cos_target, cos_control, cos_target_control, r_log_target_observed, r_log_target_identity, r_log_target_gap, r_log_control_observed, r_log_control_identity, r_log_control_gap, fit_r2_target, fit_r2_control, poor_projection, flag_parallel_to_control, flag_coupled_target_control, thresholds` |
 
 **Verificação primária da álgebra = Pearson nos logaritmos**, previsto × observado: identidade
 algébrica, sem suposição distribucional (nos logs, um monômio é combinação linear exata; a linearidade está garantida por
@@ -328,6 +390,10 @@ rápido é condição para outros pesquisadores usarem e aprimorarem.
 ---
 
 ## 6. Changelog
+- **v0.6.0 (14/09/2026, aprovado)** — §3.3 geometria alvo↔controle: vetores implícitos, cossenos sob Σ, identidade
+  r_log = cos·√R², bandeiras `PARALLEL_TO_CONTROL` / `COUPLED_TARGET_CONTROL` / `poor_projection`, tabelas
+  `implicit_vectors.csv` e `geometry.csv`, marcadores nas figuras; alvos em kg como opção documentada; colunas em kg no
+  exemplo (derivadas). Motivação: feedback externo sobre acoplamento definicional (magro + gordo + osso = peso; ambos /H²).
 - **v0.5.2 (14/09/2026)** — decisão do Thalles: o motor anterior era PILOTO; o framework não depende de nenhum dado local.
   §5 reescrito em torno de verdades conhecidas; removidos os testes de equivalência com o NHANES local, o teste de migração
   e a fixture do catálogo do piloto, a ferramenta de migração e `sigma_transfer_table_legacy`; marcador `slow` retirado.

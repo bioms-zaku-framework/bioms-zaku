@@ -81,3 +81,26 @@ def test_fit_log_linear_recovers_exponents_and_counts_nonpositive():
 def test_fisher_ci_narrows_with_n():
     lo1, hi1 = fisher_ci(0.5, 30); lo2, hi2 = fisher_ci(0.5, 3000)
     assert lo1 < lo2 < 0.5 < hi2 < hi1
+
+
+# ---- Lição 12 (contrato v0.6): vetores implícitos do alvo/controle, cosseno sob Σ, identidade r = cos·√R²
+Y_DEV = np.array([0.21, -0.07, -0.08, -0.06]); C_DEV = np.array([0.075, -0.025, -0.155, 0.105])
+
+
+def test_lesson12_implicit_vectors_and_geometry():
+    S = _sigma_population()
+    frame = pd.DataFrame({"R": np.exp(R_DEV), "H": np.exp(H_DEV)})       # EN: logs of these are exactly the deviations
+    t, r2_t, n, _ = fit_log_linear(np.exp(Y_DEV), frame, ["R", "H"])
+    u, r2_c, _, _ = fit_log_linear(np.exp(C_DEV), frame, ["R", "H"])
+    assert n == 4
+    assert np.abs(t - [-0.5, 1.0]).max() < 1e-9 and np.abs(u - [-0.5, 1.0]).max() < 1e-9      # exercícios 13-14
+    assert abs(r2_t - 0.60) < 1e-9 and abs(r2_c - 0.00885 / 0.010325) < 1e-9
+    assert abs(predicted_pearson_log(t, u, S) - 1.0) < 1e-12                                    # exercício 15
+    assert abs(np.corrcoef(Y_DEV, C_DEV)[0, 1] - 0.478) < 1e-3                                   # correlação bruta 0,48
+    a, b = np.array([-1.0, 2.0]), np.array([1.0, -1.0])
+    lnA = -R_DEV + 2 * H_DEV
+    for y, r2, expected in ((Y_DEV, r2_t, 0.7746), (C_DEV, r2_c, 0.9258)):                    # exercício 16
+        ident = predicted_pearson_log(a, t, S) * np.sqrt(r2)
+        assert abs(ident - np.corrcoef(lnA, y)[0, 1]) < 1e-12 and abs(ident - expected) < 5e-4
+    assert abs(predicted_pearson_log(a, u, S)) >= 0.90 and abs(predicted_pearson_log(t, u, S)) >= 0.80   # exercício 17
+    assert abs(predicted_pearson_log(b, u, S) - (-0.998)) < 5e-4

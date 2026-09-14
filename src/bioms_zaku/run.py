@@ -171,7 +171,7 @@ def _run(cfg: dict, *, printer: Callable[[str], None]) -> dict:
     # ---- per stratum
     lab_map = {str(k): str(v) for k, v in (cfg.get("strata_labels") or {}).items()}
     strata = [(lab_map.get(str(s), str(s)), frame[frame[ds.strata] == s].reset_index(drop=True)) for s in sorted(frame[ds.strata].dropna().unique())] if ds.strata else [("all", frame)]
-    T = {k: [] for k in ("algebra", "sigma", "pairs", "redundancy", "audit", "utility", "combinations", "sensitivity")}
+    T = {k: [] for k in ("algebra", "sigma", "pairs", "redundancy", "audit", "utility", "combinations", "sensitivity", "implicit_vectors", "geometry")}
     vecs_by, sig_by, pairs_by, vals_by, design_by, skipped_all = {}, {}, {}, {}, {}, {}
     # EN: target-kind orientation (§2.1 / §3.2): a method whose author-declared kind equals the kind of the CONTROL and
     #     differs from the kind of the TARGET is expected to "track the control" by design; say so before the verdicts.
@@ -229,6 +229,15 @@ def _run(cfg: dict, *, printer: Callable[[str], None]) -> dict:
         T["pairs"].append(pairs); T["redundancy"].append(red)
         vecs_by[stratum], sig_by[stratum], pairs_by[stratum], vals_by[stratum] = vecs, S, pairs, {k: v for k, v in vals.items() if k in vecs}
         design_by[stratum] = np.log(fr.loc[:, list(design_vars)].to_numpy(dtype=float))   # EN: v0.5 Σ-transfer bootstrap recomputes Σ_t per resample
+        # ---- geometry target↔control (v0.6, §3.3): continuous targets/controls only; flags annotate, never decide
+        gcfg = cfg["geometry"]
+        if gcfg["enabled"]:
+            cont_t = {t: fr[t].to_numpy(float) for t in ds.targets if ds.target_types.get(t) != "classification"}
+            cont_c = {c: fr[c].to_numpy(float) for c in ds.controls}
+            imp_df, geo_df = A.geometry_tables(vecs, vals, fr, design_vars, cont_t, cont_c, ds.pairing, stratum,
+                                               parallel_to_control=gcfg["parallel_to_control"], coupled_target_control=gcfg["coupled_target_control"],
+                                               min_fit_r2=gcfg["min_fit_r2"])
+            T["implicit_vectors"].append(imp_df); T["geometry"].append(geo_df)
 
         # ---- audit
         targets = {t: fr[t].to_numpy(float) for t in ds.targets}
@@ -307,7 +316,8 @@ def _run(cfg: dict, *, printer: Callable[[str], None]) -> dict:
     sort_keys = {"algebra": ["stratum", "method_id"], "sigma": ["stratum", "var_i", "var_j"], "pairs": ["stratum", "a_id", "b_id"],
                  "redundancy": ["stratum", "method_id"], "audit": ["stratum", "method_id", "target"], "utility": ["stratum", "method_id", "target"],
                  "combinations": ["stratum", "host_id", "added_id", "target"], "sigma_transfer": ["sigma_from", "observed_in"], "screening": ["stratum", "method_id"],
-                 "sensitivity": ["stratum", "method_id", "target"], "threshold_sensitivity": ["stratum", "method_id", "target", "margin", "p_specific"]}
+                 "sensitivity": ["stratum", "method_id", "target"], "threshold_sensitivity": ["stratum", "method_id", "target", "margin", "p_specific"],
+                 "implicit_vectors": ["stratum", "role", "name"], "geometry": ["stratum", "method_id", "target"]}
     for name, df in tables.items():
         write_table(df, out_dir / f"{name}.csv", sort_keys.get(name, []))
     manifest.update(strata_used={s: int(len(fr)) for s, fr in strata}, methods_evaluated=sorted(set(tables["algebra"].method_id)) if not tables["algebra"].empty else [],

@@ -60,6 +60,9 @@ bioms-zaku run examples/minimal.yaml            # 150 rows, the smallest possibl
 ls zaku_out/example_quick                       # algebra sigma pairs redundancy sigma_transfer audit utility combinations screening sensitivity threshold_sensitivity (.csv) manifest.json summary.md report.html figures/
 ```
 
+The file also carries `lean_kg`, `alm_kg`, `fat_kg` (index × height², derived, no new draw) so that absolute masses can be
+used as targets: `bioms-zaku run examples/example_kg.yaml`. See *Geometry* below before choosing.
+
 Your own data — three commands / tres comandos / três comandos:
 
 ```bash
@@ -109,6 +112,20 @@ framework flags †, never blocks), the declared kind of target (`target_kind`: 
 target gets an orientation warning), and every curation event in the catalog `history`. Phase angle and LMI contain atan
 and are therefore `composite`: their exponent vector is fitted per stratum and the fit R² is reported (exactness rule,
 `CONTRATOS.md` §2.3). The catalog file also carries entries under curation; they are not evaluated unless explicitly included.
+
+## Geometry of target and control / Geometría / Geometria (v0.6)
+
+Target and control often come from the same reference measurement and the same normalisation (lean/H² and fat/H² from one
+DXA scan; lean + fat + bone = weight, with H and W among the mapped variables). In the space of the mapped variables they
+can point almost the same way, and then an index close to that direction (W/H²-like) predicts both by arithmetic. The
+framework measures this with the algebra it already uses: the *implicit vector* of each target and control (OLS of the
+logs), the Σ-cosines index–target, index–control and target–control, and the exact identity r_log = cos_Σ·√R² for
+monomial indices. Two flags with declared thresholds annotate the verdicts and never change them: PARALLEL_TO_CONTROL
+(‡ next to the index) and COUPLED_TARGET_CONTROL (‡ in the panel title). Tables `implicit_vectors.csv` and
+`geometry.csv`; block in `summary.md`. On the shipped example the target–control cosine is 0.90 (women) and 0.86 (men)
+for LMI vs FMI. Using absolute masses (kg) removes height from both sides and lowers the coupling but does not remove the
+coupling through weight, and it makes the target more "size", which favours volume indices (H²/R): a declared choice,
+not a fix. Lesson 12 of the notebook works the whole thing by hand on four people.
 
 ## Reproducibility / Reproducibilidad / Reprodutibilidade
 

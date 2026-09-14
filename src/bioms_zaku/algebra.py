@@ -290,3 +290,72 @@ def sigma_transfer_table(vecs_by_stratum: dict[str, dict[str, VectorFit]], sigma
                              excess_lo=q(exc_b, 2.5), excess_hi=q(exc_b, 97.5), boot_B=len(med_b)))
     return pd.DataFrame(rows)
 
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# v0.6 — geometry of target and control in the space of the mapped variables (CONTRATOS §3.3)
+# ---------------------------------------------------------------------------------------------------------------------
+def _cos_sigma(a: np.ndarray, b: np.ndarray, sigma: np.ndarray) -> float:
+    return predicted_pearson_log(a, b, sigma)
+
+
+def geometry_tables(vecs: dict[str, "VectorFit"], vals: dict[str, np.ndarray], frame: pd.DataFrame, variables: Sequence[str],
+                    targets: dict[str, np.ndarray], controls: dict[str, np.ndarray], pairing: dict[str, str], stratum: str, *,
+                    parallel_to_control: float = 0.90, coupled_target_control: float = 0.80, min_fit_r2: float = 0.50
+                    ) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """
+    EN: Implicit vectors of every continuous target/control (OLS of ln y on the ln variables, `fit_log_linear`) and, per
+        index × target, the Σ-cosines index–target^, index–control^, target^–control^ plus the exact identity
+        r_log(index, y) = cos_Σ(index, y^)·√R²_y, which holds when the index is an exact monomial in the variables
+        (vector_source 'catalog'); for fitted vectors the gap is reported. Everything for one index is computed on the
+        complete-case rows of (index > 0, target > 0, control > 0, finite variables), so the identity is exact by
+        construction; the implicit-vector table uses the rows of (target, control, variables). Flags never touch verdicts.
+    ES: vectores implícitos y cosenos bajo Σ; identidad exacta para monomios. PT: vetores implícitos e cossenos sob Σ;
+        identidade exata para monômios; bandeiras nunca alteram vereditos.
+    """
+    V = list(variables)
+    X = frame.loc[:, V].to_numpy(dtype=float)
+    fin = np.isfinite(X).all(axis=1) & (X > 0).all(axis=1)
+    thr = f"parallel_to_control>={parallel_to_control};coupled_target_control>={coupled_target_control};min_fit_r2>={min_fit_r2}"
+    imp_rows, geo_rows = [], []
+
+    def _fit(y: np.ndarray, rows: np.ndarray) -> tuple[np.ndarray, float]:
+        vec, r2, _, _ = fit_log_linear(y[rows], frame.loc[rows, V], V)
+        return vec, r2
+
+    for t, c in pairing.items():
+        if t not in targets or c not in controls:
+            continue
+        yt, yc = np.asarray(targets[t], float), np.asarray(controls[c], float)
+        base = fin & np.isfinite(yt) & (yt > 0) & np.isfinite(yc) & (yc > 0)
+        if base.sum() < len(V) + 2:
+            continue
+        for role, name, y in (("target", t, yt), ("control", c, yc)):
+            vec, r2 = _fit(y, base)
+            row = dict(stratum=stratum, role=role, name=name, n=int(base.sum()), fit_r2=r2, poor_projection=bool(r2 < min_fit_r2))
+            row.update({f"e_{v}": float(x) for v, x in zip(V, vec)})
+            imp_rows.append(row)
+        for mid, vf in vecs.items():
+            v = np.asarray(vals.get(mid), float) if mid in vals else None
+            if v is None or list(vf.variables) != V:
+                continue
+            rows = base & np.isfinite(v) & (v > 0)
+            n = int(rows.sum())
+            if n < len(V) + 2:
+                continue
+            S, _ = log_covariance(frame.loc[rows], V)
+            tv, r2t = _fit(yt, rows); cv, r2c = _fit(yc, rows)
+            a = np.asarray(vf.vector, float)
+            cos_t, cos_c, cos_tc = _cos_sigma(a, tv, S), _cos_sigma(a, cv, S), _cos_sigma(tv, cv, S)
+            lv = np.log(v[rows])
+            r_t = float(np.corrcoef(lv, np.log(yt[rows]))[0, 1]); r_c = float(np.corrcoef(lv, np.log(yc[rows]))[0, 1])
+            id_t, id_c = cos_t * np.sqrt(max(r2t, 0.0)), cos_c * np.sqrt(max(r2c, 0.0))
+            ok = (r2t >= min_fit_r2) and (r2c >= min_fit_r2)
+            geo_rows.append(dict(method_id=mid, stratum=stratum, target=t, control=c, n=n, vector_source=vf.source,
+                                 cos_target=cos_t, cos_control=cos_c, cos_target_control=cos_tc,
+                                 r_log_target_observed=r_t, r_log_target_identity=float(id_t), r_log_target_gap=r_t - float(id_t),
+                                 r_log_control_observed=r_c, r_log_control_identity=float(id_c), r_log_control_gap=r_c - float(id_c),
+                                 fit_r2_target=r2t, fit_r2_control=r2c, poor_projection=bool(not ok),
+                                 flag_parallel_to_control=bool(ok and abs(cos_c) >= parallel_to_control),
+                                 flag_coupled_target_control=bool(ok and abs(cos_tc) >= coupled_target_control), thresholds=thr))
+    return pd.DataFrame(imp_rows), pd.DataFrame(geo_rows)

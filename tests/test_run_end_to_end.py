@@ -33,7 +33,7 @@ def test_end_to_end_minimal_example_writes_all_outputs(tmp_path):
     from bioms_zaku.run import run
     res = run(_cfg(tmp_path), printer=lambda s: None)
     out = res["out_dir"]
-    for f in ("algebra.csv", "sigma.csv", "pairs.csv", "redundancy.csv", "audit.csv", "utility.csv", "screening.csv", "manifest.json", "summary.md"):
+    for f in ("algebra.csv", "sigma.csv", "pairs.csv", "redundancy.csv", "audit.csv", "utility.csv", "screening.csv", "implicit_vectors.csv", "geometry.csv", "manifest.json", "summary.md"):
         assert (out / f).exists(), f
     m = json.loads((out / "manifest.json").read_text())
     assert m["preset"] == "quick" and m["input_sha256"] and m["outputs_sha256"]["audit.csv"] and m["versions"]["sklearn"]

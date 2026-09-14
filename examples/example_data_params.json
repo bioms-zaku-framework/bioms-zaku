@@ -25,6 +25,11 @@
   "b2": 0.5,
   "note": "synthetic outcome for classification demos; depends on FMI and age only"
  },
+ "derived_columns": {
+  "lean_kg": "LMI_DXA * (H_cm/100)**2, rounded to 2 decimals (v0.6; absolute-mass targets as an option)",
+  "alm_kg": "ALMI_DXA * (H_cm/100)**2, rounded to 2 decimals (v0.6; absolute-mass targets as an option)",
+  "fat_kg": "FMI_DXA * (H_cm/100)**2, rounded to 2 decimals (v0.6; absolute-mass targets as an option)"
+ },
  "per_sex": {
   "F": {
    "sexo": 0,

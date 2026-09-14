@@ -61,3 +61,31 @@ def test_published_sigma_predicts_observed_correlation_between_monomial_indices(
                 assert abs(predicted_pearson_log(a, b, S_obs) - rho_obs) < 1e-12          # exact identity
                 worst = max(worst, abs(predicted_pearson_log(a, b, S_pub) - rho_obs))     # known truth vs observed
         assert worst < 0.02, f"{key}: published Σ misses observed ρ by {worst:.4f}"
+
+
+def test_geometry_on_shipped_example_reproduces_hand_numbers_and_identity():
+    # EN: contract §3.3 gate — the four Σ-cosines computed by hand on 2026-09-14 (with the same functions, on all rows per sex)
+    #     must come out of geometry_tables, and the identity r_log = cos·√R² must be exact on the monomial indices.
+    from bioms_zaku.algebra import compute_vectors, geometry_tables
+    from bioms_zaku.catalog import load_catalog
+    from bioms_zaku.io import read_table
+    from bioms_zaku.run import _values
+    mapping = {"variables": {"R": "R", "Xc": "Xc", "H": "H_cm", "W": "W"}, "units": {"H": "cm", "W": "kg"},
+               "targets": {"LMI_DXA": "LMI_DXA"}, "controls": {"FMI_DXA": "FMI_DXA"}, "pairing": {"LMI_DXA": "FMI_DXA"}, "strata": "sexo",
+               "groups": {"sexo": "sexo", "C_arm": "BMXARMC", "C_waist": "BMXWAIST", "C_calf": "BMXCALF"}}   # circumferences: Rsp/Xcsp need them
+    ds = read_table(CSV, mapping); cat = load_catalog()
+    keep = {"Lukaski1985_II", "Baumgartner1988_PhA", "Piccoli1994_RH", "Piccoli1994_XcH", "LMI", "Rsp", "Xcsp"}
+    expected = {"F": (0.899, 0.928), "M": (0.855, 0.909)}          # (cos target–control, cos Rsp–control), hand-computed 2026-09-14
+    for sex, name in ((0, "F"), (1, "M")):
+        fr = ds.frame[ds.frame["sexo"] == sex]
+        vals, _ = _values(cat, ds, fr); vals = {k: v for k, v in vals.items() if k in keep}
+        vecs = compute_vectors(cat, vals, fr, ds.variables, name)
+        imp, geo = geometry_tables(vecs, vals, fr, ds.variables, {"LMI_DXA": fr["LMI_DXA"].to_numpy(float)},
+                                   {"FMI_DXA": fr["FMI_DXA"].to_numpy(float)}, {"LMI_DXA": "FMI_DXA"}, name)
+        assert set(geo.method_id) == keep and len(imp) == 2
+        g = geo.set_index("method_id")
+        assert abs(g.cos_target_control.iloc[0] - expected[name][0]) < 2e-3
+        assert abs(g.loc["Rsp", "cos_control"] - expected[name][1]) < 2e-3
+        mono = g[g.vector_source == "catalog"]
+        assert len(mono) == 3 and mono.r_log_target_gap.abs().max() < 1e-9 and mono.r_log_control_gap.abs().max() < 1e-9
+        assert bool(g.loc["Rsp", "flag_parallel_to_control"]) and not bool(g.loc["Lukaski1985_II", "flag_parallel_to_control"])

@@ -97,6 +97,27 @@ def write_summary(out_dir: Path, cfg: dict, tables: dict[str, pd.DataFrame], man
                 ut = u[u.target == t]
                 L.append(f"- utility over {ut.covariates.iloc[0]} for `{t}`: useful {int(ut.useful.sum())} of {len(ut)} (margin {cfg['audit']['utility_margin']})")
         L.append("")
+    geo = tables.get("geometry")
+    if geo is not None and not geo.empty:
+        L += ["## Geometry of target and control in the measured space (§3.3, v0.6)", "",
+              "Implicit vector = OLS of ln(target or control) on the ln variables; cos_Σ = correlation between the two projections. "
+              "Flags annotate the verdicts, never change them. Thresholds: " + geo.thresholds.iloc[0].replace(";", " · "), ""]
+        for s in sorted(set(geo.stratum)):
+            g = geo[geo.stratum == s]
+            for t in sorted(set(g.target)):
+                gt = g[g.target == t]; r0 = gt.iloc[0]
+                coupled = bool(gt.flag_coupled_target_control.any())
+                L.append(f"- `{s}` · `{t}` vs `{r0.control}`: cos_Σ(target^, control^) = {r0.cos_target_control:.3f} "
+                         f"(projection R² target {r0.fit_r2_target:.3f}, control {r0.fit_r2_control:.3f})"
+                         + (" — **COUPLED_TARGET_CONTROL**: the contrast is weak by construction for every index" if coupled else "")
+                         + (" — poor projection: flags off" if bool(gt.poor_projection.all()) else ""))
+                par = gt[gt.flag_parallel_to_control]
+                if len(par):
+                    L.append("  - PARALLEL_TO_CONTROL (‡): " + "; ".join(f"{x.method_id} (cos {x.cos_control:+.3f})" for x in par.itertuples()))
+                mono = gt[gt.vector_source == "catalog"]
+                if len(mono):
+                    L.append(f"  - identity r_log = cos·√R² on monomial indices: max |gap| {mono.r_log_target_gap.abs().max():.1e}")
+        L.append("")
     if "pairs" in tables and not tables["pairs"].empty:
         p = tables["pairs"]; p = p[~p.identity].nlargest(10, "abs_err_log")
         L += ["## Largest predicted−observed gaps (Pearson of logs)", "", "| stratum | a | b | predicted | observed | gap |", "|---|---|---|---|---|---|"]

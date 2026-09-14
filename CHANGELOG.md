@@ -1,6 +1,15 @@
 # Changelog
 
 ## 0.1.0.dev0 — 2026-09-10 (unreleased)
+- Geometry of target and control (2026-09-14, contract v0.6, §3.3): implicit exponent vectors of every continuous target and
+  control (OLS of the logs, with fit R²), Σ-cosines index–target, index–control and target–control, the exact identity
+  r_log = cos_Σ·√R² for monomial indices (gap reported for fitted vectors), and two flags with declared thresholds:
+  PARALLEL_TO_CONTROL (‡ on the scorecard, dashed outline on the target–control figure) and COUPLED_TARGET_CONTROL
+  (‡ in the panel title). Flags annotate, never change, a verdict. New tables `implicit_vectors.csv`, `geometry.csv`;
+  block in `summary.md`. Lesson 12 in the notebook (hand-calculated, tested to 1e-9); constructed-data tests; gate test on
+  the shipped example (hand cosines 0.899/0.928 F, 0.855/0.909 M). Example data gain derived `lean_kg`, `alm_kg`,
+  `fat_kg` (index × H², no new draw; CSV regenerated, parameters unchanged) and `examples/example_kg.yaml` shows absolute
+  masses as targets. Motivated by external feedback on definitional coupling (lean + fat + bone = weight; both / H²).
 - Threads (2026-09-14): `run()` now limits BLAS/OpenMP threads itself (`threadpoolctl`, declared dependency), so the Python
   API behaves like the CLI. Controlled A/B on the boosting sensitivity path (3 methods, 150 rows, 20-core machine):
   without the limit 25.7 s wall / 314 s CPU; with it 17.4 s wall / 17.4 s CPU; identical output hashes. The minimal example

@@ -31,6 +31,7 @@ DEFAULTS: dict[str, Any] = {
               "utility_margin": 0.03, "verdict": {"p_specific": 0.95, "p_control": 0.05, "ci": 0.95, "margin": 0.03,
                           "sensitivity_margins": [0.02, 0.03, 0.05], "sensitivity_p": [0.90, 0.95, 0.99]},   # EN: v0.5 verdict margin + threshold grid (v0.5.1)
               "multiplicity": "none", "combinations": False},
+    "geometry": {"enabled": True, "parallel_to_control": 0.90, "coupled_target_control": 0.80, "min_fit_r2": 0.50},   # EN: v0.6 §3.3 target↔control geometry; flags never change verdicts
     "design": None,
     "declarations": {"targets_independent_of_variables": None,
                      "target_kinds": {}},   # EN: optional {column: lean_mass|fat_mass|body_water|hydration|cell_mass|other} for targets/controls   # EN: circularity rule (contract v0.4.3); required true with design   # {"target": ..., "split": "holdout", "fraction": 0.70, "seed": 42, "id": "designed_<target>"}

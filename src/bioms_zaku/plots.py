@@ -230,7 +230,16 @@ def _lineages(r: pd.DataFrame, order: list[str]) -> tuple[list[str], dict[str, l
     return [m for m in order if m in lanes], lanes
 
 
-def target_control(aud: pd.DataFrame, alg: pd.DataFrame, out_dir: Path, primary_target: str, meta: dict | None = None, margin: float = 0.03) -> None:
+def _geo_flags(geo: pd.DataFrame | None, stratum: str, target: str) -> tuple[set[str], bool]:
+    """EN: (indices flagged PARALLEL_TO_CONTROL, whether target and control are COUPLED) for one stratum × target (v0.6 §3.3)."""
+    if geo is None or geo.empty or "flag_parallel_to_control" not in geo:
+        return set(), False
+    g = geo[(geo.stratum == stratum) & (geo.target == target)]
+    return set(g[g.flag_parallel_to_control].method_id), bool(g.flag_coupled_target_control.any())
+
+
+def target_control(aud: pd.DataFrame, alg: pd.DataFrame, out_dir: Path, primary_target: str, meta: dict | None = None, margin: float = 0.03,
+                   geo: pd.DataFrame | None = None) -> None:
     """
     EN: the conditional negative-control figure (v0.5) as PAIRED BARS. One row per index, sorted by S1. Green bar = S1,
         what the index adds to the prediction of the TARGET beyond the control; violet bar = S2, what it adds to the
@@ -262,13 +271,17 @@ def target_control(aud: pd.DataFrame, alg: pd.DataFrame, out_dir: Path, primary_
              "BOTH": (S("both"), C["ink2"]), "NEITHER": (S("neither"), C["muted"])}
     for ax, st in zip(axes[0], strata):
         q = a[a.stratum == st].sort_values("s1_mean", ascending=True).reset_index(drop=True)
+        par, coupled = _geo_flags(geo, st, primary_target)
         ax.axvline(0, color=C["grid"], lw=1.0, zorder=1); ax.axvline(margin, color=C["ink2"], lw=0.8, ls="--", zorder=1)
         ax.grid(axis="x"); ax.set_axisbelow(True)
         for i, row in q.iterrows():
             y = i; hollow = conf.get(row.method_id, "high") != "high"
             # S1 (green) above, S2 (violet) below, within the row
-            ax.barh(y + 0.19, row.s1_mean, height=0.34, color=C["specific"], alpha=0.35 if hollow else 0.9, zorder=2)
-            ax.barh(y - 0.19, row.s2_mean, height=0.34, color=C["control"], alpha=0.35 if hollow else 0.9, zorder=2)
+            flagged = row.method_id in par   # EN: v0.6 — index parallel to the control in the measured space: dashed outline
+            ax.barh(y + 0.19, row.s1_mean, height=0.34, color=C["specific"], alpha=0.35 if hollow else 0.9, zorder=2,
+                    edgecolor=C["ink"] if flagged else "none", linestyle="--", linewidth=0.9 if flagged else 0)
+            ax.barh(y - 0.19, row.s2_mean, height=0.34, color=C["control"], alpha=0.35 if hollow else 0.9, zorder=2,
+                    edgecolor=C["ink"] if flagged else "none", linestyle="--", linewidth=0.9 if flagged else 0)
             ax.plot([row.s1_lo, row.s1_hi], [y + 0.19, y + 0.19], color=C["ink"], lw=0.9, zorder=3)
             ax.plot([row.s2_lo, row.s2_hi], [y - 0.19, y - 0.19], color=C["ink"], lw=0.9, zorder=3)
             ax.text(max(row.s1_hi, 0) + 0.006, y + 0.19, f"{row.s1_mean:+.2f}", fontsize=6.2, va="center", color=C["ink2"])
@@ -276,10 +289,10 @@ def target_control(aud: pd.DataFrame, alg: pd.DataFrame, out_dir: Path, primary_
             word, col = words.get(row.verdict, (row.verdict, C["muted"]))
             ax.text(1.02, y, word, transform=ax.get_yaxis_transform(), fontsize=7.2, va="center", ha="left", color="white", fontweight="bold",
                     bbox=dict(boxstyle="round,pad=0.35,rounding_size=0.8", fc=col, ec="none"))
-        ax.set_yticks(range(len(q))); ax.set_yticklabels([short.get(m, m) + ("*" if conf.get(m, "high") != "high" else "") for m in q.method_id], fontsize=7.4)
+        ax.set_yticks(range(len(q))); ax.set_yticklabels([short.get(m, m) + ("*" if conf.get(m, "high") != "high" else "") + (" ‡" if m in par else "") for m in q.method_id], fontsize=7.4)
         ax.set_ylim(-0.6, len(q) - 0.4); ax.set_xlim(xmin, xmax); ax.tick_params(axis="y", length=0)
         ax.set_xlabel(F("tc_xbar", m=metric), fontsize=7.5)
-        ax.set_title(f"{T('stratum')} {st}", fontsize=9, loc="left")
+        ax.set_title(f"{T('stratum')} {st}" + (" · ‡ target and control coupled in the measured space" if coupled else ""), fontsize=9, loc="left")
         for sp in ("left", "top", "right"):
             ax.spines[sp].set_visible(False)
     # in-figure key only when captions are requested (default: the documentation text explains the colours)
@@ -538,7 +551,7 @@ def board(alg: pd.DataFrame, red: pd.DataFrame, aud: pd.DataFrame, uti: pd.DataF
 
 
 def scorecard(alg: pd.DataFrame, red: pd.DataFrame, aud: pd.DataFrame, uti: pd.DataFrame | None, out_dir: Path, primary_target: str,
-              threshold: float = 0.95, meta: dict | None = None, margin: float = 0.03) -> None:
+              threshold: float = 0.95, meta: dict | None = None, margin: float = 0.03, geo: pd.DataFrame | None = None) -> None:
     """
     EN: the readable verdict sheet — one row per method, three cells with a coloured pill and a short technical phrase;
         numbers are evidence, set small. Replaces the board as an official figure (board stays supplementary).
@@ -557,6 +570,7 @@ def scorecard(alg: pd.DataFrame, red: pd.DataFrame, aud: pd.DataFrame, uti: pd.D
         ids = [m for m in order if m in r.index]
         if not ids:
             continue
+        par, coupled = _geo_flags(geo, st, primary_target)
         metric = a.metric.iloc[0] if len(a) else "R2"; control = a.control.iloc[0] if len(a) else ""
         smax = float(np.nanmax(np.concatenate([aud.s1_hi.to_numpy(float), aud.s2_hi.to_numpy(float)]))) if "s1_hi" in aud else 1.0
         covs = u.covariates.iloc[0].replace("+", " + ") if u is not None and len(u) else ""
@@ -570,7 +584,7 @@ def scorecard(alg: pd.DataFrame, red: pd.DataFrame, aud: pd.DataFrame, uti: pd.D
         x_m, x_o, x_s, x_u = 1.0, 24.0, 46.0, 77.0; pw = 10.0
         # column headers (figure coords, just above the rows)
         yh = (foot_in + row_h * n + 0.12) / H
-        for x, txt in ((x_m, S("method")), (x_o, S("col_o")), (x_s, f"{S('col_s')} · {primary_target} vs {control}"), (x_u, f"{S('col_u')} · {S('over', c=covs) if covs else ''}")):
+        for x, txt in ((x_m, S("method")), (x_o, S("col_o")), (x_s, f"{S('col_s')} · {primary_target} vs {control}" + (" ‡ coupled" if coupled else "")), (x_u, f"{S('col_u')} · {S('over', c=covs) if covs else ''}")):
             fig.text(x / 100, yh, txt, fontsize=8.5, color=C["ink2"], va="bottom")
         fig.add_artist(plt.Line2D([0.0, 1.0], [yh - 0.01, yh - 0.01], color=C["grid"], lw=0.8, transform=fig.transFigure))
 
@@ -582,7 +596,7 @@ def scorecard(alg: pd.DataFrame, red: pd.DataFrame, aud: pd.DataFrame, uti: pd.D
             y = n - i - 0.5
             if i % 2 == 0:
                 ax.add_patch(FancyBboxPatch((0, y - 0.5), 100, 1.0, boxstyle="square,pad=0", fc="#f4f6fc", ec="none"))
-            flags = (" †" if oovd.get((m, st), 0) > 0.5 else "") + (" *" if conf.get((m, st), "high") != "high" else "")
+            flags = (" †" if oovd.get((m, st), 0) > 0.5 else "") + (" *" if conf.get((m, st), "high") != "high" else "") + (" ‡" if m in par else "")
             ax.text(x_m, y, lab.get(m, m) + flags, fontsize=8.2, color=C["ink"], va="center")
             ident = r.loc[m, "identity_of"] if pd.notna(r.loc[m, "identity_of"]) else None
             if ident:
@@ -804,8 +818,9 @@ def make_all(out_dir: Path, tables: dict, cfg: dict, *, supplementary: bool | No
     exponents_sigma(alg, red, tables.get("sigma"), fd, meta)
     if primary:
         lineage_tree(red, alg, aud, fd, primary, threshold=cfg["algebra"]["redundancy_threshold"], meta=meta)
-        target_control(aud, alg, fd, primary, meta, margin=cfg["audit"]["verdict"]["margin"])
-        scorecard(alg, red, aud, uti, fd, primary, threshold=cfg["algebra"]["redundancy_threshold"], meta=meta, margin=cfg["audit"]["verdict"]["margin"])
+        geo = tables.get("geometry")
+        target_control(aud, alg, fd, primary, meta, margin=cfg["audit"]["verdict"]["margin"], geo=geo)
+        scorecard(alg, red, aud, uti, fd, primary, threshold=cfg["algebra"]["redundancy_threshold"], meta=meta, margin=cfg["audit"]["verdict"]["margin"], geo=geo)
     if supplementary is None:
         supplementary = bool(cfg.get("output", {}).get("supplementary_figures", False))
     if supplementary:

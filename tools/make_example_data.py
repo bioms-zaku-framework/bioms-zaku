@@ -26,6 +26,7 @@ from scipy.stats import kurtosis, skew
 VARS = ["R", "Xc", "H_cm", "W", "idade", "BMXARMC", "BMXWAIST", "BMXCALF", "LMI_DXA", "ALMI_DXA", "FMI_DXA"]
 ROUND = {"R": 2, "Xc": 2, "H_cm": 1, "W": 1, "idade": 0, "BMXARMC": 1, "BMXWAIST": 1, "BMXCALF": 1, "LMI_DXA": 2, "ALMI_DXA": 2, "FMI_DXA": 2}
 # EN: synthetic binary label (declared, not a clinical outcome): logit = b0 + b1·z(log FMI) + b2·z(log age), Bernoulli.
+DERIVED = {"LMI_DXA": "lean_kg", "ALMI_DXA": "alm_kg", "FMI_DXA": "fat_kg"}   # EN: kg = index × (H_cm/100)², rounded to 2 decimals
 LABEL = {"name": "label_synthetic", "b0": -2.0, "b1": 1.2, "b2": 0.5, "note": "synthetic outcome for classification demos; depends on FMI and age only"}
 
 
@@ -46,7 +47,9 @@ def main() -> None:
                 "source": "NHANES 1999-2004, adults 18-49 y with measured DXA and 50 kHz BIA (HYDRA 4200), complete cases on the listed variables; "
                           "a CONVENIENCE sample (survey weights ignored). Only μ and Σ of the logs were used; no individual row is reproduced.",
                 "model": "multivariate log-normal per sex: log(x) ~ N(mu, Sigma) with mu, Sigma AS PUBLISHED (rounded); values exponentiated and rounded",
-                "variables": VARS, "label": LABEL, "per_sex": {}}
+                "variables": VARS, "label": LABEL,
+                "derived_columns": {kg: f"{src} * (H_cm/100)**2, rounded to 2 decimals (v0.6; absolute-mass targets as an option)" for src, kg in DERIVED.items()},
+                "per_sex": {}}
     frames = []
     for sex, name in ((0, "F"), (1, "M")):
         if a.from_params:
@@ -62,6 +65,9 @@ def main() -> None:
         for c, r in ROUND.items():
             X[c] = X[c].round(r)
         X["idade"] = X["idade"].clip(18, 49).astype(int)
+        # EN: v0.6 — absolute-mass targets DERIVED from the indices and height (no new draw): index × (H/100)²
+        for src_col, kg_col in DERIVED.items():
+            X[kg_col] = (X[src_col] * (X["H_cm"] / 100.0) ** 2).round(2)
         z_f = (Z[:, VARS.index("FMI_DXA")] - mu[VARS.index("FMI_DXA")]) / np.sqrt(S[VARS.index("FMI_DXA"), VARS.index("FMI_DXA")])
         z_a = (Z[:, VARS.index("idade")] - mu[VARS.index("idade")]) / np.sqrt(S[VARS.index("idade"), VARS.index("idade")])
         p = 1 / (1 + np.exp(-(LABEL["b0"] + LABEL["b1"] * z_f + LABEL["b2"] * z_a)))
