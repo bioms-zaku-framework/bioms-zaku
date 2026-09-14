@@ -1,6 +1,9 @@
 # Changelog
 
 ## 0.1.0.dev0 — 2026-09-10 (unreleased)
+- Runs are named after the YAML, not the CSV (two analyses of one file no longer overwrite each other); `run` announces
+  when an output folder already holds a previous run (printed and in the manifest); 'Estimator sensitivity (not requested)'
+  when no second estimator was configured (2026-09-14).
 - Self-explaining `init` (2026-09-14): an intro and one help line before each question, in four languages, interactive mode
   only (`--map` stays quiet).
 - Usability (2026-09-14, evening): `init` asks the language as a clear first question and prints it in the mapping with its

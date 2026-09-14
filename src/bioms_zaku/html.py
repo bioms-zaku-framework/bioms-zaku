@@ -115,10 +115,11 @@ def _tables_block(names: list[str], tables: dict, out_dir: Path, xlsx: Path | No
 
 # EN: result blocks in reading order: (key of the method text, tables shown under it, function building the text kwargs)
 def _block_kwargs(cfg: dict, manifest: dict, tables: dict) -> dict[str, dict]:
+    from .i18n import t
     au = cfg["audit"]; g = cfg.get("geometry") or {}; al = cfg["algebra"]
     est = str(tables["audit"].estimator.iloc[0]) if "audit" in tables and not tables["audit"].empty else au["single"]["estimator"]
     ut = tables.get("utility"); cov = str(ut.covariates.iloc[0]).replace("+", " + ") if ut is not None and not ut.empty else "—"
-    se = tables.get("sensitivity"); est_alt = str(se.estimator.iloc[0]) if se is not None and not se.empty else "—"
+    se = tables.get("sensitivity"); est_alt = str(se.estimator.iloc[0]) if se is not None and not se.empty else t("m.sens.none")
     return {
         "m.input": dict(sep=repr(manifest.get("sep_used")), dec=repr(manifest.get("decimal_used")), rin=manifest.get("input_rows"), rout=manifest.get("rows_out"),
                         strata=", ".join(f"{k} (n={v})" for k, v in (manifest.get("strata_used") or {}).items()) or "—"),

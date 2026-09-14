@@ -122,3 +122,17 @@ def test_T8_no_english_leak_in_pt_report(run_pt):
         assert en not in txt, en
     for pt in ("Como foi calculado", "Como ler", "Rigor aplicado", "baixar CSV", "Rigor desta execução", "Resultados"):
         assert pt in txt, pt
+
+
+def test_run_name_follows_the_yaml_and_overwrite_is_announced(tmp_path):
+    from bioms_zaku.wizard import init
+    from bioms_zaku.run import run
+    flags = {"R": "resistencia_ohm", "Xc": "reatancia_ohm", "H": "estatura_cm", "W": "massa_kg", "target": "lmi_dxa", "control": "fmi_dxa", "independent": "yes"}
+    out = init(str(ROOT / "examples/minimal_data.csv"), str(tmp_path / "analise_A.yaml"), map_flags=flags, printer=lambda s: None)
+    assert yaml.safe_load(out.read_text(encoding="utf-8"))["run_name"] == "analise_A"          # named after the YAML, not the CSV
+    cfg = _cfg(tmp_path, "same", language="en")
+    lines = []; run(cfg, printer=lines.append); assert not any("already holds" in l for l in lines)
+    lines = []; res = run(cfg, printer=lines.append)
+    assert any("already holds a previous run" in l for l in lines) and any("already holds" in w for w in res["manifest"]["warnings"])
+    txt = (res["out_dir"] / "report.html").read_text(encoding="utf-8"); assert "Estimator sensitivity (not requested)" in txt
+    set_language("en")

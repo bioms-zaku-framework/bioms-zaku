@@ -129,7 +129,11 @@ def _show_inline(report: Path) -> None:
 
 def _run(cfg: dict, *, printer: Callable[[str], None]) -> dict:
     t0 = time.time()
-    out_dir = Path(cfg["output"]["dir"]) / cfg["run_name"]; out_dir.mkdir(parents=True, exist_ok=True)
+    out_dir = Path(cfg["output"]["dir"]) / cfg["run_name"]
+    overwrite_note = _t("r.overwrite", dir=out_dir) if (out_dir / "manifest.json").exists() else None   # EN: never replace a previous run silently
+    if overwrite_note:
+        printer(overwrite_note)
+    out_dir.mkdir(parents=True, exist_ok=True)
     d = cfg["data"]
     # EN: single source of truth for strata: top-level `strata` (contract §3); copied into the column mapping.
     cols = d["columns"]
@@ -142,6 +146,8 @@ def _run(cfg: dict, *, printer: Callable[[str], None]) -> dict:
                     drop_nonpositive=d["drop_nonpositive"], min_n=d["min_n"], min_per_class=d["min_per_class"])
     cat = _load_catalog(cfg)
     warnings = list(ds.info["warnings"])
+    if overwrite_note:
+        warnings.append(overwrite_note.lstrip("⚠ "))
     frame = ds.frame
     manifest = {"run_name": cfg["run_name"], "config_resolved": cfg, "config_sha256": sha256_obj(cfg), "catalog_version": cat.version,
                 "catalog_sha256": sha256_file(cat.source_path) if cat.source_path and Path(cat.source_path).exists() else None,
