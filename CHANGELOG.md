@@ -1,6 +1,8 @@
 # Changelog
 
 ## 0.1.0.dev0 — 2026-09-10 (unreleased)
+- CI fix (2026-09-14): the dashed outline of flagged bars is only set on flagged bars; matplotlib 3.10 (Python 3.10 job)
+  rejects a dash pattern with linewidth 0. First real CI run on GitHub: 3.11 and 3.12 green, 3.10 fixed here.
 - Scorecard layout (2026-09-14, after inspection): method labels wrap to two lines inside their column; the "repeats" note
   is two short lines (predecessor / ρ). No text runs into a pill any more.
 - Geometry of target and control (2026-09-14, contract v0.6, §3.3): implicit exponent vectors of every continuous target and

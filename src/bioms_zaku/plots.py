@@ -279,10 +279,10 @@ def target_control(aud: pd.DataFrame, alg: pd.DataFrame, out_dir: Path, primary_
             y = i; hollow = conf.get(row.method_id, "high") != "high"
             # S1 (green) above, S2 (violet) below, within the row
             flagged = row.method_id in par   # EN: v0.6 — index parallel to the control in the measured space: dashed outline
-            ax.barh(y + 0.19, row.s1_mean, height=0.34, color=C["specific"], alpha=0.35 if hollow else 0.9, zorder=2,
-                    edgecolor=C["ink"] if flagged else "none", linestyle="--", linewidth=0.9 if flagged else 0)
-            ax.barh(y - 0.19, row.s2_mean, height=0.34, color=C["control"], alpha=0.35 if hollow else 0.9, zorder=2,
-                    edgecolor=C["ink"] if flagged else "none", linestyle="--", linewidth=0.9 if flagged else 0)
+            # EN: the dashed style is set ONLY on flagged bars; a dash pattern with linewidth 0 is rejected by older matplotlib
+            edge = dict(edgecolor=C["ink"], linestyle="--", linewidth=0.9) if flagged else dict(edgecolor="none", linewidth=0)
+            ax.barh(y + 0.19, row.s1_mean, height=0.34, color=C["specific"], alpha=0.35 if hollow else 0.9, zorder=2, **edge)
+            ax.barh(y - 0.19, row.s2_mean, height=0.34, color=C["control"], alpha=0.35 if hollow else 0.9, zorder=2, **edge)
             ax.plot([row.s1_lo, row.s1_hi], [y + 0.19, y + 0.19], color=C["ink"], lw=0.9, zorder=3)
             ax.plot([row.s2_lo, row.s2_hi], [y - 0.19, y - 0.19], color=C["ink"], lw=0.9, zorder=3)
             ax.text(max(row.s1_hi, 0) + 0.006, y + 0.19, f"{row.s1_mean:+.2f}", fontsize=6.2, va="center", color=C["ink2"])
