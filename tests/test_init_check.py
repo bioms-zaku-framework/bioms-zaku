@@ -23,24 +23,24 @@ def test_suggest_only_when_unambiguous():
 
 
 def test_init_from_flags_writes_valid_config_and_check_passes(tmp_path):
-    out = init(str(ROOT / "examples/sintetico.csv"), str(tmp_path / "c.yaml"), map_flags=FLAGS, printer=lambda s: None)
+    out = init(str(ROOT / "examples/minimal_data.csv"), str(tmp_path / "c.yaml"), map_flags=FLAGS, printer=lambda s: None)
     cfg = yaml.safe_load(out.read_text(encoding="utf-8"))
     assert cfg["data"]["sep"] == ";" and cfg["data"]["decimal"] == "," and cfg["declarations"]["targets_independent_of_variables"] is True
-    cfg["preset"] = "quick"; cfg["data"]["path"] = str(ROOT / "examples/sintetico.csv"); (tmp_path / "c.yaml").write_text(yaml.safe_dump(cfg))
+    cfg["preset"] = "quick"; cfg["data"]["path"] = str(ROOT / "examples/minimal_data.csv"); (tmp_path / "c.yaml").write_text(yaml.safe_dump(cfg))
     rep = check(tmp_path / "c.yaml", printer=lambda s: None)
     assert not rep["errors"] and any("methods evaluable" in x for x in rep["info"])
 
 
 def test_init_rejects_unknown_column_and_missing_required(tmp_path):
     with pytest.raises(InputError, match="not in file"):
-        init(str(ROOT / "examples/sintetico.csv"), str(tmp_path / "x.yaml"), map_flags={**FLAGS, "R": "nope"}, printer=lambda s: None)
+        init(str(ROOT / "examples/minimal_data.csv"), str(tmp_path / "x.yaml"), map_flags={**FLAGS, "R": "nope"}, printer=lambda s: None)
     with pytest.raises(InputError, match="required"):
-        init(str(ROOT / "examples/sintetico.csv"), str(tmp_path / "x.yaml"), map_flags={k: v for k, v in FLAGS.items() if k != "target"}, printer=lambda s: None)
+        init(str(ROOT / "examples/minimal_data.csv"), str(tmp_path / "x.yaml"), map_flags={k: v for k, v in FLAGS.items() if k != "target"}, printer=lambda s: None)
 
 
 def test_check_blocks_design_without_declaration(tmp_path):
-    cfg = yaml.safe_load((ROOT / "examples/minimo.yaml").read_text(encoding="utf-8"))
-    cfg["data"]["path"] = str(ROOT / "examples/sintetico.csv"); cfg["design"] = {"target": "LMI_DXA"}
+    cfg = yaml.safe_load((ROOT / "examples/minimal.yaml").read_text(encoding="utf-8"))
+    cfg["data"]["path"] = str(ROOT / "examples/minimal_data.csv"); cfg["design"] = {"target": "LMI_DXA"}
     with pytest.raises(CheckError):
         check(cfg, printer=lambda s: None)
     cfg["declarations"] = {"targets_independent_of_variables": True}
@@ -48,8 +48,8 @@ def test_check_blocks_design_without_declaration(tmp_path):
 
 
 def test_check_blocks_impossible_bootstrap(tmp_path):
-    cfg = yaml.safe_load((ROOT / "examples/minimo.yaml").read_text(encoding="utf-8"))
-    cfg["data"]["path"] = str(ROOT / "examples/sintetico.csv"); cfg["audit"]["bootstrap"]["min_oob"] = 500
+    cfg = yaml.safe_load((ROOT / "examples/minimal.yaml").read_text(encoding="utf-8"))
+    cfg["data"]["path"] = str(ROOT / "examples/minimal_data.csv"); cfg["audit"]["bootstrap"]["min_oob"] = 500
     with pytest.raises(CheckError):
         check(cfg, printer=lambda s: None)
 
@@ -57,7 +57,7 @@ def test_check_blocks_impossible_bootstrap(tmp_path):
 def test_cli_init_and_check(tmp_path):
     env = {"PYTHONPATH": str(ROOT / "src"), "HOME": str(tmp_path), "PATH": ""}
     out = tmp_path / "c.yaml"
-    r = subprocess.run([sys.executable, "-m", "bioms_zaku.cli", "init", str(ROOT / "examples/sintetico.csv"), "-o", str(out), "--map"] + [f"{k}={v}" for k, v in FLAGS.items()],
+    r = subprocess.run([sys.executable, "-m", "bioms_zaku.cli", "init", str(ROOT / "examples/minimal_data.csv"), "-o", str(out), "--map"] + [f"{k}={v}" for k, v in FLAGS.items()],
                        capture_output=True, text=True, env=env)
     assert r.returncode == 0, r.stderr[-500:]
     r = subprocess.run([sys.executable, "-m", "bioms_zaku.cli", "check", str(out)], capture_output=True, text=True, env=env)

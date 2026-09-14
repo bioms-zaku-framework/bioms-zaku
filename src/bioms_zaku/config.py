@@ -1,8 +1,8 @@
 """
-EN: Run configuration (CONTRATOS.md §3): defaults = article preset; `quick` preset for examples/tests; resolved config
+EN: Run configuration (CONTRATOS.md §3): defaults = `full` preset; `quick` preset for examples/tests; resolved config
     is what the manifest records.
-ES: Configuración de ejecución: valores por defecto = preset artículo; `quick` para ejemplos/pruebas.
-PT: Configuração de execução: padrões = preset artigo; `quick` para exemplos/testes.
+ES: Configuración de ejecución: valores por defecto = preset `full`; `quick` para ejemplos/pruebas.
+PT: Configuração de execução: padrões = preset `full`; `quick` para exemplos/testes.
 """
 from __future__ import annotations
 
@@ -35,7 +35,7 @@ DEFAULTS: dict[str, Any] = {
     "declarations": {"targets_independent_of_variables": None,
                      "target_kinds": {}},   # EN: optional {column: lean_mass|fat_mass|body_water|hydration|cell_mass|other} for targets/controls   # EN: circularity rule (contract v0.4.3); required true with design   # {"target": ..., "split": "holdout", "fraction": 0.70, "seed": 42, "id": "designed_<target>"}
     "seeds": {"cv": 42, "bootstrap": 42},
-    "preset": "article",
+    "preset": "full",
     "threads": 1,
     "n_jobs": 1,
     "output": {"dir": "./zaku_out", "figures": True, "supplementary_figures": False, "format": "csv"},
@@ -46,7 +46,7 @@ DEFAULTS: dict[str, Any] = {
                 "font": "DejaVu Sans", "font_size": 8.5, "dpi": 300, "formats": ["png", "pdf"], "footer": True,
                 "captions": False},   # EN: in-figure explanatory legends off by default; the report/documentation text explains each figure
 }
-PRESETS = {"quick": {"audit": {"cv": {"repeats": 5}, "bootstrap": {"B": 200}}}, "article": {}}
+PRESETS = {"quick": {"audit": {"cv": {"repeats": 5}, "bootstrap": {"B": 200}}}, "full": {}}
 
 
 def _merge(base: dict, over: dict) -> dict:

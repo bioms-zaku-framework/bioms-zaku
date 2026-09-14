@@ -45,18 +45,19 @@ Python ≥ 3.10. Dependencies: numpy, pandas, scipy, scikit-learn, pyyaml (+ mat
 
 ## Example data / Datos de ejemplo / Dados de exemplo
 
-`examples/nhanes_sintetico.csv` — 8 000 **synthetic** rows (4 000 per sex). They are draws from a multivariate log-normal
+`examples/example_data.csv` — 8 000 **synthetic** rows (4 000 per sex). They are draws from a multivariate log-normal
 whose mean vector and log-covariance Σ were estimated, per sex, from a **convenience sample** of NHANES 1999–2004 (adults
 18–49 y, measured DXA, 50 kHz BIA; n = 2 792 women, 3 036 men). No real row is reproduced; only μ and Σ left the source, and
-they are published in `examples/nhanes_sintetico_params.json` (with the skew and kurtosis of the source logs, so the
-log-normal approximation can be judged) together with the generator `tools/make_synthetic_nhanes.py` and its seed. The
+they are published in `examples/example_data_params.json` (with the skew and kurtosis of the source logs, so the
+log-normal approximation can be judged) together with the generator `tools/make_example_data.py` and its seed. The
 file carries R, Xc, height, weight, age, three circumferences, DXA lean/appendicular/fat indices and one declared
 synthetic binary label. Use it to learn the method, to test the tool, and to decompose Σ by hand.
 
 ```bash
-bioms-zaku run examples/nhanes_sintetico.yaml   # 7 curated indices, preset quick, ~20 s
-bioms-zaku run examples/minimo.yaml             # 150 rows, the smallest possible run
-ls zaku_out/nhanes_sintetico                    # algebra.csv pairs.csv redundancy.csv audit.csv utility.csv sigma_transfer.csv manifest.json summary.md report.html figures/
+bioms-zaku run examples/example_quick.yaml      # 7 curated indices, preset quick, ~20 s
+bioms-zaku run examples/example_full.yaml       # same data, preset full (5×50 CV, B = 2000), for reporting
+bioms-zaku run examples/minimal.yaml            # 150 rows, the smallest possible run
+ls zaku_out/example_quick                       # algebra sigma pairs redundancy sigma_transfer audit utility combinations screening sensitivity threshold_sensitivity (.csv) manifest.json summary.md report.html figures/
 ```
 
 Your own data — three commands / tres comandos / três comandos:
@@ -83,7 +84,7 @@ data:
     controls: {FMI: fat_mass_index}
     covariates: [weight_kg, height_cm]
 strata: sex
-preset: article          # 5×50 CV, B = 2000 (quick = 5×5, B = 200, for demos only)
+preset: full             # 5×50 CV, B = 2000 (quick = 5×5, B = 200, for demos only)
 ```
 
 ## Rules the code enforces / Reglas / Regras
@@ -112,14 +113,15 @@ and are therefore `composite`: their exponent vector is fitted per stratum and t
 ## Reproducibility / Reproducibilidad / Reprodutibilidade
 
 `manifest.json` records the resolved configuration, seeds, package/library versions, input hash and the SHA-256 of every
-output. Two identical runs give identical hashes (tested in CI). Equivalence tests against the previous analysis engine
-(NHANES 1999–2004) are marked `slow` and run locally: `pytest -m slow`.
+output. Two identical runs give identical hashes (tested in CI). Every quality check runs from the repository alone:
+hand-calculated lessons, exact algebraic identities, synthetic cases with a constructed answer, and the shipped example,
+which is reproducible byte for byte from its published parameters (`tools/make_example_data.py --from-params`). No test
+depends on data outside the repository.
 
 ## Development / Desarrollo / Desenvolvimento
 
 ```bash
-pytest -q -m "not slow"     # fast suite (~2 min)
-pytest -q -m slow           # equivalence with the previous engine (needs local reference data)
+pytest -q                   # whole suite, ~2 min, self-contained
 python -m build && twine check dist/*
 ```
 

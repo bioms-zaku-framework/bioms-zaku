@@ -57,7 +57,7 @@ def suggest(columns: list[str]) -> dict[str, str | None]:
 
 def build_config(csv: Path, mapping: dict[str, str], *, units: dict[str, str], targets: dict[str, str], controls: dict[str, str],
                  covariates: list[str], strata: str | None, id_col: str | None, sep: str, decimal: str, run_name: str,
-                 preset: str = "article", independent: bool = False) -> dict:
+                 preset: str = "full", independent: bool = False) -> dict:
     cfg = {
         "run_name": run_name,
         "data": {"path": str(csv), "sep": sep, "decimal": decimal,

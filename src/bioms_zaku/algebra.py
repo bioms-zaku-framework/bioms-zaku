@@ -290,30 +290,3 @@ def sigma_transfer_table(vecs_by_stratum: dict[str, dict[str, VectorFit]], sigma
                              excess_lo=q(exc_b, 2.5), excess_hi=q(exc_b, 97.5), boot_B=len(med_b)))
     return pd.DataFrame(rows)
 
-
-def sigma_transfer_table_legacy(vecs_by_stratum: dict[str, dict[str, VectorFit]], sigma_by_stratum: dict[str, np.ndarray],
-                         pairs_by_stratum: dict[str, pd.DataFrame], *, exclude_identity: bool = True) -> pd.DataFrame:
-    """
-    EN: PRE-v0.5 metric, kept ONLY for the equivalence test with the previous engine (§5): Spearman conversion under
-        bivariate normality and "fraction within the Fisher CI", which depends on n. Not used in any official output.
-    ES/PT: aplica Σ do estrato s aos vetores de s e compara com o observado no estrato t.
-    """
-    rows = []
-    for s, vs in vecs_by_stratum.items():
-        S = sigma_by_stratum[s]
-        for t, pt in pairs_by_stratum.items():
-            errs, errs_sp, inci, n = [], [], 0, 0
-            for _, p in pt.iterrows():
-                if exclude_identity and p.identity:
-                    continue
-                if p.a_id not in vs or p.b_id not in vs:
-                    continue
-                r_pred = predicted_pearson_log(vs[p.a_id].vector, vs[p.b_id].vector, S)
-                sp_pred = pearson_to_spearman(r_pred)
-                errs.append(abs(r_pred - p.r_log_observed)); errs_sp.append(abs(sp_pred - p.rho_sp_observed)); n += 1
-                inci += int(p.ci_lo <= sp_pred <= p.ci_hi)
-            if n:
-                rows.append(dict(sigma_from=s, observed_in=t, type=("own" if s == t else "transfer"), pairs=n,
-                                 within_ci_frac=inci / n, median_abs_err=float(np.median(errs)), max_abs_err=float(np.max(errs)),
-                                 median_abs_err_sp=float(np.median(errs_sp)), max_abs_err_sp=float(np.max(errs_sp))))
-    return pd.DataFrame(rows)

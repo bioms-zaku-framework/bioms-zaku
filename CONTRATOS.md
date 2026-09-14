@@ -1,4 +1,4 @@
-# BioMS Zaku — Etapa 1: contratos (v0.3, 10/09/2026)
+# BioMS Zaku — contratos (v0.5.2, 14/09/2026; changelog na seção 6)
 
 Princípio da v1.0: **a versão mais simples possível, sem erros**. Cobre o método; não cobre todos os
 contextos. O que fica de fora está listado na seção 0 e é decisão de escopo, não esquecimento.
@@ -130,7 +130,7 @@ recebe vetor ajustado por estrato e o `fit_r2` fica na tabela e na figura (o ant
 foi removido: PhA e LMI passaram a `composite`). `II` e `H_m` continuam re-expressões exatas.
 `check_example`: |expr(inputs) − expected| ≤ tol. Falha → erro na carga.
 Versão e histórico: `catalog_version` (semântico) e `history` (uma linha por evento de curadoria: versão, data, autor,
-mudança). O resultado da migração de 08/09 está congelado em `tests/fixtures/catalog_v1_migrated_2026-09-08.json`.
+mudança). A versão 1.0.0 nasceu da migração do catálogo do piloto (08/09/2026); desde então o catálogo evolui só por curadoria, registrada em `history`.
 
 ### 2.4 Gramática (árvore sintática, lista branca)
 Números; nomes canônicos das variáveis mapeadas e derivadas; nomes de `groups`; `+ - * / ** ( )`;
@@ -173,8 +173,8 @@ fórmula errada falhar na carga, não no artigo. Lista branca substitui `eval`.
 
 ### 3.1 Exemplo completo (padrões = análise do artigo)
 ```yaml
-run_name: nhanes_1999_2004
-data: {path: nhanes_limpo.csv, encoding: utf-8, sep: auto, decimal: auto, columns: {…},
+run_name: my_study
+data: {path: my_data.csv, encoding: utf-8, sep: auto, decimal: auto, columns: {…},
        drop_nonpositive: false, impute: false, max_missing_frac_warn: 0.10, min_n: 30, min_per_class: 20}
 catalog: {path: builtin, include: all, exclude: [], user_entries: []}
 strata: sexo
@@ -201,7 +201,7 @@ audit:
   multiplicity: none             # none | bh  (bh = Benjamini–Hochberg entre métodos, como sensibilidade)
   combinations: false
 seeds: {cv: 42, bootstrap: 42}
-preset: article                  # quick (cv 5x5, B 200) | article
+preset: full                     # quick (cv 5x5, B 200) | full
 threads: 1
 n_jobs: 1
 output: {dir: ./zaku_out, figures: true}
@@ -215,8 +215,8 @@ output: {dir: ./zaku_out, figures: true}
   sobre o controle que o alvo não explica. Um incremento está *presente* quando média > `verdict.margin` (0,03), IC 95 %
   exclui 0 e P(d>0) ≥ `p_specific`. Vereditos: `SPECIFIC` (S1 presente, S2 ausente) · `TRACKS_CONTROL` (S2 presente, S1
   ausente) · `BOTH` (os dois: o índice carrega informação que nem alvo nem controle explicam, p. ex. tamanho corporal)
-  · `NEITHER` (nenhum). A regra anterior (diferença marginal `disc`) fica em `verdict_marginal`, descritiva, e mantém a
-  equivalência com o motor anterior. Justificativa: alvo e controle correlacionam (0,7 no NHANES); a diferença marginal
+  · `NEITHER` (nenhum). A regra anterior (diferença marginal `disc`) fica em `verdict_marginal`, descritiva, para
+  comparação lado a lado com o condicional. Justificativa: alvo e controle correlacionam (0,7 no NHANES); a diferença marginal
   dava crédito ao índice pela parte do alvo que o controle também carrega; o condicional pergunta o que o índice acrescenta.
 - **Amostra de conveniência.** O framework não estima parâmetros populacionais: pesos amostrais são ignorados por
   desenho e os vereditos descrevem a amostra analisada. O resumo declara isso.
@@ -299,35 +299,44 @@ em dados que não podem sair (container em parceiros). Figuras das tabelas garan
 
 ---
 
-## 5. Contrato de REPRODUTIBILIDADE
-- Determinismo: mesma entrada + configuração + versões ⇒ mesmos `outputs_sha256`, para qualquer `n_jobs`.
-- Equivalência com o **motor anterior** (scripts de 08–09/09/2026), onde o método não mudou: com `preset: article`,
-  sementes 42/42, `threads: 1`, Python 3.11.13, numpy 2.3.5, pandas 2.3.3, scipy 1.16.2, scikit-learn 1.4.2, o pacote
-  reproduz os CSVs do NHANES (09/09/2026) e do piloto v2 com tolerância **1e-9 na mesma máquina** e **1e-6 entre
-  máquinas** para estatísticas não baseadas em postos (expoentes ajustados, R², Pearson dos logs, escores de
-  validação cruzada e bootstrap). Estatísticas de posto (Spearman) a **1e-6** e contagens discretas (pares dentro do IC)
-  com **±1 par**: verificado em 10/09/2026 que o CSV de referência carrega diferenças de 1 ulp nas colunas derivadas
-  (H_m, II) que desfazem empates nos postos e deslocam o Spearman em ~3e-7.
-- Exceções declaradas (o motor anterior fazia diferente e o framework é mais rigoroso): Segal específica selecionada
-  por %gordura do DXA (vazamento; o framework só seleciona por `groups`); IMC como método (fora do catálogo);
-  identidades por escala contadas como redundância (o framework as separa); precedência só por ano (o framework usa
-  ano > data > DOI); transferência de Σ com conversão Σ→Spearman e fração no IC de Fisher (motor anterior; v0.5 usa
-  erro em Pearson dos logs com bootstrap de pessoas — o teste usa `sigma_transfer_table_legacy`); veredito marginal
-  (v0.5 compara `verdict_marginal`); PhA e LMI com vetor linearizado (atan(x) ≈ x) no bloco de transferência de Σ (desde o catálogo 1.1.0
-  ambos são `composite` com vetor ajustado; o teste reproduz a convenção antiga só para esses dois métodos).
-  Nos testes, esses casos são reproduzidos por entradas só-de-teste ou excluídos, com o motivo escrito.
-- Teste rápido em CI: recorte fixo (400 linhas, 5 métodos, `quick`), referência congelada, < 60 s.
+## 5. Contrato de REPRODUTIBILIDADE (v0.5.2, 14/09/2026)
+- **Determinismo:** mesma entrada + configuração + versões ⇒ mesmos `outputs_sha256`, para qualquer `n_jobs`.
+- **Autonomia:** todo critério de qualidade roda a partir do repositório sozinho. Nenhum teste lê arquivo fora dele; nada
+  é pulado por "dado ausente". A comunidade roda a suíte inteira em ~2 min e vê o mesmo resultado.
+- **Verdades conhecidas (o que substitui qualquer "igual ao piloto"):**
+  1. contas à mão do caderno (`caderno/licoes_metodo_bioms_a_mao.md`): Var, Cov, Σ, aᵀΣa, aᵀΣb, ρ, R² fora da amostra,
+     bootstrap, controle condicional — tolerância 1e-9;
+  2. identidades algébricas exatas em dados aleatórios (Pearson dos logs previsto por Σ = observado, 1e-12; invariâncias
+     de escala e potência);
+  3. dados sintéticos com resposta construída: índice específico × índice de tamanho, ganho por combinação só com
+     informação nova, partição do desenho recupera o vetor gerador;
+  4. **exemplo embarcado com parâmetros publicados:** `examples/example_data.csv` é reproduzível byte a byte a partir de
+     `examples/example_data_params.json` (o sorteio usa μ e Σ ARREDONDADOS, exatamente os publicados); μ e Σ dos logs
+     batem dentro do erro amostral; a Σ publicada prevê a correlação observada entre índices monomiais (< 0,02);
+  5. exemplos numéricos das fontes primárias no catálogo (`check_example`), conferidos na carga;
+  6. determinismo dos exemplos (hashes iguais em duas execuções, verificado no CI).
+- **O motor anterior (scripts de 08–09/09/2026) foi PILOTO.** O artigo é produzido pelo framework; os CSVs do NHANES de
+  09/09 não são referência de nada. A equivalência a 1e-9 verificada em 10/09 foi um portão de transição, cumprido e
+  retirado em 14/09 (v0.5.2), junto com a função legada `sigma_transfer_table_legacy` e o marcador `slow`.
+- Presets: `quick` (5×5, B 200) para desenvolvimento e demonstração; `full` (5×50, B 2000) para reportar. No exemplo
+  embarcado os dois dão os mesmos 28 vereditos (mediana |ΔS1| 0,0005).
 
-**Justificativa.** O artigo será produzido pelo framework. A equivalência com o motor anterior é verificação de
-implementação onde o método não mudou; não amarra decisões de rigor. Declarar as exceções agora evita "ajustar" o
-teste depois para passar.
+**Justificativa.** Um critério que só roda numa máquina não é critério científico: ninguém pode contestá-lo. Verdades
+conhecidas (conta à mão, identidade, parâmetro publicado) são contestáveis por qualquer leitor com lápis. Simples e
+rápido é condição para outros pesquisadores usarem e aprimorarem.
 
 ---
 
 ## 6. Changelog
-- **v0.5.1 — verificação quick × article (13/09/2026, exemplo sintético, 7 índices, 2 estratos, 2 alvos):** 28 vereditos
-  idênticos; mediana |ΔS1| 0,0005 (máx 0,0015); largura mediana do IC de S1 0,032 (quick) vs 0,033 (article); redundância
-  idêntica; utilidade idêntica. Conclusão: `quick` serve para desenvolvimento e demonstração; `article` para reportar, como
+- **v0.5.2 (14/09/2026)** — decisão do Thalles: o motor anterior era PILOTO; o framework não depende de nenhum dado local.
+  §5 reescrito em torno de verdades conhecidas; removidos os testes de equivalência com o NHANES local, o teste de migração
+  e a fixture do catálogo do piloto, a ferramenta de migração e `sigma_transfer_table_legacy`; marcador `slow` retirado.
+  Gerador do exemplo sorteia a partir dos parâmetros ARREDONDADOS (os publicados) e ganha `--from-params`: o CSV
+  embarcado é reproduzível byte a byte pelo JSON; três testes de verdade conhecida sobre o exemplo. Preset `article`
+  renomeado `full`; exemplos renomeados (`example_data`, `example_quick`, `example_full`, `minimal`).
+- **v0.5.1 — verificação quick × full (13/09/2026, exemplo sintético, 7 índices, 2 estratos, 2 alvos):** 28 vereditos
+  idênticos; mediana |ΔS1| 0,0005 (máx 0,0015); largura mediana do IC de S1 0,032 (quick) vs 0,033 (full); redundância
+  idêntica; utilidade idêntica. Conclusão: `quick` serve para desenvolvimento e demonstração; `full` para reportar, como
   o contrato já dizia; os intervalos de 200 reamostras já são estáveis neste n (8 000).
 - **v0.5.1 (13/09/2026)** — modo de sensibilidade **implementado** (antes só declarado): `audit.sensitivity.estimator`
   roda o segundo estimador nas mesmas reamostras e grava `sensitivity.csv` (S1/S2/veredito primário e alternativo,

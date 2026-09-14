@@ -1,9 +1,10 @@
 {
- "generator": "tools/make_synthetic_nhanes.py",
- "date": "2026-09-13",
+ "generator": "tools/make_example_data.py",
+ "date": "2026-09-14",
  "seed": 20260913,
+ "n_per_sex": 4000,
  "source": "NHANES 1999-2004, adults 18-49 y with measured DXA and 50 kHz BIA (HYDRA 4200), complete cases on the listed variables; a CONVENIENCE sample (survey weights ignored). Only \u03bc and \u03a3 of the logs were used; no individual row is reproduced.",
- "model": "multivariate log-normal per sex: log(x) ~ N(mu, Sigma); values exponentiated and rounded",
+ "model": "multivariate log-normal per sex: log(x) ~ N(mu, Sigma) with mu, Sigma AS PUBLISHED (rounded); values exponentiated and rounded",
  "variables": [
   "R",
   "Xc",

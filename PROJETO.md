@@ -85,10 +85,10 @@ resolvida + versões + hash.
 
 1. **Testes de unidade com resposta à mão**: a tabela de 4 pessoas das lições (Var, Cov, Σ, aᵀΣa,
    aᵀΣb, ρ = −0,998) e a regressão de 3+2 pontos (R² = 0,72). Tolerância 1e-9.
-2. **Testes de equivalência com o motor anterior**: onde o método não mudou, o pacote reproduz os CSVs do NHANES de
-   09/09/2026 e do piloto v2 (mesmas sementes) — é uma verificação de implementação, não uma amarra. O artigo será
-   produzido pelo framework; onde o framework é mais rigoroso que o motor anterior (sem imputação, sem seleção pelo
-   critério, identidades separadas, precedência declarada), o número do artigo é o do framework e a diferença é explicada.
+2. **Verdades conhecidas dentro do repositório** (decisão de 14/09/2026; substitui a equivalência com o motor anterior,
+   que era piloto e cujo portão foi cumprido em 10/09 e retirado): identidades algébricas exatas; dados sintéticos com
+   resposta construída; exemplo embarcado reproduzível byte a byte a partir dos parâmetros publicados, cuja Σ prevê a
+   correlação observada. Nenhum teste lê arquivo fora do repositório. O artigo é produzido pelo framework.
 3. **Testes de contrato**: CSV com `;` e vírgula decimal; coluna negativa → erro claro; faltante no
    alvo → linha removida com aviso; expressão maliciosa → rejeitada pelo parser.
 4. **Determinismo**: duas execuções → saídas idênticas e mesmo hash no manifesto.
@@ -111,10 +111,10 @@ resolvida + versões + hash.
 |---|---|---|
 | 0 | verificação do ambiente e contas (git, gh, PyPI, Zenodo, Docker); decisões de nome/licença | ✔ 10/09: git/gh/Podman ok; PyPI+TestPyPI com token (rotacionar); Zenodo pendente. Ambiente conda `zaku` criado (Python 3.11.13; numpy 2.3.5, pandas 2.3.3, scipy 1.16.2, scikit-learn 1.4.2 = versões da referência; matplotlib 3.11.1, pyyaml, pytest 9, build, twine, hatchling) |
 | 1 | contratos: formato de entrada, catálogo, configuração, saídas (documento + exemplos) | ✔ 10/09: CONTRATOS.md v0.3 aprovado ("faça") |
-| 2 | `io` + `catalog` + parser seguro, com testes de contrato | ✔ 10/09: `src/bioms_zaku/{expr,catalog,io}.py`; `tools/migrate_catalog.py` (39→31, determinístico); `data/catalog_v1.json` validado (vetores conferidos numericamente, 2 check_examples); 42 testes passando; `python -m build` + `twine check` OK. Correções feitas pelos testes: detecção de separador exigia conversão numérica; `inputs` faltava o grupo de ramo. Lima 2008 ganhou DOI 10.37527/2008.58.4.010 (Crossref, resolve). Aguardando revisão do Thalles |
+| 2 | `io` + `catalog` + parser seguro, com testes de contrato | ✔ 10/09: `src/bioms_zaku/{expr,catalog,io}.py`; `tools/migrate_catalog.py` (39→31, determinístico; removido em 14/09, migração concluída); `data/catalog_v1.json` validado (vetores conferidos numericamente, 2 check_examples); 42 testes passando; `python -m build` + `twine check` OK. Correções feitas pelos testes: detecção de separador exigia conversão numérica; `inputs` faltava o grupo de ramo. Lima 2008 ganhou DOI 10.37527/2008.58.4.010 (Crossref, resolve). Aguardando revisão do Thalles |
 | 3 | `algebra` com testes das lições e equivalência com bloco D | ✔ 10/09: `algebra.py` (Σ ddof=1, vetor do catálogo ou ajuste log-linear, Pearson dos logs exato, Spearman observado, pares, redundância com precedência, transferência de Σ). Testes: 10 lições do caderno; exatidão em dados aleatórios (1e-12); equivalência NHANES: expoentes e R² a 1e-9 (26 métodos × 2 sexos), máximos de redundância a 1e-6, bloco D (34 linhas: pares, erro mediano/máximo a 1e-6, dentro-IC ±1 par). Causa dos 3e-7: 1 ulp em H_m/II no CSV de referência. Commit 2. Aguardando revisão |
 | 4 | `audit` + `screen` com equivalência com blocos B/C/E do NHANES | ✔ 10/09: `audit.py` (reamostras determinísticas por conjunto de linhas e semente = esquema do motor anterior; CV repetida, estratificada em classificação, por grupos com id; contraste pareado; controle negativo; utilidade em caso completo na união; ganho por combinação; multiclasse AUROC OvR; progresso+ETA) e `screen.py`. 10 testes sintéticos + 2 de triagem; equivalência exata (1e-9) com blocos B e E do motor anterior em 3 métodos com parâmetros completos (63 s, marcados `slow`). Commit 6. Aguardando revisão |
-| 5 | `report` + manifesto + CLI + determinismo | ✔ 10/09: `config.py` (padrões = preset artigo; `quick`), `run.py` (orquestrador; desenho com partição; caso completo; paralelismo), `report.py` (CSV precisão completa, manifesto com hashes/versões, resumo), `cli.py`, `plots.py` (3 figuras oficiais: exponents, predicted_observed, board; suplementares sob demanda; paleta validada; legendas EN/ES/PT em figures/README.md), `design.py`. Testes ponta a ponta, determinismo (hashes iguais), CLI. 78 testes. Figuras inspecionadas pelo Thalles (v0 reprovada; v1 enviada). Commits até 3e6bfe8 |
+| 5 | `report` + manifesto + CLI + determinismo | ✔ 10/09: `config.py` (padrões = preset `full`; `quick`), `run.py` (orquestrador; desenho com partição; caso completo; paralelismo), `report.py` (CSV precisão completa, manifesto com hashes/versões, resumo), `cli.py`, `plots.py` (3 figuras oficiais: exponents, predicted_observed, board; suplementares sob demanda; paleta validada; legendas EN/ES/PT em figures/README.md), `design.py`. Testes ponta a ponta, determinismo (hashes iguais), CLI. 78 testes. Figuras inspecionadas pelo Thalles (v0 reprovada; v1 enviada). Commits até 3e6bfe8 |
 | 6 | README, CITATION, CHANGELOG, CI, licença | ✔ 10/09: README EN/ES/PT (o que faz, instalação, exemplo, regras impostas, catálogo, reprodutibilidade), CITATION.cff (Mota, Martins, Oliveira Gonçalves), CHANGELOG, `.github/workflows/ci.yml` (Python 3.10–3.12: suíte rápida, exemplo determinístico, build + twine). Passos do CI simulados localmente com sucesso. Repositório GitHub ainda NÃO criado (decisão adiada) |
 | 7 | release v1.0.0 → Zenodo → PyPI → container | Thalles executa as publicações |
 
@@ -127,7 +127,7 @@ O catálogo entra na v1.0 como está, com o campo `verificacao` (nível de confi
 
 ## 9. Riscos e como estão tratados
 
-- **Resultado diferente do artigo após refatorar** → portão 2 (equivalência) bloqueia.
+- **Resultado diferente após refatorar** → determinismo (hashes) e verdades conhecidas (portão 2) bloqueiam.
 - **Parser inseguro** → parser por árvore sintática com lista branca; teste de expressão maliciosa.
 - **Dependência de versão do scikit-learn muda números** → versões fixadas no manifesto e no
   container; testes de equivalência com tolerância declarada.

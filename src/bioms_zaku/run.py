@@ -17,6 +17,7 @@ from typing import Callable
 
 import numpy as np
 import pandas as pd
+from threadpoolctl import threadpool_limits   # EN: ships with scikit-learn
 
 from . import algebra as A
 from .audit import verdict_sensitivity, AuditConfig, AuditError, audit_method, combination_gain, default_estimator, utility_method
@@ -96,9 +97,17 @@ def run(config: dict | str | Path, *, printer: Callable[[str], None] = print) ->
     EN: execute a full run; returns {"tables": {...}, "manifest": {...}, "out_dir": Path}.
     ES/PT: executa uma rodada completa.
     """
-    t0 = time.time()
     cfg = resolve(config)
-    os.environ.setdefault("OMP_NUM_THREADS", str(cfg["threads"])); os.environ.setdefault("OPENBLAS_NUM_THREADS", str(cfg["threads"]))
+    # EN: BLAS/OpenMP threads are limited HERE, after import, so that run() called from Python (tests, notebooks, other
+    #     packages) behaves exactly like the CLI: no oversubscription on small matrices. Env vars are also set for workers.
+    for k in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS"):
+        os.environ.setdefault(k, str(cfg["threads"]))
+    with threadpool_limits(limits=int(cfg["threads"])):
+        return _run(cfg, printer=printer)
+
+
+def _run(cfg: dict, *, printer: Callable[[str], None]) -> dict:
+    t0 = time.time()
     out_dir = Path(cfg["output"]["dir"]) / cfg["run_name"]; out_dir.mkdir(parents=True, exist_ok=True)
     d = cfg["data"]
     # EN: single source of truth for strata: top-level `strata` (contract §3); copied into the column mapping.

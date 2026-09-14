@@ -14,8 +14,8 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def _cfg(tmp_path, name="e2e"):
-    cfg = yaml.safe_load((ROOT / "examples/minimo.yaml").read_text(encoding="utf-8"))
-    cfg["data"]["path"] = str(ROOT / "examples/sintetico.csv"); cfg["output"]["dir"] = str(tmp_path); cfg["run_name"] = name
+    cfg = yaml.safe_load((ROOT / "examples/minimal.yaml").read_text(encoding="utf-8"))
+    cfg["data"]["path"] = str(ROOT / "examples/minimal_data.csv"); cfg["output"]["dir"] = str(tmp_path); cfg["run_name"] = name
     return cfg
 
 
@@ -86,6 +86,7 @@ def test_sensitivity_tables(tmp_path):
     #     sensitivity runs the second estimator on the same resamples and reports deltas without changing the primary verdict.
     from bioms_zaku.run import run
     cfg = _cfg(tmp_path, "sens"); cfg["audit"]["sensitivity"] = {"estimator": "hgb", "params": {"max_depth": 2, "max_iter": 30}}
+    cfg["catalog"] = {"include": ["Lukaski1985_II", "Baumgartner1988_PhA", "Kyle2001_FFM"]}   # EN: 3 methods keep the boosting run short
     res = run(cfg, printer=lambda s: None); t = res["tables"]
     ts = t["threshold_sensitivity"]; base = ts[(ts.margin == 0.03) & (ts.p_specific == 0.95)]
     assert len(base) and (base.verdict == base.verdict_default).all()
@@ -115,6 +116,7 @@ def test_validity_flag_and_strata_labels(tmp_path):
     cfg = _cfg(tmp_path, "val"); cfg["data"]["path"] = str(p); cfg["strata"] = "sexo"; cfg["strata_labels"] = {0: "F", 1: "M"}
     cfg["data"]["min_n"] = 30; cfg["audit"]["bootstrap"]["min_oob"] = 5
     cfg["data"]["columns"]["targets"] = {"LMI_DXA": "lmi_dxa"}; cfg["data"]["columns"]["controls"] = {"FMI_DXA": "fmi_dxa"}
+    cfg["catalog"] = {"include": ["Lukaski1985_II", "Lima2008_SMM"]}   # EN: Lima 2008 (elderly women) is the validity-flag case
     t = run(cfg, printer=lambda s: None)["tables"]["algebra"]
     assert set(t.stratum) == {"F", "M"}
     lima = t[(t.method_id == "Lima2008_SMM") & (t.stratum == "F")]

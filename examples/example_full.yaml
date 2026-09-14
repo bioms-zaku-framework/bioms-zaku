@@ -1,6 +1,6 @@
-run_name: nhanes_sintetico
+run_name: example_full
 data:
-  path: nhanes_sintetico.csv
+  path: examples/example_data.csv
   columns:
     variables:
       R: R
@@ -47,13 +47,13 @@ declarations:
     LMI_DXA: lean_mass
     ALMI_DXA: lean_mass
     FMI_DXA: fat_mass
-preset: quick
-n_jobs: 4
+preset: full
+n_jobs: 8
 output:
   dir: ./zaku_out
   figures: true
 figures:
   title: Synthetic example · lean mass index (LMI) vs fat mass index (FMI)
-  subtitle: 7 curated indices · preset quick
+  subtitle: 7 curated indices · preset full (5×50 CV, B = 2000)
   language: en
   labels: full

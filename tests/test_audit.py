@@ -26,7 +26,7 @@ def test_resamples_are_deterministic_and_respect_min_oob():
 
 
 def test_reference_scheme_reproduced_exactly():
-    # EN: the previous engine: rng=default_rng(42); ii=rng.integers(0,n,n); oob=setdiff1d(arange(n), unique(ii)); keep if >=20
+    # EN: the documented resampling scheme (§3): rng=default_rng(seed); ii=rng.integers(0,n,n); oob=setdiff1d(arange(n), unique(ii)); keep if >= min_oob
     n, B = 50, 10
     rng = np.random.default_rng(42); ref = []
     while len(ref) < B:

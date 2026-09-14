@@ -23,6 +23,7 @@ dependencies = [
   "pandas>=2.0,<3",
   "scipy>=1.11,<2",
   "scikit-learn>=1.3,<2",
+  "threadpoolctl>=3",
   "pyyaml>=6",
 ]
 
@@ -45,5 +46,4 @@ include = ["src/bioms_zaku", "data", "tests", "README.md", "LICENSE", "CONTRATOS
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-markers = ["slow: equivalence tests with full parameters (minutes)"]
 filterwarnings = ["ignore::DeprecationWarning"]

@@ -62,7 +62,7 @@ def write_manifest(out_dir: Path, manifest: dict) -> Path:
 def write_summary(out_dir: Path, cfg: dict, tables: dict[str, pd.DataFrame], manifest: dict) -> Path:
     """EN: human summary; the only place with rounding (3 decimals). ES/PT: resumo humano; único lugar com arredondamento."""
     L = [f"# BioMS Zaku — {cfg['run_name']}", ""]
-    if cfg["preset"] != "article":
+    if cfg["preset"] != "full":
         L += [f"> **PRESET `{cfg['preset']}`** — reduced resampling ({cfg['audit']['cv']['repeats']}×CV, B={cfg['audit']['bootstrap']['B']}). "
               "Not for reporting.", ""]
     L += [f"Package {__version__} · catalog {manifest.get('catalog_version')} · input rows {manifest.get('input_rows')} → used {manifest.get('rows_out')} · "

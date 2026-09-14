@@ -1,5 +1,5 @@
 """
-EN: Generate the bundled SYNTHETIC example (examples/sintetico.csv): 150 rows, deterministic (seed 2026). Values are
+EN: Generate the bundled SYNTHETIC example (examples/minimal_data.csv): 150 rows, deterministic (seed 2026). Values are
     plausible for adults but do not come from any person. For demonstrating the pipeline only.
 ES/PT: gera o exemplo SINTÉTICO embarcado (150 linhas, semente 2026). Só para demonstrar o fluxo.
 """
@@ -14,6 +14,6 @@ lean = 0.42 * W * (H / 170) ** 0.4 * (500 / R) ** 0.45 * np.where(sexo == 1, 1.1
 df = pd.DataFrame(dict(seqn=np.arange(1, n + 1), sexo=sexo, idade_anos=idade, estatura_cm=H.round(1), massa_kg=W.round(1), resistencia_ohm=R.round(1),
                        reatancia_ohm=Xc.round(1), lmi_dxa=(lean / (H / 100) ** 2).round(2), fmi_dxa=(fat / (H / 100) ** 2).round(2),
                        diab=(fat / W > np.quantile(fat / W, 0.85)).astype(int)))
-out = Path(__file__).resolve().parents[1] / "examples" / "sintetico.csv"
+out = Path(__file__).resolve().parents[1] / "examples" / "minimal_data.csv"
 df.to_csv(out, index=False, sep=";", decimal=",")
 print(f"{len(df)} rows -> {out}")
