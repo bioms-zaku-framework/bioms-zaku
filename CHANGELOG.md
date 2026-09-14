@@ -1,6 +1,12 @@
 # Changelog
 
 ## 0.1.0.dev0 — 2026-09-10 (unreleased)
+- External-user simulation, Colab (2026-09-14) — three defects found and fixed at the root: (1) the catalogue JSON was outside
+  the package and a pip-installed user had none (`FileNotFoundError`); it now ships inside `bioms_zaku/data/` and CI installs
+  from the built wheel, never editable, with an 'external user' step run outside the repository, on Python 3.10–3.13.
+  (2) `init` silently wrote `catalog.include` with five indices; it now includes the whole catalogue. (3) `init` could not map
+  the columns the equations need; new optional roles `sex`, `age`, `arm`, `waist`, `calf` (suggested, never assumed), and
+  `check` now says, per skipped method, which column is missing and how to map it.
 - CI fix (2026-09-14): the dashed outline of flagged bars is only set on flagged bars; matplotlib 3.10 (Python 3.10 job)
   rejects a dash pattern with linewidth 0. First real CI run on GitHub: 3.11 and 3.12 green, 3.10 fixed here.
 - Scorecard layout (2026-09-14, after inspection): method labels wrap to two lines inside their column; the "repeats" note

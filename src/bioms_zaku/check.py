@@ -73,8 +73,21 @@ def check(config: str | Path | dict, *, printer: Callable[[str], None] = print) 
     cat = _load_catalog(cfg)
     vals, skipped = _values(cat, ds, ds.frame)
     rep["info"].append(f"catalog: {len(vals)} methods evaluable, {len(skipped)} skipped")
+    hint = {"sexo": "sex", "idade": "age", "C_arm": "arm", "C_waist": "waist", "C_calf": "calf"}
+    need: dict[str, list[str]] = {}
     for k, why in skipped.items():
         rep["info"].append(f"  skipped {k}: {why}")
+        if why.startswith("missing inputs"):
+            for inp in why[len("missing inputs "):].strip("[]").replace("'", "").split(", "):
+                need.setdefault(inp, []).append(k)
+    for inp, ids in sorted(need.items()):
+        if inp in hint:
+            how = f"--map {hint[inp]}=<column>  (YAML: data.columns.groups.{inp})"
+        elif inp[:1] == "Z" and inp[1:].isdigit():
+            how = f"YAML: data.columns.extra_variables.{inp} — a column with |Z| at {inp[1:]} kHz"
+        else:
+            how = f"YAML: data.columns.groups.{inp} — a categorical column with that meaning (see the catalogue entry)"
+        rep["info"].append(f"  → {len(ids)} method(s) need `{inp}`, which is not mapped: {how}")
     for k, v in vals.items():
         frac = 1 - np.isfinite(v).mean()
         if frac > d["max_missing_frac_warn"]:

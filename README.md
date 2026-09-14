@@ -66,12 +66,14 @@ used as targets: `bioms-zaku run examples/example_kg.yaml`. See *Geometry* below
 Your own data — three commands / tres comandos / três comandos:
 
 ```bash
-bioms-zaku init my_data.csv          # asks which column is R, Xc, H, W, target, control… (suggests, never guesses) → my_data.zaku.yaml
+bioms-zaku init my_data.csv          # asks which column is R, Xc, H, W, target, control, and optionally sex, age, arm/waist/calf (suggests, never guesses) → my_data.zaku.yaml
 bioms-zaku check my_data.zaku.yaml   # validates data + configuration WITHOUT running: rows, classes, methods, bootstrap, circularity
 bioms-zaku run   my_data.zaku.yaml   # the analysis
 ```
 
-Non-interactive `init`: `bioms-zaku init my_data.csv --map R=resistance Xc=reactance H=height W=weight target=lmi control=fmi independent=yes`.
+Non-interactive `init`: `bioms-zaku init my_data.csv --map R=resistance Xc=reactance H=height W=weight target=lmi control=fmi independent=yes`,
+optionally adding `strata=sex id=subject age=age arm=arm_c waist=waist_c calf=calf_c` so that the catalogue equations that need
+sex, age or circumferences can be evaluated; `check` lists every method it cannot evaluate and which column it needs.
 The YAML maps columns to roles (see `CONTRATOS.md` §1): `variables` (R, Xc, H, W at the declared frequency), `units`,
 `targets`, `controls`, optional `covariates`, `strata`, `groups`, `id`, and `declarations.targets_independent_of_variables`
 (true only if no target/control is computed from the mapped variables — the circularity rule).

@@ -120,3 +120,12 @@ def test_excluded_entries_require_reason_and_builtin_marks_heitmann_tbw():
     assert e.status == "excluded" and e.exclusion_reason
     with pytest.raises(CatalogError, match="exclusion_reason"):
         build_catalog(_with(status="excluded"))
+
+
+def test_builtin_catalog_ships_inside_the_package():
+    # EN: an installed wheel must find the catalogue: it has to live under the package directory (Colab finding, 2026-09-14)
+    import bioms_zaku
+    from pathlib import Path
+    from bioms_zaku.catalog import BUILTIN_PATH
+    pkg = Path(bioms_zaku.__file__).resolve().parent
+    assert BUILTIN_PATH.exists() and pkg in BUILTIN_PATH.parents

@@ -62,3 +62,24 @@ def test_cli_init_and_check(tmp_path):
     assert r.returncode == 0, r.stderr[-500:]
     r = subprocess.run([sys.executable, "-m", "bioms_zaku.cli", "check", str(out)], capture_output=True, text=True, env=env)
     assert r.returncode == 0 and "ready to run" in r.stdout, r.stdout + r.stderr[-300:]
+
+
+def test_init_includes_whole_catalog_and_maps_equation_inputs(tmp_path):
+    # EN: Colab finding 2026-09-14 — init must not hide the catalogue behind a fixed include list, and must let the user map
+    #     the columns the equations need (sex, age, circumferences). check must name what is missing and how to map it.
+    from bioms_zaku.wizard import init
+    from bioms_zaku.check import check
+    out = init(str(ROOT / "examples/minimal_data.csv"), str(tmp_path / "a.yaml"), map_flags={**FLAGS, "age": "idade_anos"}, printer=lambda s: None)
+    cfg = yaml.safe_load(out.read_text(encoding="utf-8"))
+    assert cfg["catalog"]["include"] == "all" and cfg["data"]["columns"]["groups"] == {"sexo": "sexo", "idade": "idade_anos"}
+    cfg["data"]["path"] = str(ROOT / "examples/minimal_data.csv"); (tmp_path / "a.yaml").write_text(yaml.safe_dump(cfg))
+    lines = []; rep = check(str(tmp_path / "a.yaml"), printer=lines.append)
+    txt = "\n".join(lines)
+    assert "methods evaluable" in txt and int(txt.split("catalog: ")[1].split(" ")[0]) >= 20      # far more than five
+    assert "need `C_arm`" in txt and "--map arm=<column>" in txt                                     # circumferences not mapped: said so
+    printed = []; init(str(ROOT / "examples/minimal_data.csv"), str(tmp_path / "c.yaml"), map_flags=FLAGS, printer=printed.append)
+    assert any("age" in l and "idade_anos" in l and "[suggested]" in l for l in printed)        # an unambiguous suggestion is applied AND printed
+    out2 = init(str(ROOT / "examples/minimal_data.csv"), str(tmp_path / "b.yaml"), map_flags={**FLAGS, "age": "none"}, printer=lambda s: None)
+    cfg2 = yaml.safe_load(out2.read_text(encoding="utf-8")); cfg2["data"]["path"] = str(ROOT / "examples/minimal_data.csv")
+    (tmp_path / "b.yaml").write_text(yaml.safe_dump(cfg2)); lines = []; check(str(tmp_path / "b.yaml"), printer=lines.append)
+    assert "need `idade`" in "\n".join(lines) and "--map age=<column>" in "\n".join(lines)          # age not mapped: said so

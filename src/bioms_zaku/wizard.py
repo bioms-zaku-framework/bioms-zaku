@@ -21,9 +21,17 @@ SUGGEST = {
     "Xc": r"^(xc|react|reactance|reatancia|reatância|reactancia)(_?ohm|50|_50)?$|react",
     "H": r"^(h|ht|height|estatura|altura|talla|stature)(_?cm|_?m)?$|height|estatura|altura|talla",
     "W": r"^(w|wt|weight|peso|massa|mass|masa)(_?kg)?$|weight|peso|massa",
-    "strata": r"^(sex|sexo|gender|genero|género)$",
-    "id": r"^(id|seqn|subject|participant|paciente|patient)$",
+    "strata": r"^(sex|sexo|gender|genero|género)(_.*)?$",
+    "id": r"^(id|seqn|subject|participant|paciente|patient)(_.*)?$",
+    # EN: optional columns that the catalogue EQUATIONS need (age, sex, circumferences); suggested, never assumed
+    "sex": r"^(sex|sexo|gender|genero|género)(_.*)?$",
+    "age": r"^(age|idade|edad|years|anos|años)(_.*)?$|^age|^idade|^edad",
+    "arm": r"arm|braco|braço|brazo",
+    "waist": r"waist|cintura",
+    "calf": r"calf|panturrilha|pantorrilla",
 }
+# EN: role flag → column name inside the catalogue (inputs of the equations)
+GROUP_ROLES = {"sex": "sexo", "age": "idade", "arm": "C_arm", "waist": "C_waist", "calf": "C_calf"}
 
 
 def detect(path: Path, encoding: str = "utf-8") -> tuple[pd.DataFrame, str, str]:
@@ -57,21 +65,23 @@ def suggest(columns: list[str]) -> dict[str, str | None]:
 
 def build_config(csv: Path, mapping: dict[str, str], *, units: dict[str, str], targets: dict[str, str], controls: dict[str, str],
                  covariates: list[str], strata: str | None, id_col: str | None, sep: str, decimal: str, run_name: str,
-                 preset: str = "full", independent: bool = False) -> dict:
+                 preset: str = "full", independent: bool = False, groups: dict[str, str] | None = None) -> dict:
     cfg = {
         "run_name": run_name,
         "data": {"path": str(csv), "sep": sep, "decimal": decimal,
                  "columns": {"variables": {k: mapping[k] for k in ("R", "Xc", "H", "W") if k in mapping},
                              "units": units, "targets": targets, "controls": controls, "covariates": covariates,
-                             "groups": {}, "id": id_col}},
+                             "groups": dict(groups or {}), "id": id_col}},
         "strata": strata,
-        "catalog": {"include": ["Lukaski1985_II", "Baumgartner1988_PhA", "Piccoli1994_RH", "Piccoli1994_XcH", "LMI"]},
+        # EN: the WHOLE catalogue by default; `check` lists what the mapped columns cannot evaluate and why. (Until 2026-09-14
+        #     init silently wrote five indices here — found by the Colab simulation.)
+        "catalog": {"include": "all"},
         "declarations": {"targets_independent_of_variables": bool(independent)},
         "preset": preset,
         "output": {"dir": "./zaku_out", "figures": True},
     }
-    if strata:
-        cfg["data"]["columns"]["groups"] = {"sexo": strata} if strata else {}
+    if strata and "sexo" not in cfg["data"]["columns"]["groups"]:
+        cfg["data"]["columns"]["groups"]["sexo"] = strata
     return cfg
 
 
@@ -86,7 +96,8 @@ def init(csv: str, out: str | None = None, *, ask: Callable[[str, str | None], s
          sep: str = "auto", decimal: str = "auto", encoding: str = "utf-8", printer: Callable[[str], None] = print) -> Path:
     """
     EN: interactive when `ask` is given; otherwise fully specified by `map_flags` (R, Xc, H, W, H_unit, W_unit, target, control,
-        covariates (comma list), strata, id, independent (yes/no)). Never guesses silently.
+        covariates (comma list), strata, id, independent (yes/no), and the optional equation inputs sex, age, arm, waist, calf).
+        Never guesses silently.
     ES/PT: interativo com `ask`; senão, totalmente especificado por `map_flags`. Nunca adivinha em silêncio.
     """
     p = Path(csv)
@@ -100,21 +111,24 @@ def init(csv: str, out: str | None = None, *, ask: Callable[[str, str | None], s
     printer("numeric columns: " + ", ".join(numeric))
     sug = suggest(cols)
     flags = dict(map_flags or {})
+    origin: dict[str, str] = {}   # EN: role -> "flag" | "answer" | "suggested" | "default"; printed at the end so nothing is silent
 
     def get(role: str, prompt: str, default: str | None, required: bool = True) -> str | None:
         if role in flags:
-            v = flags[role]
+            v = flags[role]; origin[role] = "flag"
+            if str(v).strip().lower() in ("none", "-"):
+                return None                      # EN: explicit refusal of a suggestion
         elif ask is not None:
-            v = ask(prompt + (f" [{default}]" if default else ""), default)
+            v = ask(prompt + (f" [{default}]" if default else ""), default); origin[role] = "answer" if (v or "").strip() else "suggested"
         else:
-            v = default
+            v = default; origin[role] = "suggested" if default else "default"
         v = (v or "").strip() or (default or "")
         if required and not v:
             raise InputError(f"{role}: a value is required")
         return v or None
 
-    def col(role: str, prompt: str, required: bool = True) -> str | None:
-        v = get(role, prompt, sug.get(role), required)
+    def col(role: str, prompt: str, required: bool = True, default: str | None = None) -> str | None:
+        v = get(role, prompt, default if default is not None else sug.get(role), required)
         if v and v not in cols:
             raise InputError(f"{role}: column {v!r} not in file (columns: {cols})")
         return v
@@ -131,11 +145,24 @@ def init(csv: str, out: str | None = None, *, ask: Callable[[str, str | None], s
             raise InputError(f"covariate {x!r} not in file")
     strata = col("strata", "stratum column, e.g. sex (empty = none)", required=False)
     id_col = col("id", "identifier column (empty = none)", required=False)
+    # EN: optional columns the catalogue equations need; empty = not mapped (check will list which methods are skipped and why)
+    groups: dict[str, str] = {}
+    for role, gname in GROUP_ROLES.items():
+        v = col(role, f"column for {role} (used by the catalogue equations; empty = skip)", required=False,
+                default=(strata if role == "sex" and strata else None))
+        if v:
+            groups[gname] = v
     indep = (get("independent", "Are ALL targets/controls measured independently of R, Xc, H, W (yes/no)?", "no") or "no").lower() in ("yes", "y", "sim", "sí", "si", "true")
     tname = re.sub(r"\W+", "_", t).upper(); cname = re.sub(r"\W+", "_", c).upper()
     cfg = build_config(p, mapping, units=units, targets={tname: t}, controls={cname: c}, covariates=covariates, strata=strata, id_col=id_col,
-                       sep=s, decimal=d, run_name=p.stem, independent=indep)
+                       sep=s, decimal=d, run_name=p.stem, independent=indep, groups=groups)
     outp = Path(out) if out else p.with_suffix(".zaku.yaml")
     outp.write_text(HEADER + yaml.safe_dump(cfg, sort_keys=False, allow_unicode=True), encoding="utf-8")
+    printer("mapping:")
+    for role, v in (("R", mapping["R"]), ("Xc", mapping["Xc"]), ("H", mapping["H"]), ("W", mapping["W"]), ("target", t), ("control", c),
+                    ("covariates", ",".join(covariates) or None), ("strata", strata), ("id", id_col),
+                    *[(r, groups.get(g)) for r, g in GROUP_ROLES.items()]):
+        printer(f"  {role:11s} ← {v if v else '(not mapped)'}" + (f"   [{origin[role]}]" if v and role in origin else ""))
+    printer("  catalogue: all methods; `check` lists those the mapped columns cannot evaluate")
     printer(f"wrote {outp}  → next: bioms-zaku check {outp}")
     return outp

@@ -42,7 +42,7 @@ bioms-zaku = "bioms_zaku.cli:main"
 packages = ["src/bioms_zaku"]
 
 [tool.hatch.build.targets.sdist]
-include = ["src/bioms_zaku", "data", "tests", "README.md", "LICENSE", "CONTRATOS.md", "PROJETO.md"]
+include = ["src/bioms_zaku", "tests", "README.md", "LICENSE", "CONTRATOS.md", "PROJETO.md"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

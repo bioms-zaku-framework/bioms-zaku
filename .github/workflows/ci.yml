@@ -1,7 +1,8 @@
-# EN: continuous integration — whole suite on 3 Python versions + package build check (self-contained; no external data)
-#     (they need the reference NHANES data, which are not in the repository).
-# ES: integración continua — suite rápida en 3 versiones de Python + construcción del paquete.
-# PT: integração contínua — suíte rápida em 3 versões de Python + construção do pacote.
+# EN: continuous integration — the package is BUILT and INSTALLED FROM THE WHEEL (never editable), the whole suite runs
+#     against that installation, and an 'external user' step runs init/check/run from a directory outside the repository.
+#     Motivated by the Colab simulation of 2026-09-14: an editable install hid that the catalogue was not shipped.
+# ES: integración continua — instalación desde el wheel + suite + paso de usuario externo fuera del repositorio.
+# PT: integração contínua — instalação a partir do wheel + suíte + passo de usuário externo fora do repositório.
 name: ci
 on:
   push:
@@ -13,7 +14,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.10", "3.11", "3.12"]
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
     env:
       OMP_NUM_THREADS: "1"
       OPENBLAS_NUM_THREADS: "1"
@@ -23,10 +24,12 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - name: "Install (package + plots + dev)"
+      - name: "Build the wheel and install it like a user (no editable install)"
         run: |
-          python -m pip install --upgrade pip
-          python -m pip install -e ".[plots,dev]"
+          python -m pip install --upgrade pip build
+          python -m build --wheel
+          python -m pip install dist/*.whl matplotlib pytest twine
+          python -c "import bioms_zaku, pathlib; print(bioms_zaku.__file__)"
       - name: "Test suite (self-contained)"
         run: python -m pytest -q
       - name: Example run (quick preset) must succeed and be deterministic
@@ -41,6 +44,16 @@ jobs:
           assert a == b, "outputs differ between two identical runs"
           print("deterministic:", len(a), "output files")
           PY
+      - name: "External user: init/check/run from a directory outside the repository"
+        run: |
+          mkdir -p /tmp/usuario && cp examples/minimal_data.csv /tmp/usuario/meus_dados.csv && cd /tmp/usuario
+          bioms-zaku init meus_dados.csv -o estudo.yaml --map R=resistencia_ohm Xc=reatancia_ohm H=estatura_cm W=massa_kg target=lmi_dxa control=fmi_dxa covariates=massa_kg,estatura_cm strata=sexo id=seqn independent=yes
+          bioms-zaku check estudo.yaml
+          python - <<'PY'
+          import yaml; c = yaml.safe_load(open("estudo.yaml")); c["preset"] = "quick"; c["audit"]["bootstrap"]["min_oob"] = 10; yaml.safe_dump(c, open("estudo.yaml", "w"))
+          PY
+          bioms-zaku run estudo.yaml
+          test -f zaku_out/*/report.html && test -f zaku_out/*/geometry.csv && echo "external user OK"
   build:
     runs-on: ubuntu-latest
     steps:
