@@ -247,7 +247,10 @@ def _run(cfg: dict, *, printer: Callable[[str], None]) -> dict:
                 T["sigma"].append(dict(stratum=stratum, n=n_sig, var_i=vi, var_j=vj, cov_log=float(S[i, j])))
         pcat = Catalog(cat.version, cat.conventions, list(cat.entries) + ([_designed_entry(di)] if di is not None else []), cat.source_path)
         pairs = A.pairs_table(pcat, vecs, vals, S, stratum, min_pair_n=cfg["algebra"]["min_pair_n"], alpha=cfg["algebra"]["fisher_alpha"])
-        red = A.redundancy_table(pcat, pairs, stratum, threshold=cfg["algebra"]["redundancy_threshold"]) if not pairs.empty else pd.DataFrame()
+        # EN: with a single evaluable method there are no pairs; the empty table still carries its columns (a one-method run must
+        #     not crash downstream — found by a test on 14/09)
+        red = (A.redundancy_table(pcat, pairs, stratum, threshold=cfg["algebra"]["redundancy_threshold"]) if not pairs.empty
+               else pd.DataFrame(columns=["method_id", "stratum", "rho_sp_max", "predecessor_id", "predecessor_year", "redundant", "identity_of"]))
         T["pairs"].append(pairs); T["redundancy"].append(red)
         vecs_by[stratum], sig_by[stratum], pairs_by[stratum], vals_by[stratum] = vecs, S, pairs, {k: v for k, v in vals.items() if k in vecs}
         design_by[stratum] = np.log(fr.loc[:, list(design_vars)].to_numpy(dtype=float))   # EN: v0.5 Σ-transfer bootstrap recomputes Σ_t per resample
@@ -355,9 +358,12 @@ def _run(cfg: dict, *, printer: Callable[[str], None]) -> dict:
     from .html import write_report
     write_report(out_dir, cfg, tables, manifest)
     printer(_t("r.done", sec=f"{time.time() - t0:.0f}", out=out_dir))
-    rp = out_dir / "report.html"
+    rp = (out_dir / "report.html").resolve()
     if rp.exists():
+        import platform as _pf
+        opener = {"Linux": "xdg-open", "Darwin": "open", "Windows": "start \"\""}.get(_pf.system(), "xdg-open")
         printer(_t("r.report", path=rp))
+        printer(_t("r.open", cmd=f"{opener} \"{rp}\""))
         _show_inline(rp)
     return {"tables": tables, "manifest": manifest, "out_dir": out_dir}
 

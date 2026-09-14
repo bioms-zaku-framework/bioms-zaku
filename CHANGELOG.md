@@ -1,6 +1,9 @@
 # Changelog
 
 ## 0.1.0.dev0 — 2026-09-10 (unreleased)
+- Usability (2026-09-14, evening): `init` asks the language as a clear first question and prints it in the mapping with its
+  origin; `run` ends with the absolute report path and the exact open command for the platform ('paste this in the terminal').
+  Bug fixed: a run with a single evaluable method crashed (empty redundancy table without columns).
 - Report as the product (2026-09-14, contract v0.8 §4.6, PLANO_v0.8_relatorio.md): per-block method text (how · read ·
   rigour) in en/es/pt/it with numbers from the resolved configuration; CSV download buttons embedded (base64, offline);
   optional `tables.xlsx` (extra `[excel]`); 'Rigour of this run' section; report path printed by `run`, inline in notebooks;

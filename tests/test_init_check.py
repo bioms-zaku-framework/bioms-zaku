@@ -134,3 +134,18 @@ def test_interactive_init_reasks_on_typo_refuses_control_equal_to_target_and_pri
         init(str(ROOT / "examples/minimal_data.csv"), str(tmp_path / "j.yaml"), map_flags={**FLAGS, "control": FLAGS["target"]}, printer=lambda s: None)
     s = suggest(["id", "reatancia_50k_ohm", "resistencia_50k_ohm", "massa_corporal_kg", "estatura_cm"])
     assert s["Xc"] == "reatancia_50k_ohm" and s["W"] == "massa_corporal_kg" and s["R"] == "resistencia_50k_ohm"
+
+
+def test_init_shows_language_with_its_origin_and_run_prints_an_open_command(tmp_path):
+    from bioms_zaku.wizard import init
+    from bioms_zaku.run import run
+    printed = []; init(str(ROOT / "examples/minimal_data.csv"), str(tmp_path / "l.yaml"), map_flags=FLAGS, lang="pt", printer=printed.append)
+    assert any(l.strip().startswith("idioma") and "pt" in l and "[opção]" in l for l in printed)
+    answers = iter(["it"] + [""] * 6 + ["lmi_dxa", "fmi_dxa"] + [""] * 8 + ["yes"])
+    printed = []; init(str(ROOT / "examples/minimal_data.csv"), str(tmp_path / "m.yaml"), ask=lambda p, d: next(answers), printer=printed.append)
+    assert any(l.strip().startswith("lingua") and "it" in l and "[risposta]" in l for l in printed)
+    cfg = yaml.safe_load((ROOT / "examples/minimal.yaml").read_text(encoding="utf-8")); cfg["data"]["path"] = str(ROOT / "examples/minimal_data.csv")
+    cfg["output"] = {"dir": str(tmp_path), "figures": False}; cfg["catalog"] = {"include": ["Lukaski1985_II"]}; cfg["audit"] = {"bootstrap": {"min_oob": 10}, "cv": {"folds": 3}}; cfg["language"] = "pt"
+    lines = []; run(cfg, printer=lines.append)
+    assert any(l.startswith("relatório: /") for l in lines) and any("cole isto no terminal:  xdg-open \"/" in l or "cole isto no terminal:  open \"/" in l for l in lines)
+    from bioms_zaku.i18n import set_language; set_language("en")

@@ -113,8 +113,10 @@ def init(csv: str, out: str | None = None, *, ask: Callable[[str, str | None], s
     """
     p = Path(csv)
     # EN: language first — asked interactively when not given, so every later prompt is already in that language
+    lang_origin = "flag" if lang else ("flag" if (map_flags or {}).get("lang") else "default")
     if lang is None and ask is not None:
-        lang = (ask("language / idioma / lingua (en, es, pt, it) [en]", "en") or "en").strip().lower()
+        a = (ask("Language / Idioma / Língua / Lingua — en (English) · es (Español) · pt (Português) · it (Italiano) [en]", "en") or "").strip().lower()
+        lang, lang_origin = (a or "en"), ("answer" if a else "default")
     lang = set_language(lang or (map_flags or {}).get("lang") or "en")
     if sep != "auto" and decimal != "auto":
         df = pd.read_csv(p, sep=sep, decimal=decimal, encoding=encoding); s, d = sep, decimal
@@ -189,6 +191,7 @@ def init(csv: str, out: str | None = None, *, ask: Callable[[str, str | None], s
     outp = Path(out) if out else p.with_suffix(".zaku.yaml")
     outp.write_text(HEADER + yaml.safe_dump(cfg, sort_keys=False, allow_unicode=True), encoding="utf-8")
     printer(t("w.mapping"))
+    printer(f"  {t('w.lang_shown'):11s} ← {lang}   [{t('w.origin.' + lang_origin)}]")
     for role, v in (("R", mapping["R"]), ("Xc", mapping["Xc"]), ("H", mapping["H"]), ("W", mapping["W"]), ("target", tgt), ("control", c),
                     ("covariates", ",".join(covariates) or None), ("strata", strata), ("id", id_col),
                     *[(r, groups.get(g)) for r, g in GROUP_ROLES.items()], ("independent", "yes" if indep else "no")):

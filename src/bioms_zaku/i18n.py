@@ -235,8 +235,10 @@ MSG: dict[str, dict[str, str]] = {
                             "es": "La misma entrada, configuración y versiones reproducen cada tabla byte a byte (los hashes de arriba). Este informe lleva fecha y hora y por eso no se hashea.",
                             "pt": "A mesma entrada, configuração e versões reproduzem cada tabela byte a byte (os hashes acima). Este relatório carrega data e hora e por isso não é hasheado.",
                             "it": "Lo stesso input, configurazione e versioni riproducono ogni tabella byte per byte (gli hash sopra). Questo rapporto contiene data e ora e perciò non viene hashato."},
-    "r.report": {"en": "report: {path}  (open it in a browser: xdg-open / open / start)", "es": "informe: {path}  (ábralo en un navegador: xdg-open / open / start)",
-                 "pt": "relatório: {path}  (abra num navegador: xdg-open / open / start)", "it": "rapporto: {path}  (aprirlo in un browser: xdg-open / open / start)"},
+    "r.report": {"en": "report: {path}", "es": "informe: {path}", "pt": "relatório: {path}", "it": "rapporto: {path}"},
+    "r.open": {"en": "to open it, paste this in the terminal:  {cmd}   (or double-click the file)", "es": "para abrirlo, pegue esto en la terminal:  {cmd}   (o doble clic en el archivo)",
+               "pt": "para abrir, cole isto no terminal:  {cmd}   (ou dois cliques no arquivo)", "it": "per aprirlo, incolla questo nel terminale:  {cmd}   (o doppio clic sul file)"},
+    "w.lang_shown": {"en": "language", "es": "idioma", "pt": "idioma", "it": "lingua"},
     # ---------------------------------------------------------------- report (v0.8): method text per block (how · read · rigour)
     "m.input.how": {"en": "The file was read with separator {sep} and decimal {dec} (detected or declared). Only rows with every mapped variable finite and strictly positive enter the algebra (logarithms); a target or control missing removes the row from that audit only. {rin} rows read, {rout} usable. Strata: {strata}.",
                     "es": "El archivo se leyó con separador {sep} y decimal {dec} (detectado o declarado). Solo entran en el álgebra las filas con todas las variables mapeadas finitas y estrictamente positivas (logaritmos); un objetivo o control ausente quita la fila solo de esa auditoría. {rin} filas leídas, {rout} utilizables. Estratos: {strata}.",
