@@ -330,4 +330,12 @@ MSG: dict[str, dict[str, str]] = {
                        "es": "Composición de las tres auditorías anteriores, sin cálculo nuevo. Los nombres de clase se mantienen en inglés a propósito (legibles por máquina en todos los idiomas).",
                        "pt": "Composição das três auditorias acima, sem cálculo novo. Os nomes das classes ficam em inglês de propósito (legíveis por máquina em qualquer língua).",
                        "it": "Composizione delle tre verifiche precedenti, nessun nuovo calcolo. I nomi delle classi restano in inglese di proposito (leggibili dalla macchina in ogni lingua)."},
+    "b.input": {"en": "Input and sample", "es": "Entrada y muestra", "pt": "Entrada e amostra", "it": "Input e campione"},
+    "b.redund": {"en": "Redundancy and precedence", "es": "Redundancia y precedencia", "pt": "Redundância e precedência", "it": "Ridondanza e precedenza"},
+    "b.spec": {"en": "Specificity (conditional negative control)", "es": "Especificidad (control negativo condicional)", "pt": "Especificidade (controle negativo condicional)", "it": "Specificità (controllo negativo condizionale)"},
+    "b.util": {"en": "Added value over the covariates", "es": "Valor agregado sobre las covariables", "pt": "Valor acrescentado sobre as covariáveis", "it": "Valore aggiunto oltre le covariate"},
+    "b.geo": {"en": "Geometry of target and control", "es": "Geometría del objetivo y del control", "pt": "Geometria do alvo e do controle", "it": "Geometria di target e controllo"},
+    "b.transfer": {"en": "Transfer of Σ between strata", "es": "Transferencia de Σ entre estratos", "pt": "Transferência de Σ entre estratos", "it": "Trasferimento di Σ tra strati"},
+    "b.sens": {"en": "Sensitivity of the verdicts", "es": "Sensibilidad de los veredictos", "pt": "Sensibilidade dos vereditos", "it": "Sensibilità dei verdetti"},
+    "b.screen": {"en": "Screening classes and combinations", "es": "Clases de cribado y combinaciones", "pt": "Classes de triagem e combinações", "it": "Classi di screening e combinazioni"},
 }

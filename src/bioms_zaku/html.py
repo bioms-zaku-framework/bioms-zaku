@@ -189,7 +189,7 @@ def write_report(out_dir: Path, cfg: dict, tables: dict[str, pd.DataFrame], mani
         present = [n for n in names if tables.get(n) is not None and not tables[n].empty]
         if not present and key != "m.input":
             continue
-        parts.append(f"<h3>{html.escape(', '.join(present) or key.split('.')[1])}</h3>")
+        parts.append(f"<h3>{html.escape(t('b.' + key.split('.')[1]))} <span class='hint'>({html.escape(', '.join(present))})</span></h3>")
         parts.append(_method_block(key, **kw[key]))
         parts.append(_tables_block(present, tables, out_dir, xlsx)); shown.update(present)
     rest = [n for n, df in tables.items() if n not in shown and df is not None and not df.empty]
