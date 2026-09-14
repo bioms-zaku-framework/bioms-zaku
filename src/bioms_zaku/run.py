@@ -121,8 +121,19 @@ def _show_inline(report: Path) -> None:
     if ip is None or "IPKernelApp" not in getattr(ip, "config", {}):
         return
     try:
-        from IPython.display import HTML, display
-        display(HTML(f"<iframe src='{report.as_posix()}' width='100%' height='720' style='border:1px solid #e6e5e1;border-radius:6px'></iframe>"))
+        from IPython.display import HTML, IFrame, display
+        # EN: Jupyter serves files only below the folder it was started in. Inside it → IFrame with a RELATIVE path (works in
+        #     JupyterLab and Colab); outside it → the whole report embedded in the frame (srcdoc), which works anywhere.
+        try:
+            rel = report.resolve().relative_to(Path.cwd().resolve()).as_posix()
+        except ValueError:
+            rel = None
+        style = "border:1px solid #e6e5e1;border-radius:6px"
+        if rel is not None:
+            display(IFrame(rel, width="100%", height=720))
+        else:
+            import html as _html
+            display(HTML(f"<iframe srcdoc=\"{_html.escape(report.read_text(encoding='utf-8'), quote=True)}\" width='100%' height='720' style='{style}'></iframe>"))
     except Exception:
         return
 

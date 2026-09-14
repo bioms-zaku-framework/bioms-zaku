@@ -86,13 +86,21 @@ def test_T5_inline_only_in_notebooks(tmp_path, monkeypatch):
         config = {"IPKernelApp": {}}
     class HTML:
         def __init__(self, data): self.data = data
-    fake_display = types.SimpleNamespace(display=lambda x: shown.append(x), HTML=HTML)
+    class IFrame:
+        def __init__(self, src, width, height): self.src = src
+    fake_display = types.SimpleNamespace(display=lambda x: shown.append(x), HTML=HTML, IFrame=IFrame)
     monkeypatch.setitem(sys.modules, "IPython", types.SimpleNamespace(display=fake_display))
     monkeypatch.setitem(sys.modules, "IPython.display", fake_display)
     monkeypatch.setattr(builtins, "get_ipython", lambda: FakeIP(), raising=False)
-    R._show_inline(tmp_path / "report.html"); assert len(shown) == 1 and "iframe" in shown[0].data
+    (tmp_path / "report.html").write_text("<p>x</p>", encoding="utf-8")
+    monkeypatch.chdir(tmp_path.parent)                                   # report BELOW the notebook folder → relative IFrame (no 404)
+    R._show_inline(tmp_path / "report.html"); assert len(shown) == 1 and isinstance(shown[0], IFrame) and not shown[0].src.startswith("/")
+    monkeypatch.chdir(tmp_path.parent.parent if tmp_path.parent.parent != tmp_path.parent else "/")
+    other = tmp_path / "elsewhere"; other.mkdir(); (other / "report.html").write_text("<p>y</p>", encoding="utf-8")
+    monkeypatch.chdir(other); R._show_inline(tmp_path / "report.html")   # report OUTSIDE the notebook folder → embedded srcdoc
+    assert len(shown) == 2 and isinstance(shown[1], HTML) and "srcdoc=" in shown[1].data and "&lt;p&gt;x&lt;/p&gt;" in shown[1].data
     monkeypatch.delattr(builtins, "get_ipython", raising=False)
-    R._show_inline(tmp_path / "report.html"); assert len(shown) == 1                  # outside a notebook: nothing
+    R._show_inline(tmp_path / "report.html"); assert len(shown) == 2                  # outside a notebook: nothing new
 
 
 def test_T6_html_is_well_formed(run_pt):
