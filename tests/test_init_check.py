@@ -28,7 +28,7 @@ def test_init_from_flags_writes_valid_config_and_check_passes(tmp_path):
     assert cfg["data"]["sep"] == ";" and cfg["data"]["decimal"] == "," and cfg["declarations"]["targets_independent_of_variables"] is True
     cfg["preset"] = "quick"; cfg["data"]["path"] = str(ROOT / "examples/minimal_data.csv"); (tmp_path / "c.yaml").write_text(yaml.safe_dump(cfg))
     rep = check(tmp_path / "c.yaml", printer=lambda s: None)
-    assert not rep["errors"] and any("methods evaluable" in x for x in rep["info"])
+    assert not rep["errors"] and any("method(s) evaluable" in x for x in rep["info"])
 
 
 def test_init_rejects_unknown_column_and_missing_required(tmp_path):
@@ -76,7 +76,7 @@ def test_init_includes_whole_catalog_and_maps_equation_inputs(tmp_path):
     lines = []; rep = check(str(tmp_path / "a.yaml"), printer=lines.append)
     txt = "\n".join(lines)
     assert "include = curated (8 methods" in txt and "non-curated entries exist and are NOT audited" in txt
-    assert "catalog: 5 methods evaluable" in txt                                                    # II, PhA, R/H, Xc/H, LMI at 50 kHz without circumferences
+    assert "catalog: 5 method(s) evaluable" in txt                                                    # II, PhA, R/H, Xc/H, LMI at 50 kHz without circumferences
     assert "need `C_arm`" in txt and "--map arm=<column>" in txt                                     # Rsp/Xcsp: circumferences not mapped, said so
     cfg["catalog"]["include"] = "all"; (tmp_path / "a.yaml").write_text(yaml.safe_dump(cfg)); lines = []; check(str(tmp_path / "a.yaml"), printer=lines.append)
     assert int("\n".join(lines).split("catalog: ")[1].split(" ")[0]) >= 20                          # explicit all: the equations too

@@ -118,7 +118,7 @@ MSG: dict[str, dict[str, str]] = {
                   "es": "catálogo: include = curated ({k} métodos con lectura de la fuente primaria); existen {n} entradas no curadas que NO se auditan (catalog.include: all)",
                   "pt": "catálogo: include = curated ({k} métodos com leitura da fonte primária); existem {n} entradas não curadas que NÃO são auditadas (catalog.include: all)",
                   "it": "catalogo: include = curated ({k} metodi con lettura della fonte primaria); esistono {n} voci non curate che NON vengono verificate (catalog.include: all)"},
-    "c.evaluable": {"en": "catalog: {k} methods evaluable, {n} skipped", "es": "catálogo: {k} métodos evaluables, {n} omitidos", "pt": "catálogo: {k} métodos avaliáveis, {n} pulados", "it": "catalogo: {k} metodi valutabili, {n} saltati"},
+    "c.evaluable": {"en": "catalog: {k} method(s) evaluable, {n} skipped", "es": "catálogo: {k} método(s) evaluable(s), {n} omitido(s)", "pt": "catálogo: {k} método(s) avaliável(is), {n} pulado(s)", "it": "catalogo: {k} metodo/i valutabile/i, {n} saltato/i"},
     "c.skipped": {"en": "  skipped {k}: {why}", "es": "  omitido {k}: {why}", "pt": "  pulado {k}: {why}", "it": "  saltato {k}: {why}"},
     "c.need": {"en": "  → {n} method(s) need `{inp}`, which is not mapped: {how}", "es": "  → {n} método(s) necesitan `{inp}`, que no está mapeado: {how}",
                "pt": "  → {n} método(s) precisam de `{inp}`, que não está mapeado: {how}", "it": "  → {n} metodo/i richiedono `{inp}`, non mappato: {how}"},
