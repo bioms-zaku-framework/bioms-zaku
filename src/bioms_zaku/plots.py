@@ -22,6 +22,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import re
+import textwrap
 
 import numpy as np
 import pandas as pd
@@ -560,7 +561,7 @@ def scorecard(alg: pd.DataFrame, red: pd.DataFrame, aud: pd.DataFrame, uti: pd.D
     if alg.empty or red.empty or aud.empty:
         return
     from matplotlib.patches import FancyBboxPatch
-    order = _order(alg); lab = _label(alg)
+    order = _order(alg); lab = _label(alg); short = _short(lab)
     conf = alg.set_index(["method_id", "stratum"]).provenance_confidence.to_dict()
     oovd = alg.set_index(["method_id", "stratum"]).get("out_of_validity_frac", pd.Series(dtype=float)).to_dict()
     for st in sorted(alg.stratum.unique()):
@@ -597,13 +598,18 @@ def scorecard(alg: pd.DataFrame, red: pd.DataFrame, aud: pd.DataFrame, uti: pd.D
             if i % 2 == 0:
                 ax.add_patch(FancyBboxPatch((0, y - 0.5), 100, 1.0, boxstyle="square,pad=0", fc="#f4f6fc", ec="none"))
             flags = (" †" if oovd.get((m, st), 0) > 0.5 else "") + (" *" if conf.get((m, st), "high") != "high" else "") + (" ‡" if m in par else "")
-            ax.text(x_m, y, lab.get(m, m) + flags, fontsize=8.2, color=C["ink"], va="center")
+            # EN: the method column is 23 % of the sheet; labels longer than that wrap to two lines instead of running into the pill
+            wrapped = textwrap.wrap(lab.get(m, m), 30)[:2]
+            if len(textwrap.wrap(lab.get(m, m), 30)) > 2:
+                wrapped[1] = wrapped[1][:27] + "…"
+            ax.text(x_m, y, "\n".join(wrapped) + flags, fontsize=8.2 if len(wrapped) == 1 else 7.4, color=C["ink"], va="center", linespacing=1.05)
             ident = r.loc[m, "identity_of"] if pd.notna(r.loc[m, "identity_of"]) else None
             if ident:
-                pill(x_o, y, S("identical"), C["control"]); ax.text(x_o + pw + 0.8, y, lab.get(ident, ident), fontsize=7, color=C["ink2"], va="center")
+                pill(x_o, y, S("identical"), C["control"]); ax.text(x_o + pw + 0.8, y, f"= {short.get(ident, ident)}", fontsize=6.6, color=C["ink2"], va="center")
             elif bool(r.loc[m, "redundant"]):
                 pred = r.loc[m, "predecessor_id"]
-                pill(x_o, y, S("repeats"), C["control"]); ax.text(x_o + pw + 0.8, y, f"{lab.get(pred, pred)} · ρ {r.loc[m, 'rho_sp_max']:.2f}", fontsize=7, color=C["ink2"], va="center")
+                # EN: two short lines (name / ρ) so the note stays inside the originality column (ends at x_s)
+                pill(x_o, y, S("repeats"), C["control"]); ax.text(x_o + pw + 0.8, y, f"{short.get(pred, pred)}\nρ {r.loc[m, 'rho_sp_max']:.2f}", fontsize=6.6, color=C["ink2"], va="center", linespacing=1.05)
             else:
                 pill(x_o, y, S("original"), C["specific"])
                 if np.isfinite(r.loc[m, "rho_sp_max"]):

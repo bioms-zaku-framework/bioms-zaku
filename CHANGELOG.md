@@ -1,6 +1,8 @@
 # Changelog
 
 ## 0.1.0.dev0 — 2026-09-10 (unreleased)
+- Scorecard layout (2026-09-14, after inspection): method labels wrap to two lines inside their column; the "repeats" note
+  is two short lines (predecessor / ρ). No text runs into a pill any more.
 - Geometry of target and control (2026-09-14, contract v0.6, §3.3): implicit exponent vectors of every continuous target and
   control (OLS of the logs, with fit R²), Σ-cosines index–target, index–control and target–control, the exact identity
   r_log = cos_Σ·√R² for monomial indices (gap reported for fitted vectors), and two flags with declared thresholds:
