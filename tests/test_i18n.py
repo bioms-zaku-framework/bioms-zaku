@@ -63,7 +63,7 @@ def test_language_flows_from_init_to_check_run_summary_and_figures(tmp_path):
     res = run(str(tmp_path / "pt.yaml"), printer=lambda s: None)
     summ = (res["out_dir"] / "summary.md").read_text(encoding="utf-8")
     assert "## Estrato `" in summ and "- métodos avaliados:" in summ and "## Geometria do alvo e do controle" in summ
-    html = (res["out_dir"] / "report.html").read_text(encoding="utf-8"); assert "<h2>Figuras</h2>" in html and "<h2>Tabelas</h2>" in html
+    html = (res["out_dir"] / "report.html").read_text(encoding="utf-8"); assert "<h2>Figuras</h2>" in html and "<h2>Resultados</h2>" in html and "Rigor desta execução" in html
     caps = (res["out_dir"] / "figures" / "README.md").read_text(encoding="utf-8"); assert caps.index("**PT**") < caps.index("**EN**")
     assert res["manifest"]["config_resolved"]["figures"]["language"] == "pt"
     set_language("en")

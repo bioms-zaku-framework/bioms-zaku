@@ -143,7 +143,7 @@ def test_html_report_and_brand_palette(tmp_path):
     # EN: no row-level data: the id column never appears as a table header, and no table has one row per input person
     import re
     assert not re.search(r"<th[^>]*>\s*seqn\s*</th>", txt, flags=re.I)
-    assert "150 rows" not in txt
+    assert not re.search(r"csv · 150 (rows|filas|linhas|righe)", txt)   # EN: no table with one row per input person
     cfg2 = _cfg(tmp_path, "badpal"); cfg2["figures"] = {"palette": "rainbow"}
     with pytest.raises(ValueError, match="figures.palette"):
         run(cfg2, printer=lambda s: None)

@@ -112,6 +112,21 @@ def run(config: dict | str | Path, *, printer: Callable[[str], None] = print) ->
         return _run(cfg, printer=printer)
 
 
+def _show_inline(report: Path) -> None:
+    """EN: inside a Jupyter/Colab notebook, display the report inline (iframe); elsewhere do nothing. Never raises."""
+    try:
+        ip = get_ipython()  # type: ignore[name-defined]  # noqa: F821
+    except NameError:
+        return
+    if ip is None or "IPKernelApp" not in getattr(ip, "config", {}):
+        return
+    try:
+        from IPython.display import HTML, display
+        display(HTML(f"<iframe src='{report.as_posix()}' width='100%' height='720' style='border:1px solid #e6e5e1;border-radius:6px'></iframe>"))
+    except Exception:
+        return
+
+
 def _run(cfg: dict, *, printer: Callable[[str], None]) -> dict:
     t0 = time.time()
     out_dir = Path(cfg["output"]["dir"]) / cfg["run_name"]; out_dir.mkdir(parents=True, exist_ok=True)
@@ -340,6 +355,10 @@ def _run(cfg: dict, *, printer: Callable[[str], None]) -> dict:
     from .html import write_report
     write_report(out_dir, cfg, tables, manifest)
     printer(_t("r.done", sec=f"{time.time() - t0:.0f}", out=out_dir))
+    rp = out_dir / "report.html"
+    if rp.exists():
+        printer(_t("r.report", path=rp))
+        _show_inline(rp)
     return {"tables": tables, "manifest": manifest, "out_dir": out_dir}
 
 

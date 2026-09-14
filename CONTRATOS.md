@@ -373,6 +373,21 @@ excluídas) · 3 `precedence_tree` · 4 `specificity_quadrant` (escore controle 
 · 5 `screening_map` (assinatura) · 6 `sigma_transfer` · 7 `combination_gain`.
 **Portão:** inspeção de cada figura pelo Thalles antes do fechamento da v1.0.
 
+### 4.6 Relatório (`report.html`, v0.8 — plano aprovado em 14/09/2026; ver PLANO_v0.8_relatorio.md)
+- **É a saída principal.** Um único arquivo, autocontido (figuras e tabelas embutidas), abre do disco sem servidor. Terminal:
+  a última linha do `run` é o caminho do relatório e como abri-lo. Notebook: `run()` mostra o relatório inline.
+- **Seções, nesta ordem:** cabeçalho (título, preset, aviso se `quick`); resumo; para cada bloco de resultado — entrada e amostra,
+  redundância e precedência, especificidade (controle condicional), utilidade, geometria alvo↔controle, transferência de Σ,
+  sensibilidade, triagem — três parágrafos fixos **como foi calculado · como ler · rigor aplicado**, cujos números (folds,
+  repetições, B, margens, limiares, sementes, estimador) vêm da configuração resolvida e do manifesto, nunca de texto fixo;
+  figuras com legenda; tabelas com botões **CSV** (embutido em base64, funciona offline) e **Excel** (arquivo `tables.xlsx`
+  ao lado, uma aba por tabela, gerado só se `openpyxl` estiver instalado — extra `bioms-zaku[excel]`; sem ele, aviso e CSV);
+  seção **Rigor desta execução** (preset, sementes, versões, hash da entrada, hash de cada saída, tempo, avisos, declaração
+  de independência); manifesto.
+- **O relatório não recalcula nada:** lê tabelas, manifesto e configuração. Uma fonte de verdade.
+- **Determinismo:** `report.html` carrega data/hora e NÃO entra em `outputs_sha256`; os CSV embutidos são byte a byte os
+  arquivos hasheados (teste). Fora: interatividade, PDF.
+
 ### 4.5 Progresso
 CLI e API imprimem, por estrato e método, contagem, tempo decorrido e estimativa de término, desde o
 primeiro método.
@@ -412,6 +427,8 @@ rápido é condição para outros pesquisadores usarem e aprimorarem.
 ---
 
 ## 6. Changelog
+- **v0.8.0 (14/09/2026)** — §4.6 relatório como produto: textos de método por bloco (4 línguas, números da configuração),
+  botões CSV/Excel, seção de rigor, inline no notebook; logo passa a ir dentro do pacote.
 - **v0.7.0 (14/09/2026)** — §3.4 idioma: catálogo único em en/es/pt/it, `--lang` e `language:`; figuras e legendas em italiano.
 - **v0.6.1 (14/09/2026)** — simulação de usuário externo no Colab: catálogo passa a ir DENTRO do pacote (instalação por wheel não o
   encontrava); CI instala o wheel (nunca editável) e roda um passo de usuário externo fora do repositório, Python 3.10–3.13; `init`

@@ -134,6 +134,15 @@ for LMI vs FMI. Using absolute masses (kg) removes height from both sides and lo
 coupling through body mass, and it makes the target more "size", which favours volume indices (H²/R): a declared choice,
 not a fix. Lesson 12 of the notebook works the whole thing by hand on four people.
 
+## The report / El informe / O relatório (v0.8)
+
+`report.html` is the main output: one self-contained file (figures and tables embedded) that opens from disk. In a notebook
+`run()` shows it inline. Each result block carries three fixed paragraphs — *how it was computed · how to read it · rigour
+applied* — whose numbers (folds, repeats, B, margins, thresholds, seeds, estimator) come from the resolved configuration,
+never from fixed text. Every table has a **CSV** download button (embedded, works offline); `pip install bioms-zaku[excel]`
+adds `tables.xlsx` (one sheet per table) next to the report. A *Rigour of this run* section lists preset, seeds, versions,
+input hash, the SHA-256 of every output table, wall time and warnings. The report recomputes nothing.
+
 ## Reproducibility / Reproducibilidad / Reprodutibilidade
 
 `manifest.json` records the resolved configuration, seeds, package/library versions, input hash and the SHA-256 of every

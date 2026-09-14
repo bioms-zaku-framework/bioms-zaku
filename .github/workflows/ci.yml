@@ -28,7 +28,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip build
           python -m build --wheel
-          python -m pip install dist/*.whl matplotlib pytest twine
+          python -m pip install dist/*.whl matplotlib pytest twine openpyxl   # openpyxl: the optional [excel] path is tested too
           python -c "import bioms_zaku, pathlib; print(bioms_zaku.__file__)"
       - name: "Test suite (self-contained)"
         run: python -m pytest -q

@@ -1,6 +1,11 @@
 # Changelog
 
 ## 0.1.0.dev0 — 2026-09-10 (unreleased)
+- Report as the product (2026-09-14, contract v0.8 §4.6, PLANO_v0.8_relatorio.md): per-block method text (how · read ·
+  rigour) in en/es/pt/it with numbers from the resolved configuration; CSV download buttons embedded (base64, offline);
+  optional `tables.xlsx` (extra `[excel]`); 'Rigour of this run' section; report path printed by `run`, inline in notebooks;
+  logo shipped inside the package. Tests: links equal the hashed files, sizes, Excel with/without openpyxl, text follows
+  the configuration, inline only in notebooks, balanced HTML, text = tables, no English leak in pt.
 - Terminal simulation, report inspection (2026-09-14): figure captions matched by longest name (target_control had none);
   scorecard column headers in two lines with truncation (long column names no longer overlap), coupling note in the footer;
   '‡ coupled' and the panel note in the catalogue (4 languages); skipped-method reasons, task names, role meanings and the
