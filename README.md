@@ -141,7 +141,9 @@ not a fix. Lesson 12 of the notebook works the whole thing by hand on four peopl
 applied* — whose numbers (folds, repeats, B, margins, thresholds, seeds, estimator) come from the resolved configuration,
 never from fixed text. Every table has a **CSV** download button (embedded, works offline); `pip install bioms-zaku[excel]`
 adds `tables.xlsx` (one sheet per table) next to the report. A *Rigour of this run* section lists preset, seeds, versions,
-input hash, the SHA-256 of every output table, wall time and warnings. The report recomputes nothing.
+input hash, the SHA-256 of every output table, wall time and warnings. The report recomputes nothing — which is why
+`bioms-zaku --lang en render zaku_out/my_run` re-writes summary, figures and report of a finished run in another language
+in seconds, leaving tables and manifest untouched.
 
 ## Reproducibility / Reproducibilidad / Reprodutibilidade
 

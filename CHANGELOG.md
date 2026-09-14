@@ -1,6 +1,9 @@
 # Changelog
 
 ## 0.1.0.dev0 — 2026-09-10 (unreleased)
+- `render` (2026-09-14): re-write summary, figures and report of a finished run in another language from the saved tables,
+  no recomputation, tables and manifest untouched (tested). Lineage captions in es/pt completed (the 'family tree' half
+  was missing); caption length parity across languages is now tested.
 - Notebook inline report (2026-09-14): relative IFrame when the report lies under the notebook folder (Jupyter served an
   absolute path as 404), embedded srcdoc otherwise; no IPython warning.
 - Runs are named after the YAML, not the CSV (two analyses of one file no longer overwrite each other); `run` announces

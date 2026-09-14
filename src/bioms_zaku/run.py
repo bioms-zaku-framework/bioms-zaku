@@ -112,6 +112,39 @@ def run(config: dict | str | Path, *, printer: Callable[[str], None] = print) ->
         return _run(cfg, printer=printer)
 
 
+def render(out_dir: str | Path, lang: str | None = None, *, printer: Callable[[str], None] = print) -> Path:
+    """
+    EN: re-write summary.md, figures/ and report.html of a FINISHED run in another language, from the saved tables and
+        manifest — nothing is recomputed (contract §4.6: the report reads, never calculates). Tables and manifest are untouched.
+    ES/PT/IT: regrava resumo, figuras e relatório de uma execução concluída em outro idioma, sem recalcular nada.
+    """
+    out_dir = Path(out_dir)
+    manifest = json.loads((out_dir / "manifest.json").read_text(encoding="utf-8"))
+    cfg = manifest["config_resolved"]
+    if lang:
+        cfg["language"] = lang; cfg.setdefault("figures", {})["language"] = lang
+    set_language(cfg.get("language", "en"))
+    str_cols = {"stratum": str, "sigma_from": str, "observed_in": str, "a_id": str, "b_id": str, "method_id": str}
+    def _read(p: Path) -> pd.DataFrame:
+        try:
+            return pd.read_csv(p, dtype=str_cols)
+        except pd.errors.EmptyDataError:                 # EN: an empty table is written as an empty file
+            return pd.DataFrame()
+    tables = {p.stem: _read(p) for p in sorted(out_dir.glob("*.csv"))}
+    for name, df in tables.items():                       # EN: booleans come back as bools; empty tables stay empty
+        for c in df.columns:
+            if df[c].dtype == object and set(df[c].dropna().unique()) <= {"True", "False"}:
+                df[c] = df[c].map({"True": True, "False": False})
+    write_summary(out_dir, cfg, tables, manifest)
+    if cfg["output"].get("figures", True):
+        from .plots import make_all
+        make_all(out_dir, tables, cfg)
+    from .html import write_report
+    rp = write_report(out_dir, cfg, tables, manifest)
+    printer(_t("r.report", path=rp.resolve()))
+    return rp
+
+
 def _show_inline(report: Path) -> None:
     """EN: inside a Jupyter/Colab notebook, display the report inline (iframe); elsewhere do nothing. Never raises."""
     try:

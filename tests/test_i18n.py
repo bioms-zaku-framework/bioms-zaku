@@ -92,3 +92,31 @@ def test_html_report_has_a_caption_for_every_figure_and_no_english_leak_in_pt(tm
     assert "target_control</b> — Mapa do controle negativo condicional" in html
     assert "coupled in the measured space" not in html and "missing inputs" not in html
     set_language("en")
+
+
+def test_captions_are_complete_in_every_language():
+    # EN: the es/pt lineage caption had lost its first half (found by the user, 2026-09-14): no caption may be far shorter than the others
+    for name, caps in plots.CAPTIONS.items():
+        L = [len(c) for c in caps]
+        assert max(L) <= 1.4 * min(L), (name, L)
+    assert plots.CAPTIONS["lineage"][2].startswith("Árvore genealógica") and plots.CAPTIONS["lineage"][1].startswith("Árbol genealógico")
+
+
+def test_render_changes_language_without_recomputing(tmp_path):
+    import hashlib, subprocess, sys
+    from bioms_zaku.run import run, render
+    cfg = yaml.safe_load((ROOT / "examples/minimal.yaml").read_text(encoding="utf-8"))
+    cfg["data"]["path"] = str(ROOT / "examples/minimal_data.csv"); cfg["output"] = {"dir": str(tmp_path), "figures": True}; cfg["language"] = "pt"
+    cfg["catalog"] = {"include": ["Lukaski1985_II", "Piccoli1994_RH", "Baumgartner1988_PhA"]}; cfg["audit"] = {"bootstrap": {"min_oob": 10}, "cv": {"folds": 3}}
+    res = run(cfg, printer=lambda s: None); out = res["out_dir"]
+    before = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in out.glob("*.csv")}; man_before = (out / "manifest.json").read_bytes()
+    assert "## Estrato" in (out / "summary.md").read_text(encoding="utf-8")
+    render(out, "en", printer=lambda s: None)
+    assert "## Stratum" in (out / "summary.md").read_text(encoding="utf-8")
+    html = (out / "report.html").read_text(encoding="utf-8"); assert "<h2>Figures</h2>" in html and "Rigour of this run" in html and "Como foi calculado" not in html
+    caps = (out / "figures" / "README.md").read_text(encoding="utf-8"); assert caps.index("**EN**") < caps.index("**PT**")
+    after = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in out.glob("*.csv")}
+    assert after == before and (out / "manifest.json").read_bytes() == man_before          # nothing recomputed
+    r = subprocess.run([sys.executable, "-m", "bioms_zaku.cli", "--lang", "it", "render", str(out)], capture_output=True, text=True, env={"PYTHONPATH": str(ROOT / "src"), "PATH": ""})
+    assert r.returncode == 0 and "## Strato" in (out / "summary.md").read_text(encoding="utf-8")
+    set_language("en")

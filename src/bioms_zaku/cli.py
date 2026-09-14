@@ -21,6 +21,8 @@ def main(argv=None) -> int:
     i.add_argument("--encoding", default="utf-8"); i.add_argument("--map", nargs="*", default=None, help="role=column pairs, e.g. R=resistencia Xc=reatancia H=estatura W=massa_corporal target=lmi control=fmi independent=yes")
     c = sub.add_parser("check", help="validate configuration and data without running")
     c.add_argument("config")
+    rd = sub.add_parser("render", help="re-write summary, figures and report of a finished run in another language (no recomputation)")
+    rd.add_argument("out_dir")
     a = ap.parse_args(argv)
     from .i18n import set_language, t
     if a.lang:
@@ -36,6 +38,10 @@ def main(argv=None) -> int:
             init(a.csv, a.out, ask=ask, map_flags=flags, sep=a.sep, decimal=a.decimal, encoding=a.encoding, lang=a.lang)
         except InputError as e:
             print(t("cli.init_err", e=e), file=sys.stderr); return 2
+        return 0
+    if a.cmd == "render":
+        from .run import render
+        render(a.out_dir, a.lang)
         return 0
     if a.cmd == "check":
         from .check import CheckError, check
