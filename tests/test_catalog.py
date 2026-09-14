@@ -122,6 +122,24 @@ def test_excluded_entries_require_reason_and_builtin_marks_heitmann_tbw():
         build_catalog(_with(status="excluded"))
 
 
+def test_curated_default_is_the_eight_read_entries_and_is_locked():
+    # EN: DESIGN DECISION (10/09, reaffirmed 14/09 after a wrong change): only curated methods are audited by default.
+    from bioms_zaku.config import DEFAULTS, resolve
+    from bioms_zaku.run import _load_catalog
+    c = load_catalog()
+    cur = sorted(e.id for e in c.entries if e.curated)
+    assert cur == sorted(["Hoffer1969_H2Z", "Lukaski1985_II", "Baumgartner1988_PhA", "Piccoli1994_RH", "Piccoli1994_XcH", "LMI", "Rsp", "Xcsp"])
+    assert all(c[i].curation_record and c[i].confidence == "high" for i in cur)
+    assert DEFAULTS["catalog"]["include"] == "curated"
+    base = {"data": {"columns": {"variables": {"R": "r", "Xc": "x", "H": "h", "W": "w"}, "targets": {"t": "t"}, "controls": {"c": "c"}}}}
+    assert sorted(e.id for e in _load_catalog(resolve(base)).entries) == cur                       # default → the 8
+    assert len(_load_catalog(resolve({**base, "catalog": {"include": "all"}})).entries) == len(c.entries)
+    with pytest.raises(ValueError):
+        resolve({**base, "catalog": {"include": "everything"}})
+    with pytest.raises(CatalogError):                                                                # curated without a record is refused
+        build_catalog(_with(curated=True))
+
+
 def test_builtin_catalog_ships_inside_the_package():
     # EN: an installed wheel must find the catalogue: it has to live under the package directory (Colab finding, 2026-09-14)
     import bioms_zaku

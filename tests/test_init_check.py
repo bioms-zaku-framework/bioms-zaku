@@ -71,15 +71,48 @@ def test_init_includes_whole_catalog_and_maps_equation_inputs(tmp_path):
     from bioms_zaku.check import check
     out = init(str(ROOT / "examples/minimal_data.csv"), str(tmp_path / "a.yaml"), map_flags={**FLAGS, "age": "idade_anos"}, printer=lambda s: None)
     cfg = yaml.safe_load(out.read_text(encoding="utf-8"))
-    assert cfg["catalog"]["include"] == "all" and cfg["data"]["columns"]["groups"] == {"sexo": "sexo", "idade": "idade_anos"}
+    assert cfg["catalog"]["include"] == "curated" and cfg["data"]["columns"]["groups"] == {"sexo": "sexo", "idade": "idade_anos"}   # DESIGN: curated by default
     cfg["data"]["path"] = str(ROOT / "examples/minimal_data.csv"); (tmp_path / "a.yaml").write_text(yaml.safe_dump(cfg))
     lines = []; rep = check(str(tmp_path / "a.yaml"), printer=lines.append)
     txt = "\n".join(lines)
-    assert "methods evaluable" in txt and int(txt.split("catalog: ")[1].split(" ")[0]) >= 20      # far more than five
-    assert "need `C_arm`" in txt and "--map arm=<column>" in txt                                     # circumferences not mapped: said so
+    assert "include = curated (8 methods" in txt and "non-curated entries exist and are NOT audited" in txt
+    assert "catalog: 5 methods evaluable" in txt                                                    # II, PhA, R/H, Xc/H, LMI at 50 kHz without circumferences
+    assert "need `C_arm`" in txt and "--map arm=<column>" in txt                                     # Rsp/Xcsp: circumferences not mapped, said so
+    cfg["catalog"]["include"] = "all"; (tmp_path / "a.yaml").write_text(yaml.safe_dump(cfg)); lines = []; check(str(tmp_path / "a.yaml"), printer=lines.append)
+    assert int("\n".join(lines).split("catalog: ")[1].split(" ")[0]) >= 20                          # explicit all: the equations too
     printed = []; init(str(ROOT / "examples/minimal_data.csv"), str(tmp_path / "c.yaml"), map_flags=FLAGS, printer=printed.append)
     assert any("age" in l and "idade_anos" in l and "[suggested]" in l for l in printed)        # an unambiguous suggestion is applied AND printed
     out2 = init(str(ROOT / "examples/minimal_data.csv"), str(tmp_path / "b.yaml"), map_flags={**FLAGS, "age": "none"}, printer=lambda s: None)
     cfg2 = yaml.safe_load(out2.read_text(encoding="utf-8")); cfg2["data"]["path"] = str(ROOT / "examples/minimal_data.csv")
     (tmp_path / "b.yaml").write_text(yaml.safe_dump(cfg2)); lines = []; check(str(tmp_path / "b.yaml"), printer=lines.append)
+    assert "need `idade`" not in "\n".join(lines)            # curated set needs no age column; the hint appears only with include: all
+    cfg2["catalog"]["include"] = "all"; cfg2["data"]["columns"]["groups"] = {"sexo": "sexo"}; (tmp_path / "b.yaml").write_text(yaml.safe_dump(cfg2))
+    lines = []; check(str(tmp_path / "b.yaml"), printer=lines.append)
     assert "need `idade`" in "\n".join(lines) and "--map age=<column>" in "\n".join(lines)          # age not mapped: said so
+
+
+def test_run_refuses_when_check_has_blocking_problems(tmp_path):
+    # EN: user-audit finding (60 rows): run must not produce a report with every audit skipped; it stops with the check messages.
+    from bioms_zaku.run import run
+    from bioms_zaku.check import CheckError
+    cfg = yaml.safe_load((ROOT / "examples/minimal.yaml").read_text(encoding="utf-8"))
+    cfg["data"]["path"] = str(ROOT / "examples/minimal_data.csv"); cfg["output"]["dir"] = str(tmp_path); cfg["audit"]["bootstrap"]["min_oob"] = 500
+    with pytest.raises(CheckError):
+        run(cfg, printer=lambda s: None)
+    assert not (tmp_path / "minimal" / "audit.csv").exists()
+
+
+def test_init_explains_encoding_and_records_it(tmp_path):
+    # EN: user-audit finding (Brazilian spreadsheet): no traceback on latin-1; the chosen encoding is written to the YAML.
+    from bioms_zaku.wizard import init
+    from bioms_zaku.io import InputError
+    src = pd.read_csv(ROOT / "examples/minimal_data.csv", sep=";", decimal=",")
+    p = tmp_path / "planilha.csv"; src.rename(columns={"resistencia_ohm": "resistência_ohm"}).to_csv(p, index=False, sep=";", decimal=",", encoding="latin-1")
+    flags = {**FLAGS, "R": "resistência_ohm"}
+    with pytest.raises(InputError, match="--encoding latin-1"):
+        init(str(p), str(tmp_path / "x.yaml"), map_flags=flags, printer=lambda s: None)
+    out = init(str(p), str(tmp_path / "y.yaml"), map_flags=flags, encoding="latin-1", printer=lambda s: None)
+    cfg = yaml.safe_load(out.read_text(encoding="utf-8"))
+    assert cfg["data"]["encoding"] == "latin-1" and cfg["data"]["sep"] == ";" and cfg["data"]["decimal"] == ","
+    from bioms_zaku.check import check
+    check(str(out), printer=lambda s: None)          # EN: the YAML written by init passes check as is

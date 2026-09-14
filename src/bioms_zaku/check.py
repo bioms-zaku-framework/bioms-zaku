@@ -72,6 +72,12 @@ def check(config: str | Path | dict, *, printer: Callable[[str], None] = print) 
     # catalog methods
     cat = _load_catalog(cfg)
     vals, skipped = _values(cat, ds, ds.frame)
+    inc = cfg["catalog"]["include"]
+    if inc == "curated":
+        from .catalog import load_catalog as _lc
+        full = _lc(None if cfg["catalog"]["path"] in (None, "builtin") else cfg["catalog"]["path"])
+        n_nc = sum(1 for e in full.entries if not e.curated and e.status != "excluded")
+        rep["info"].append(f"catalog: include = curated ({len(cat.entries)} methods with primary-source reading); {n_nc} non-curated entries exist and are NOT audited (catalog.include: all)")
     rep["info"].append(f"catalog: {len(vals)} methods evaluable, {len(skipped)} skipped")
     hint = {"sexo": "sex", "idade": "age", "C_arm": "arm", "C_waist": "waist", "C_calf": "calf"}
     need: dict[str, list[str]] = {}
@@ -119,7 +125,7 @@ def check(config: str | Path | dict, *, printer: Callable[[str], None] = print) 
     rep["info"].append(f"preset {cfg['preset']}: task {task}; CV {cfg['audit']['cv']['folds']}×{cfg['audit']['cv']['repeats']}, B={B}; estimator {est}")
     _emit(rep, printer)
     if rep["errors"]:
-        raise CheckError(f"{len(rep['errors'])} blocking problem(s)")
+        raise CheckError(f"{len(rep['errors'])} blocking problem(s): " + " | ".join(rep["errors"]))   # EN: reasons travel with the exception (API users)
     return rep
 
 

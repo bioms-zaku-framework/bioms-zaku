@@ -86,6 +86,12 @@ class Entry:
     derivation_sample: dict | None = None
     target_kind: str | None = None           # EN: one of TARGET_KINDS or None (not declared)
     notes: str | None = None
+    # EN: CURATED = the entry went through the documented critical reading of its primary source (catalogo/fontes_primarias_indices/
+    #     LEITURAS.md) and was approved; only curated methods are audited by default (`catalog.include: curated`, §2.1/§3).
+    #     High provenance confidence alone is NOT curation: a formula copied correctly from a PDF may still lack the reading.
+    # ES/PT: curado = passou pela leitura crítica documentada da fonte primária; só curados entram na auditoria por padrão.
+    curated: bool = False
+    curation_record: str | None = None       # EN: where the reading is recorded (e.g. "LEITURAS.md §2, 2026-09-11")
 
     @property
     def inputs(self) -> frozenset[str]:
@@ -229,6 +235,11 @@ def _parse_entry(e: dict, i: int, canon: tuple[str, ...], rng_seed: int) -> Entr
         raise CatalogError(f"{where}: status must be active or excluded")
     if e.get("status") == "excluded" and not e.get("exclusion_reason"):
         raise CatalogError(f"{where}: excluded entries must state exclusion_reason")
+    if e.get("curated", False):
+        if prov["confidence"] != "high" or prov["formula_source"] not in ("pdf_text", "pdf_table"):
+            raise CatalogError(f"{where}: curated entries must have a primary-source formula (pdf_text/pdf_table) with confidence high")
+        if not e.get("curation_record"):
+            raise CatalogError(f"{where}: curated entries must cite their curation_record (where the reading is documented)")
     val = e["validity"]
     for k in ("age", "bmi", "sex", "population"):
         if k not in val:
@@ -289,6 +300,7 @@ def _parse_entry(e: dict, i: int, canon: tuple[str, ...], rng_seed: int) -> Entr
         exclusion_reason=e.get("exclusion_reason"), pmid=e.get("pmid"), date=e.get("date"), derivation_sample=e.get("derivation_sample"),
         check_example=e.get("check_example"), n=e.get("n"), r2=e.get("r2"), see=e.get("see"), target_kind=e.get("target_kind"),
         device=e.get("device"), reference_method=e.get("reference_method"), notes=e.get("notes"),
+        curated=bool(e.get("curated", False)), curation_record=e.get("curation_record"),
     )
     if ent.check_example is not None:
         _check_example(where, ent)

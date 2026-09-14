@@ -16,7 +16,7 @@ DEFAULTS: dict[str, Any] = {
     "run_name": "run",
     "data": {"path": None, "encoding": "utf-8", "sep": "auto", "decimal": "auto", "columns": {},
              "drop_nonpositive": False, "impute": False, "max_missing_frac_warn": 0.10, "min_n": 30, "min_per_class": 20},
-    "catalog": {"path": "builtin", "include": "all", "exclude": [], "user_entries": []},
+    "catalog": {"path": "builtin", "include": "curated", "exclude": [], "user_entries": []},   # EN: DEFAULT = curated methods only (§2.1/§3.2); "all" is an explicit choice
     "strata": None,
     "strata_labels": {},   # EN: optional display names for stratum values, e.g. {0: F, 1: M}
     "algebra": {"fit_affine": True, "extra_log_variables": [], "min_fit_r2": 0.90, "redundancy_threshold": 0.95,
@@ -73,4 +73,7 @@ def resolve(cfg: dict | str | Path) -> dict:
     r = _merge(r, PRESETS[r["preset"]])
     if not r["data"]["columns"]:
         raise ValueError("data.columns is required")
+    inc = r["catalog"]["include"]
+    if not (inc in ("all", "curated") or (isinstance(inc, list) and all(isinstance(x, str) for x in inc))):
+        raise ValueError("catalog.include must be 'curated' (default), 'all', or a list of method ids")
     return r

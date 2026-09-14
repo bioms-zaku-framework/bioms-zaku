@@ -50,7 +50,7 @@ jobs:
           bioms-zaku init meus_dados.csv -o estudo.yaml --map R=resistencia_ohm Xc=reatancia_ohm H=estatura_cm W=massa_kg target=lmi_dxa control=fmi_dxa covariates=massa_kg,estatura_cm strata=sexo id=seqn independent=yes
           bioms-zaku check estudo.yaml
           python - <<'PY'
-          import yaml; c = yaml.safe_load(open("estudo.yaml")); c["preset"] = "quick"; c["audit"]["bootstrap"]["min_oob"] = 10; yaml.safe_dump(c, open("estudo.yaml", "w"))
+          import yaml; c = yaml.safe_load(open("estudo.yaml")); c["preset"] = "quick"; c.setdefault("audit", {}).setdefault("bootstrap", {})["min_oob"] = 10; yaml.safe_dump(c, open("estudo.yaml", "w"))
           PY
           bioms-zaku run estudo.yaml
           test -f zaku_out/*/report.html && test -f zaku_out/*/geometry.csv && echo "external user OK"

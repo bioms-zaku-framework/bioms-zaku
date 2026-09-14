@@ -1,12 +1,18 @@
 # Changelog
 
 ## 0.1.0.dev0 — 2026-09-10 (unreleased)
+- External-user audit on real subsamples (2026-09-14): `run` now performs the `check` pre-flight and stops on blocking problems
+  (a 60-row sample produced a report with every audit skipped); `init` records `data.encoding` and, when the file is not
+  utf-8, says which `--encoding` to pass instead of a traceback; CLI exit code 2 with a one-line message on input/validation errors.
+  Hollow markers and * in figures now mean NOT CURATED (§2.1), not 'provenance not high'; `algebra.csv` carries `curated`.
 - External-user simulation, Colab (2026-09-14) — three defects found and fixed at the root: (1) the catalogue JSON was outside
   the package and a pip-installed user had none (`FileNotFoundError`); it now ships inside `bioms_zaku/data/` and CI installs
   from the built wheel, never editable, with an 'external user' step run outside the repository, on Python 3.10–3.13.
   (2) `init` silently wrote `catalog.include` with five indices; it now includes the whole catalogue. (3) `init` could not map
   the columns the equations need; new optional roles `sex`, `age`, `arm`, `waist`, `calf` (suggested, never assumed), and
-  `check` now says, per skipped method, which column is missing and how to map it.
+  `check` now says, per skipped method, which column is missing and how to map it. DESIGN RULE restated after a wrong change
+  the same day: only CURATED methods are audited by default (`catalog.include: curated`, written in the YAML by `init`; catalog
+  1.4.0 adds `curated` + `curation_record` to the 8 entries whose primary source was critically read); `all` is an explicit choice.
 - CI fix (2026-09-14): the dashed outline of flagged bars is only set on flagged bars; matplotlib 3.10 (Python 3.10 job)
   rejects a dash pattern with linewidth 0. First real CI run on GitHub: 3.11 and 3.12 green, 3.10 fixed here.
 - Scorecard layout (2026-09-14, after inspection): method labels wrap to two lines inside their column; the "repeats" note

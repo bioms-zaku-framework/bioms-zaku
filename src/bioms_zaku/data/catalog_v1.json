@@ -1,5 +1,5 @@
 {
- "catalog_version": "1.3.3",
+ "catalog_version": "1.4.0",
  "conventions": {
   "units": {
    "R": "ohm",
@@ -105,7 +105,9 @@
     "condition": "healthy medical students",
     "country": "USA"
    },
-   "target_kind": "body_water"
+   "target_kind": "body_water",
+   "curated": true,
+   "curation_record": "LEITURAS.md §1 (2026-09-11)"
   },
   {
    "id": "Lukaski1985_II",
@@ -156,7 +158,9 @@
     "condition": "apparently healthy",
     "country": "USA"
    },
-   "target_kind": "lean_mass"
+   "target_kind": "lean_mass",
+   "curated": true,
+   "curation_record": "LEITURAS.md §2 (2026-09-11)"
   },
   {
    "id": "Baumgartner1988_PhA",
@@ -200,7 +204,9 @@
    "reference_method": "hydrodensitometry (Siri; age/sex corrections of FFM density below 25 y), skinfolds",
    "n": 122,
    "consistency_note": "No individual R/Xc values are published; whole-body means (Table 2): men 7.01 ± 0.88°, women 6.31 ± 0.69°, boys 6.25°, girls 6.21°. Definitional check only: atan(Xc/R)·180/π.",
-   "target_kind": "fat_mass"
+   "target_kind": "fat_mass",
+   "curated": true,
+   "curation_record": "LEITURAS.md §3 (2026-09-11)"
   },
   {
    "id": "Piccoli1994_RH",
@@ -251,7 +257,9 @@
    "n": 217,
    "consistency_note": "No individual values are published. Healthy means (Table 1): men R/H 292.6 Ω/m at mean height 176.2 cm; women 374.3 Ω/m at 161.9 cm. The catalog expression uses height in metres so values are on the paper's Ω/m scale.",
    "notes": "The paper proposes the impedance VECTOR (R/H, Xc/H) read on sex-specific ellipses; direction = phase angle, length = hydration. The authors explicitly caution (p. 537) that, because R and Xc are mutually correlated, individual components should not be read as changes in specific fluid compartments. The framework audits each component as an exact monomial and does not reproduce the bivariate ellipse analysis; on NHANES the redundancy rule relates R/H to H²/R (ρ ≈ 0.96), which documents the authors' caution with numbers. Table 2 gives r(R/H, Xc/H) from 0.32 (healthy men) to 0.71 (obese): the covariance is conditional on clinical status as well as sex, which is the framework's reason for Σ per stratum. Height-standardisation of R appears earlier as H²/R (Hoffer 1969, Lukaski 1985); R/H (exponent −1 on H) is Piccoli's.",
-   "target_kind": "hydration"
+   "target_kind": "hydration",
+   "curated": true,
+   "curation_record": "LEITURAS.md §4 (2026-09-11)"
   },
   {
    "id": "Piccoli1994_XcH",
@@ -302,7 +310,9 @@
    "n": 217,
    "consistency_note": "No individual values are published. Healthy means (Table 1): men R/H 292.6 Ω/m at mean height 176.2 cm; women 374.3 Ω/m at 161.9 cm. The catalog expression uses height in metres so values are on the paper's Ω/m scale.",
    "notes": "The paper proposes the impedance VECTOR (R/H, Xc/H) read on sex-specific ellipses; direction = phase angle, length = hydration. The authors explicitly caution (p. 537) that, because R and Xc are mutually correlated, individual components should not be read as changes in specific fluid compartments. The framework audits each component as an exact monomial and does not reproduce the bivariate ellipse analysis; on NHANES the redundancy rule relates R/H to H²/R (ρ ≈ 0.96), which documents the authors' caution with numbers. Table 2 gives r(R/H, Xc/H) from 0.32 (healthy men) to 0.71 (obese): the covariance is conditional on clinical status as well as sex, which is the framework's reason for Σ per stratum. Height-standardisation of R appears earlier as H²/R (Hoffer 1969, Lukaski 1985); R/H (exponent −1 on H) is Piccoli's.",
-   "target_kind": "hydration"
+   "target_kind": "hydration",
+   "curated": true,
+   "curation_record": "LEITURAS.md §4 (2026-09-11)"
   },
   {
    "id": "Rsp",
@@ -351,7 +361,9 @@
    "reference_method": "DXA (Hologic QDR 4500W in Marini 2013; QDR-4500A in Buffa 2013)",
    "n": 202,
    "target_kind": "fat_mass",
-   "consistency_note": "Men's means (Table 1): R 463.5 Ω, H 175.7 cm, arm 33.8, waist 95.7, calf 39.1 cm give 404.2 Ω·cm vs 402.4 published (ratio of means vs mean of ratios). Marini 2013 men's means (Table 1): R 486.97 Ω, H 169.85 cm, arm 29.68, waist 95.43, calf 36.08 cm give 392.6 Ω·cm; the paper reports 334.7 (fat < Q1) and 450.3 (fat > Q3), so the mean lies between the quartile groups as expected."
+   "consistency_note": "Men's means (Table 1): R 463.5 Ω, H 175.7 cm, arm 33.8, waist 95.7, calf 39.1 cm give 404.2 Ω·cm vs 402.4 published (ratio of means vs mean of ratios). Marini 2013 men's means (Table 1): R 486.97 Ω, H 169.85 cm, arm 29.68, waist 95.43, calf 36.08 cm give 392.6 Ω·cm; the paper reports 334.7 (fat < Q1) and 450.3 (fat > Q3), so the mean lies between the quartile groups as expected.",
+   "curated": true,
+   "curation_record": "LEITURAS.md §6 e §8 (2026-09-11)"
   },
   {
    "id": "Xcsp",
@@ -400,7 +412,9 @@
    "reference_method": "DXA (Hologic QDR 4500W in Marini 2013; QDR-4500A in Buffa 2013)",
    "n": 202,
    "target_kind": "fat_mass",
-   "consistency_note": "Men's means (Table 1): Xc 60.2 Ω with the same A/L give 52.5 Ω·cm vs 52.5 published. Marini 2013 men's means: Xc 49.12 Ω with the same A/L give 39.6 Ω·cm, between the published quartile-group means 31.3 and 44.8."
+   "consistency_note": "Men's means (Table 1): Xc 60.2 Ω with the same A/L give 52.5 Ω·cm vs 52.5 published. Marini 2013 men's means: Xc 49.12 Ω with the same A/L give 39.6 Ω·cm, between the published quartile-group means 31.3 and 44.8.",
+   "curated": true,
+   "curation_record": "LEITURAS.md §6 e §8 (2026-09-11)"
   },
   {
    "id": "LMI",
@@ -444,7 +458,9 @@
    "reference_method": "none independent of BIA; body cell mass and fat mass from the Kotler 1996 equation, and phase angle, all derived from the same R and Xc",
    "n": 664,
    "consistency_note": "Group means (Table 2): elite PA 7.7°, H 181.9 cm, R 458.1 Ω give 3.06 vs 3.08 published; medium 7.2°, 179.3 cm, 483.7 Ω give 2.67 vs 2.71. Consistent, but a mean of ratios is not the ratio of means, so not used as check_example.",
-   "target_kind": "lean_mass"
+   "target_kind": "lean_mass",
+   "curated": true,
+   "curation_record": "LEITURAS.md §5 (2026-09-11)"
   },
   {
    "id": "IR",
@@ -1414,6 +1430,12 @@
    "date": "2026-09-11",
    "by": "TM",
    "change": "Mulasi 2015 (review) read: IR has a commercial origin (Bodystat) and no primary derivation paper; entry relabelled, attribution chain and reference cut-offs recorded, confidence kept low, validity null; Jenin 1975 marked as abstract-only."
+  },
+  {
+   "version": "1.4.0",
+   "date": "2026-09-14",
+   "by": "TM",
+   "change": "Schema: `curated` (bool) + `curation_record`. Curated = critical reading of the primary source documented in LEITURAS.md and approved; set on the 8 read entries (Hoffer 1969, Lukaski 1985, Baumgartner 1988, Piccoli 1994 R/H and Xc/H, LMI, Rsp, Xcsp). Only curated methods are audited by default (catalog.include: curated). The predictive equations stay in the catalogue, not curated yet: their coefficients were transcribed without the critical reading, and as sums they depend on the log-linear fit that is still to be validated one by one."
   }
  ]
 }

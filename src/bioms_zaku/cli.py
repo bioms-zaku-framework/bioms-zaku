@@ -27,7 +27,11 @@ def main(argv=None) -> int:
         from .wizard import init
         flags = dict(kv.split("=", 1) for kv in (a.map or [])) or None
         ask = None if flags else (lambda prompt, default: input(prompt + ": "))
-        init(a.csv, a.out, ask=ask, map_flags=flags, sep=a.sep, decimal=a.decimal, encoding=a.encoding)
+        from .io import InputError
+        try:
+            init(a.csv, a.out, ask=ask, map_flags=flags, sep=a.sep, decimal=a.decimal, encoding=a.encoding)
+        except InputError as e:
+            print(f"init: {e}", file=sys.stderr); return 2
         return 0
     if a.cmd == "check":
         from .check import CheckError, check
@@ -43,7 +47,12 @@ def main(argv=None) -> int:
     for k in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS"):
         os.environ[k] = str(threads)
     from .run import run
-    run(a.config)
+    from .check import CheckError
+    from .io import InputError
+    try:
+        run(a.config)
+    except (CheckError, InputError) as e:
+        print(f"run: stopped — {e}", file=sys.stderr); return 2
     return 0
 
 

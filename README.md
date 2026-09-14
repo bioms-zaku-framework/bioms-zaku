@@ -113,7 +113,9 @@ derivation paper). Each entry records the derivation sample separately from the 
 framework flags †, never blocks), the declared kind of target (`target_kind`: a fat-mass index audited against a lean-mass
 target gets an orientation warning), and every curation event in the catalog `history`. Phase angle and LMI contain atan
 and are therefore `composite`: their exponent vector is fitted per stratum and the fit R² is reported (exactness rule,
-`CONTRATOS.md` §2.3). The catalog file also carries entries under curation; they are not evaluated unless explicitly included.
+`CONTRATOS.md` §2.3). **Only curated entries are audited by default** (`catalog.include: curated`, the value `init` writes): the
+eight whose primary source was critically read (`curated: true`, with `curation_record`). The predictive equations stay in the
+catalog without curation and are audited only with `catalog.include: all`, marked * in every output.
 
 ## Geometry of target and control / Geometría / Geometria (v0.6)
 

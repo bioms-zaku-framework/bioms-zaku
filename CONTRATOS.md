@@ -116,6 +116,7 @@ treino/teste.
 | `provenance` | sim | `{formula_source: pdf_table|pdf_text|pmc_text|abstract|review_table, source_detail, verified_by, verified_on, confidence}`; mapa padrão pdf/pmc → high, abstract → medium, review → low |
 | `check_example` | obrig. para contribuições | `{inputs, expected, tol}` com valor publicado; testado na carga |
 | `identity_of` | não | transformação exata de outro método → sai como `identity`, excluído das estatísticas de previsão |
+| `curated`, `curation_record` | não (padrão `false`) | **curado** = a fonte primária foi lida criticamente, com registro em `catalogo/fontes_primarias_indices/LEITURAS.md`, e a entrada aprovada. Exige `confidence: high` e fórmula de PDF. **Só métodos curados entram na auditoria por padrão** (`catalog.include: curated`, §3.2). Confiança alta sozinha NÃO é curadoria: fórmula copiada certa de um PDF pode não ter passado pela leitura. Em 14/09/2026: 8 curados (Hoffer 1969, Lukaski 1985, Baumgartner 1988, Piccoli 1994 R/H e Xc/H, LMI, Rsp, Xcsp); as equações preditivas ficam no catálogo sem curadoria até serem lidas uma a uma |
 | `n`, `r2`, `see`, `device`, `reference_method`, `notes` | não | `null` quando não informado; nunca inventado |
 
 ### 2.2 Precedência
@@ -176,7 +177,7 @@ fórmula errada falhar na carga, não no artigo. Lista branca substitui `eval`.
 run_name: my_study
 data: {path: my_data.csv, encoding: utf-8, sep: auto, decimal: auto, columns: {…},
        drop_nonpositive: false, impute: false, max_missing_frac_warn: 0.10, min_n: 30, min_per_class: 20}
-catalog: {path: builtin, include: all, exclude: [], user_entries: []}
+catalog: {path: builtin, include: curated, exclude: [], user_entries: []}   # curated (padrão) | all | [ids]
 strata: sexo
 algebra:
   fit_affine: true
@@ -213,6 +214,14 @@ output: {dir: ./zaku_out, figures: true}
 ```
 
 ### 3.2 Regras
+- **`run` valida antes de rodar (14/09/2026).** A mesma verificação de `check` roda no início de `run` (CLI e API); problema
+  bloqueante para a execução com as mensagens do `check` e código de saída 2. Nunca se produz relatório com todas as auditorias
+  puladas. `init` grava `data.encoding` e, se não conseguir decodificar, diz qual `--encoding` tentar (sem traceback).
+- **Catálogo por padrão = só curados (decisão de desenho, 10/09, reafirmada 14/09).** `catalog.include: curated` é o padrão do pacote e
+  do `init`; `all` é escolha explícita do usuário e marca com * toda saída de método não curado; lista de ids é escolha explícita.
+  Registro do erro: em 14/09 o padrão foi trocado para `all` dentro de uma correção de bug, sem consulta; revertido no mesmo dia e
+  travado por teste (`tests/test_catalog.py`, `tests/test_init_check.py`). Regra de trabalho: decisão de desenho nunca muda dentro
+  de correção.
 - **Controle negativo condicional (v0.5).** Além de escore(alvo | índice) e escore(controle | índice), a auditoria ajusta,
   nas MESMAS reamostras, o controle como preditor do alvo (com e sem o índice) e o alvo como preditor do controle (com e
   sem o índice). Dois incrementos pareados: **S1** = escore(alvo | controle + índice) − escore(alvo | controle), o sinal
@@ -390,6 +399,11 @@ rápido é condição para outros pesquisadores usarem e aprimorarem.
 ---
 
 ## 6. Changelog
+- **v0.6.1 (14/09/2026)** — simulação de usuário externo no Colab: catálogo passa a ir DENTRO do pacote (instalação por wheel não o
+  encontrava); CI instala o wheel (nunca editável) e roda um passo de usuário externo fora do repositório, Python 3.10–3.13; `init`
+  mapeia sexo/idade/perímetros (papéis `sex`, `age`, `arm`, `waist`, `calf`; sugeridos, impressos com origem, `none` recusa) e escreve
+  `catalog.include: curated` às claras; `check` nomeia cada entrada faltante e como mapear, e diz quantos não curados existem sem rodar.
+  Catálogo 1.4.0: campo `curated` + `curation_record` nos 8 lidos. Erro de desenho cometido e revertido no mesmo dia (§3.2).
 - **v0.6.0 (14/09/2026, aprovado)** — §3.3 geometria alvo↔controle: vetores implícitos, cossenos sob Σ, identidade
   r_log = cos·√R², bandeiras `PARALLEL_TO_CONTROL` / `COUPLED_TARGET_CONTROL` / `poor_projection`, tabelas
   `implicit_vectors.csv` e `geometry.csv`, marcadores nas figuras; alvos em kg como opção documentada; colunas em kg no
@@ -430,7 +444,7 @@ rápido é condição para outros pesquisadores usarem e aprimorarem.
 - **v0.4.4 (10/09/2026)** — experiência do usuário: `bioms-zaku init` (constrói o YAML a partir do CSV; sugere colunas por nome só quando não há ambiguidade e exige confirmação; nunca adivinha em silêncio) e `bioms-zaku check` (valida dados + configuração sem rodar: linhas, estratos, classes, pareamento, colinearidade alvo↔controle, métodos avaliáveis/pulados, viabilidade do bootstrap, partição do desenho, declaração de circularidade; código de saída ≠ 0 bloqueia). Bloco `declarations.targets_independent_of_variables` obrigatório `true` para `design`.
 - **v0.4.3 (10/09/2026)** — regra de entrada (§1.3): **o alvo não pode ser calculado a partir de nenhuma variável mapeada** (circularidade). O controle negativo detecta confundimento, não circularidade; a responsabilidade é do pesquisador e a declaração vai no manifesto (`targets_independent_of_variables: true`, campo obrigatório no YAML quando há `design`). Caso que motivou: VO2máx estimado do NHANES é calculado pelo CDC a partir das FC de estágio; a FC de recuperação correlaciona 0,92 com a FC do estágio 2 e produziu um índice "específico" por circularidade; com FC de aquecimento (0,39) o índice volta a "medir o controle".
 - **v0.4.2 (10/09/2026)** — decisão: o framework tem **três figuras oficiais** (mapa de expoentes; previsto × observado; quadro de vereditos). Faixas de precedência, transferência de Σ, ganho por combinação e bússola são suplementares, geradas só com `output.supplementary_figures: true`.
-- **v0.4.1 (10/09/2026)** — catálogo: campo `status` (`active` | `excluded` com `exclusion_reason` obrigatória; excluído nunca é avaliado e sai em `methods_skipped`); `strata` tem fonte única (topo da configuração; conflito com `columns.strata` → erro); figuras revistas após inspeção (§4.4): quadro de vereditos (`board`, assinatura) substitui quadrante e mapa; mapa de calor de expoentes substitui a bússola acima de 10 métodos; árvore de precedência em faixas por linhagem, sem aleatoriedade; paleta validada (2 cores: azul específico, laranja mede-controle; cinza = desênfase; identidade = forma/rótulo; procedência ≠ alta = marcador vazado).
+- **v0.4.1 (10/09/2026)** — catálogo: campo `status` (`active` | `excluded` com `exclusion_reason` obrigatória; excluído nunca é avaliado e sai em `methods_skipped`); `strata` tem fonte única (topo da configuração; conflito com `columns.strata` → erro); figuras revistas após inspeção (§4.4): quadro de vereditos (`board`, assinatura) substitui quadrante e mapa; mapa de calor de expoentes substitui a bússola acima de 10 métodos; árvore de precedência em faixas por linhagem, sem aleatoriedade; paleta validada (2 cores: azul específico, laranja mede-controle; cinza = desênfase; identidade = forma/rótulo; não curado (§2.1) = marcador vazado / *).
 - **v0.4 (10/09/2026)** — §2.7 desenho de índices com partição obrigatória (holdout 70:30 padrão, `by_stratum` opcional), reajuste final rotulado, aviso de n<100, entrada `designed` no catálogo da execução.
 - **v0.3.2 (10/09/2026)** — sem imputação por padrão (decisão do Thalles): caso completo por método; utilidade e
   combinação em caso completo na união das colunas; `max_missing_frac_warn` no resumo; `impute` só explícito. Na

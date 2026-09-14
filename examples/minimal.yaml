@@ -19,6 +19,6 @@ audit:
   bootstrap: {min_oob: 20}
   cv: {folds: 3}          # EN: B and repeats come from the preset (quick: B 200, repeats 5)
 catalog:
-  include: [Lukaski1985_II, Baumgartner1988_PhA, Piccoli1994_RH, Piccoli1994_XcH, LMI, Kyle2001_FFM]   # EN: 4 indices + 1 composite + 1 equation
+  include: [Lukaski1985_II, Baumgartner1988_PhA, Piccoli1994_RH, Piccoli1994_XcH, LMI, Kyle2001_FFM]   # EN: explicit list: 5 curated + Kyle 2001 (NOT curated; here only to exercise the equation path)
 preset: quick
 output: {dir: ./zaku_out, figures: true}

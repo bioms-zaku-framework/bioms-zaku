@@ -58,7 +58,7 @@ def _load_catalog(cfg: dict) -> Catalog:
     raw["entries"] = list(raw["entries"]) + list(cfg["catalog"].get("user_entries") or [])
     cat = build_catalog(raw, source_path=str(path or BUILTIN_PATH))
     inc, exc = cfg["catalog"]["include"], set(cfg["catalog"]["exclude"] or [])
-    keep = [e for e in cat.entries if (inc == "all" or e.id in inc) and e.id not in exc]
+    keep = [e for e in cat.entries if (inc == "all" or (inc == "curated" and e.curated) or (isinstance(inc, list) and e.id in inc)) and e.id not in exc]
     return Catalog(cat.version, cat.conventions, keep, cat.source_path)
 
 
@@ -102,6 +102,10 @@ def run(config: dict | str | Path, *, printer: Callable[[str], None] = print) ->
     #     packages) behaves exactly like the CLI: no oversubscription on small matrices. Env vars are also set for workers.
     for k in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS"):
         os.environ.setdefault(k, str(cfg["threads"]))
+    # EN: the same pre-flight as `bioms-zaku check` runs here too (contract §3.2, 14/09): blocking problems stop the run with the
+    #     check messages instead of producing a report with every audit skipped (found on a 60-row sample in the user simulation).
+    from .check import check as _check
+    _check(cfg, printer=lambda s: printer(s) if s.startswith(("  ✗", "  ⚠", "check:")) else None)
     with threadpool_limits(limits=int(cfg["threads"])):
         return _run(cfg, printer=printer)
 
@@ -217,7 +221,8 @@ def _run(cfg: dict, *, printer: Callable[[str], None]) -> dict:
                        stratum=stratum, n=vf.n, n_nonpositive_pred=vf.n_nonpositive_pred, fit_r2=vf.fit_r2,
                        poor_monomial=bool(vf.fit_r2 < cfg["algebra"]["min_fit_r2"]), vector_source=vf.source,
                        out_of_validity_frac=oov.get(mid, (0.0, ""))[0], out_of_validity_fields=oov.get(mid, (0.0, ""))[1],
-                       provenance_confidence=conf.get(mid, "low"), target_kind=(cat[mid].target_kind if mid in cat.ids() else None))
+                       provenance_confidence=conf.get(mid, "low"), curated=bool(cat[mid].curated) if mid in cat.ids() else False,
+                       target_kind=(cat[mid].target_kind if mid in cat.ids() else None))
             row.update({f"e_{v}": float(x) for v, x in zip(vf.variables, vf.vector)})
             T["algebra"].append(row)
         for i, vi in enumerate(design_vars):
