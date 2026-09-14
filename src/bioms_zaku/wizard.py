@@ -126,6 +126,11 @@ def init(csv: str, out: str | None = None, *, ask: Callable[[str, str | None], s
     numeric = [c for c, raw in zip(cols, df.columns) if pd.api.types.is_numeric_dtype(df[raw])]
     printer(t("w.file", name=p.name, rows=len(df), cols=len(cols), sep=repr(s), dec=repr(d)))
     printer(t("w.numeric", cols=", ".join(numeric)))
+    def help_(key: str) -> None:   # EN: one explanatory line before a question, interactive mode only
+        if ask is not None:
+            printer(t(key))
+    if ask is not None:
+        printer(""); printer(t("w.intro")); printer("")
     sug = suggest(cols)
     flags = dict(map_flags or {})
     origin: dict[str, str] = {}   # EN: role -> "flag" | "answer" | "suggested" | "default"; printed at the end so nothing is silent
@@ -155,11 +160,14 @@ def init(csv: str, out: str | None = None, *, ask: Callable[[str, str | None], s
             printer(t("w.notin_again", col=repr(v), cols=", ".join(cols)))   # EN: interactive: ask again, never abort on a typo
         raise InputError(t("w.noattempts", role=role))
 
+    help_("w.help.vars")
     mapping = {r: col(r, t("w.col_for", role=r, meaning=t(f"w.mean.{r}"))) for r in ("R", "Xc", "H", "W")}
     units = {"H": get("H_unit", t("w.unit_H"), "cm"), "W": get("W_unit", t("w.unit_W"), "kg")}
     if units["H"] not in ("cm", "m") or units["W"] not in ("kg", "g"):
         raise InputError(t("w.units_bad"))
+    help_("w.help.target")
     tgt = col("target", t("w.target"))
+    help_("w.help.control")
     for attempt in range(3):
         c = col("control", t("w.control"))
         if c != tgt:
@@ -169,20 +177,25 @@ def init(csv: str, out: str | None = None, *, ask: Callable[[str, str | None], s
         printer(t("w.control_same_again", col=repr(c)))
     else:
         raise InputError(t("w.control_3"))
+    help_("w.help.cov")
     cov = get("covariates", t("w.covariates"), f"{mapping['W']},{mapping['H']}", required=False)
     covariates = [x.strip() for x in (cov or "").split(",") if x.strip()]
     for x in covariates:
         if x not in cols:
             raise InputError(t("w.cov_notin", col=repr(x)))
+    help_("w.help.strata")
     strata = col("strata", t("w.strata"), required=False)
+    help_("w.help.id")
     id_col = col("id", t("w.id"), required=False)
     # EN: optional columns the catalogue equations need; empty = not mapped (check will list which methods are skipped and why)
     groups: dict[str, str] = {}
+    help_("w.help.groups")
     for role, gname in GROUP_ROLES.items():
         v = col(role, t("w.group_col", role=f"{role} ({t('w.role.' + role)})"), required=False,
                 default=(strata if role == "sex" and strata else None))
         if v:
             groups[gname] = v
+    help_("w.help.indep")
     indep_raw = get("independent", t("w.independent"), "no") or "no"
     indep = indep_raw.lower() in ("yes", "y", "sim", "sí", "si", "true")
     tname = re.sub(r"\W+", "_", tgt).upper(); cname = re.sub(r"\W+", "_", c).upper()

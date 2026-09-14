@@ -1,6 +1,8 @@
 # Changelog
 
 ## 0.1.0.dev0 — 2026-09-10 (unreleased)
+- Self-explaining `init` (2026-09-14): an intro and one help line before each question, in four languages, interactive mode
+  only (`--map` stays quiet).
 - Usability (2026-09-14, evening): `init` asks the language as a clear first question and prints it in the mapping with its
   origin; `run` ends with the absolute report path and the exact open command for the platform ('paste this in the terminal').
   Bug fixed: a run with a single evaluable method crashed (empty redundancy table without columns).

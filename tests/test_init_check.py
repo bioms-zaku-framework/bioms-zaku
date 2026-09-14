@@ -149,3 +149,15 @@ def test_init_shows_language_with_its_origin_and_run_prints_an_open_command(tmp_
     lines = []; run(cfg, printer=lines.append)
     assert any(l.startswith("relatório: /") for l in lines) and any("cole isto no terminal:  xdg-open \"/" in l or "cole isto no terminal:  open \"/" in l for l in lines)
     from bioms_zaku.i18n import set_language; set_language("en")
+
+
+def test_interactive_init_explains_itself_and_map_mode_stays_quiet(tmp_path):
+    from bioms_zaku.wizard import init
+    answers = iter(["pt"] + [""] * 6 + ["lmi_dxa", "fmi_dxa"] + [""] * 8 + ["yes"])
+    printed = []; init(str(ROOT / "examples/minimal_data.csv"), str(tmp_path / "h.yaml"), ask=lambda p, d: next(answers), printer=printed.append)
+    txt = "\n".join(printed)
+    assert "Vou perguntar qual coluna do seu arquivo faz cada papel" in txt and "controle negativo: uma medida que os índices NÃO deveriam prever" in txt
+    assert "responda yes só se NENHUM alvo ou controle foi calculado" in txt
+    printed = []; init(str(ROOT / "examples/minimal_data.csv"), str(tmp_path / "q.yaml"), map_flags=FLAGS, printer=printed.append)
+    assert not any("Enter" in l or "Vou perguntar" in l for l in printed)      # --map mode: no questionnaire text
+    from bioms_zaku.i18n import set_language; set_language("en")
