@@ -139,7 +139,8 @@ def write_summary(out_dir: Path, cfg: dict, tables: dict[str, pd.DataFrame], man
         L += [f"| {x.sigma_from} | {x.observed_in} | {x.type} | {x.pairs} | {x.median_abs_err:.3f} [{x.median_abs_err_lo:.3f}, {x.median_abs_err_hi:.3f}] | {x.p90_abs_err:.3f} | {x.frac_within_tol:.2f} | {x.excess_median:+.3f} [{x.excess_lo:+.3f}, {x.excess_hi:+.3f}] |" for x in tr.itertuples()]
         L.append("")
     if scr is not None and not scr.empty:
-        L += [t("s.screening_title"), "", scr["class"].value_counts().to_string(), ""]
+        vc = scr["class"].value_counts()
+        L += [t("s.screening_title"), "", t("s.screening_header"), "|---|---|"] + [f"| {k} | {v} |" for k, v in vc.items()] + [""]
     p = out_dir / "summary.md"
     p.write_text("\n".join(L), encoding="utf-8")
     return p

@@ -1,6 +1,10 @@
 # Changelog
 
 ## 0.1.0.dev0 — 2026-09-10 (unreleased)
+- Terminal simulation, report inspection (2026-09-14): figure captions matched by longest name (target_control had none);
+  scorecard column headers in two lines with truncation (long column names no longer overlap), coupling note in the footer;
+  '‡ coupled' and the panel note in the catalogue (4 languages); skipped-method reasons, task names, role meanings and the
+  screening table translated; metric shown as R².
 - Language selector (2026-09-14, contract v0.7): one message catalogue in en/es/pt/it (98 keys; identical keys and placeholders
   tested), `--lang` on the CLI and `language:` in the YAML (asked first by `init`); prompts, check/run messages, summary, report
   headings, figure texts and captions follow it. Machine-readable names (CSV columns, YAML keys, verdicts, flags) stay in English.

@@ -76,3 +76,19 @@ def test_cli_lang_flag_overrides_yaml(tmp_path):
     assert "check: OK — listo para ejecutar" in r.stdout
     r = subprocess.run([sys.executable, "-m", "bioms_zaku.cli", "--lang", "it", "check", str(p)], capture_output=True, text=True, env={"PYTHONPATH": str(ROOT / "src"), "PATH": ""})
     assert "check: OK — pronto per l'esecuzione" in r.stdout
+
+
+def test_html_report_has_a_caption_for_every_figure_and_no_english_leak_in_pt(tmp_path):
+    # EN: user-simulation findings — the target_control caption was empty (name cut at the first '_'); '‡ coupled' was hard-coded English.
+    from bioms_zaku.run import run
+    cfg = yaml.safe_load((ROOT / "examples/minimal.yaml").read_text(encoding="utf-8"))
+    cfg["data"]["path"] = str(ROOT / "examples/minimal_data.csv"); cfg["output"] = {"dir": str(tmp_path), "figures": True}; cfg["language"] = "pt"
+    cfg["catalog"] = {"include": ["Lukaski1985_II", "Piccoli1994_RH", "Baumgartner1988_PhA"]}; cfg["audit"] = {"bootstrap": {"min_oob": 10}, "cv": {"folds": 3}}
+    res = run(cfg, printer=lambda s: None)
+    html = (res["out_dir"] / "report.html").read_text(encoding="utf-8")
+    import re as _re
+    empties = _re.findall(r"<figcaption><b>([^<]+)</b> — </figcaption>", html)
+    assert empties == [], f"figures without caption: {empties}"
+    assert "target_control</b> — Mapa do controle negativo condicional" in html
+    assert "coupled in the measured space" not in html and "missing inputs" not in html
+    set_language("en")

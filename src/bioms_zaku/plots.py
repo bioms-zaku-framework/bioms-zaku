@@ -69,7 +69,7 @@ I18N = {
 SC = {
     "it": {"title": "Verdetti", "col_o": "originalità", "col_s": "specificità", "col_u": "valore aggiunto", "method": "metodo",
            "original": "Originale", "repeats": "Ripete", "identical": "Identico a", "specific": "Specifico", "tracks": "Segue il controllo",
-           "inconc": "Inconclusivo", "both": "Misura entrambi", "neither": "Nessun segnale", "adds": "Aggiunge valore", "noadd": "Nessun valore aggiunto", "notest": "Non testato", "over": "oltre {c}",
+           "inconc": "Inconclusivo", "both": "Misura entrambi", "neither": "Nessun segnale", "adds": "Aggiunge valore", "noadd": "Nessun valore aggiunto", "notest": "Non testato", "over": "oltre {c}", "coupled": "‡ target e controllo accoppiati nello spazio misurato",
            "leg1": "Originalità: un indice è originale quando nessun metodo precedente ordina le persone quasi allo stesso modo (|Spearman| < {thr}); altrimenti ripete quel metodo.",
            "leg2": "Specificità (controllo condizionale): barra verde = guadagno in {m} per il target ({t}) quando l'indice si aggiunge al controllo ({c}); barra viola = guadagno per il controllo quando si aggiunge al target. Specifico = verde presente, viola assente; segue il controllo = l'inverso; misura entrambi = entrambe presenti; nessun segnale = nessuna. Numero = barra verde con intervallo bootstrap 95%; margine {mg}.",
            "leg3": "Valore aggiunto: guadagno in {m} quando l'indice si aggiunge a {cov}. † applicato fuori dalla validità dichiarata dal metodo · * formula non curata (fonte primaria senza lettura critica).",
@@ -77,7 +77,7 @@ SC = {
            "exp_read": "esponente positivo: l'indice cresce con la variabile · negativo: decresce · R² dell'adattamento: quanto un'equazione a somma si comporta come un prodotto (fisso = esatto)"},
     "en": {"title": "Verdicts", "col_o": "originality", "col_s": "specificity", "col_u": "added value", "method": "method",
            "original": "Original", "repeats": "Repeats", "identical": "Identical to", "specific": "Specific", "tracks": "Tracks control",
-           "inconc": "Inconclusive", "both": "Measures both", "neither": "No signal", "adds": "Adds value", "noadd": "No added value", "notest": "Not tested", "over": "over {c}",
+           "inconc": "Inconclusive", "both": "Measures both", "neither": "No signal", "adds": "Adds value", "noadd": "No added value", "notest": "Not tested", "over": "over {c}", "coupled": "‡ target and control coupled in the measured space",
            "leg1": "Originality: an index is original when no earlier method orders people almost identically (|Spearman| < {thr}); otherwise it repeats that method.",
            "leg2": "Specificity (conditional control): green bar = gain in {m} for the target ({t}) when the index is added to the control ({c}); violet bar = gain for the control when added to the target. Specific = green present, violet absent; tracks control = the reverse; measures both = both present; no signal = neither. Number = green bar with 95% bootstrap interval; margin {mg}.",
            "leg3": "Added value: gain in {m} when the index is added to {cov}. † applied outside the method's declared validity · * formula not curated (primary source not critically read).",
@@ -85,7 +85,7 @@ SC = {
            "exp_read": "positive exponent: the index grows with the variable · negative: it decreases · fit R²: how closely a sum-type equation behaves as a product (fixed = exact)"},
     "es": {"title": "Veredictos", "col_o": "originalidad", "col_s": "especificidad", "col_u": "valor agregado", "method": "método",
            "original": "Original", "repeats": "Repite", "identical": "Idéntico a", "specific": "Específico", "tracks": "Sigue control",
-           "inconc": "No concluyente", "both": "Mide los dos", "neither": "Sin señal", "adds": "Agrega valor", "noadd": "No agrega valor", "notest": "No evaluado", "over": "sobre {c}",
+           "inconc": "No concluyente", "both": "Mide los dos", "neither": "Sin señal", "adds": "Agrega valor", "noadd": "No agrega valor", "notest": "No evaluado", "over": "sobre {c}", "coupled": "‡ objetivo y control acoplados en el espacio medido",
            "leg1": "Originalidad: un índice es original cuando ningún método anterior ordena a las personas casi igual (|Spearman| < {thr}); si no, repite ese método.",
            "leg2": "Especificidad (control condicional): barra verde = ganancia en {m} para el objetivo ({t}) al añadir el índice al control ({c}); barra violeta = ganancia para el control al añadirlo al objetivo. Específico = verde presente, violeta ausente; sigue control = lo inverso; mide los dos = ambas presentes; sin señal = ninguna. Número = barra verde con intervalo bootstrap 95%; margen {mg}.",
            "leg3": "Valor agregado: ganancia en {m} al añadir el índice a {cov}. † aplicado fuera de la validez declarada · * fórmula no curada (fuente primaria sin lectura crítica).",
@@ -93,7 +93,7 @@ SC = {
            "exp_read": "exponente positivo: el índice crece con la variable · negativo: decrece · fit R²: cuán bien una ecuación aditiva se comporta como producto (fijo = exacto)"},
     "pt": {"title": "Vereditos", "col_o": "originalidade", "col_s": "especificidade", "col_u": "valor acrescentado", "method": "método",
            "original": "Original", "repeats": "Repete", "identical": "Idêntico a", "specific": "Específico", "tracks": "Acompanha ctrl",
-           "inconc": "Inconclusivo", "both": "Mede os dois", "neither": "Sem sinal", "adds": "Acrescenta valor", "noadd": "Não acrescenta", "notest": "Não avaliado", "over": "sobre {c}",
+           "inconc": "Inconclusivo", "both": "Mede os dois", "neither": "Sem sinal", "adds": "Acrescenta valor", "noadd": "Não acrescenta", "notest": "Não avaliado", "over": "sobre {c}", "coupled": "‡ alvo e controle acoplados no espaço medido",
            "leg1": "Originalidade: um índice é original quando nenhum método anterior ordena as pessoas quase igual (|Spearman| < {thr}); senão, repete esse método.",
            "leg2": "Especificidade (controle condicional): barra verde = ganho em {m} para o alvo ({t}) ao juntar o índice ao controle ({c}); barra violeta = ganho para o controle ao juntá-lo ao alvo. Específico = verde presente, violeta ausente; acompanha controle = o inverso; mede os dois = as duas presentes; sem sinal = nenhuma. Número = barra verde com intervalo bootstrap 95%; margem {mg}.",
            "leg3": "Valor acrescentado: ganho em {m} ao juntar o índice a {cov}. † aplicado fora da validade declarada · * fórmula não curada (fonte primária sem leitura crítica).",
@@ -295,7 +295,7 @@ def target_control(aud: pd.DataFrame, alg: pd.DataFrame, out_dir: Path, primary_
     ns = len(strata); panel_w = 2.9
     W = min(10.0, 1.6 + ns * (panel_w + 1.6))
     fig, axes = plt.subplots(1, ns, figsize=(W, H), squeeze=False, gridspec_kw={"wspace": 0.9})
-    metric = a.metric.iloc[0]; control = a.control.iloc[0]
+    metric = str(a.metric.iloc[0]).replace("R2", "R²"); control = a.control.iloc[0]
     xmax = float(max(a.s1_hi.max(), a.s2_hi.max(), margin * 2)) * 1.12; xmin = float(min(a.s1_lo.min(), a.s2_lo.min(), 0.0)) - 0.02
     words = {"SPECIFIC": (S("specific"), C["specific"]), "TRACKS_CONTROL": (S("tracks"), C["control"]), "MEASURES_CONTROL": (S("tracks"), C["control"]),
              "BOTH": (S("both"), C["ink2"]), "NEITHER": (S("neither"), C["muted"])}
@@ -322,7 +322,7 @@ def target_control(aud: pd.DataFrame, alg: pd.DataFrame, out_dir: Path, primary_
         ax.set_yticks(range(len(q))); ax.set_yticklabels([short.get(m, m) + ("*" if not conf.get(m, True) else "") + (" ‡" if m in par else "") for m in q.method_id], fontsize=7.4)
         ax.set_ylim(-0.6, len(q) - 0.4); ax.set_xlim(xmin, xmax); ax.tick_params(axis="y", length=0)
         ax.set_xlabel(F("tc_xbar", m=metric), fontsize=7.5)
-        ax.set_title(f"{T('stratum')} {st}" + (" · ‡ target and control coupled in the measured space" if coupled else ""), fontsize=9, loc="left")
+        ax.set_title(f"{T('stratum')} {st}" + (" · " + S("coupled") if coupled else ""), fontsize=9, loc="left")
         for sp in ("left", "top", "right"):
             ax.spines[sp].set_visible(False)
     # in-figure key only when captions are requested (default: the documentation text explains the colours)
@@ -610,21 +610,30 @@ def scorecard(alg: pd.DataFrame, red: pd.DataFrame, aud: pd.DataFrame, uti: pd.D
         if not ids:
             continue
         par, coupled = _geo_flags(geo, st, primary_target)
-        metric = a.metric.iloc[0] if len(a) else "R2"; control = a.control.iloc[0] if len(a) else ""
+        metric = (str(a.metric.iloc[0]) if len(a) else "R2").replace("R2", "R²"); control = a.control.iloc[0] if len(a) else ""
         smax = float(np.nanmax(np.concatenate([aud.s1_hi.to_numpy(float), aud.s2_hi.to_numpy(float)]))) if "s1_hi" in aud else 1.0
         covs = u.covariates.iloc[0].replace("+", " + ") if u is not None and len(u) else ""
         n = len(ids)
         # EN: fixed geometry in inches: header (title+subtitle+column names) 1.25, rows 0.42 each, legend+footer 1.15
-        row_h, head_in = 0.42, 1.10 if STYLE["subtitle"] else 0.90
+        row_h, head_in = 0.42, (1.10 if STYLE["subtitle"] else 0.90) + 0.20   # EN: +0.20 in for the two-line column headers
         foot_in = 1.15 if STYLE["captions"] else 0.45
         W, H = 10.0, head_in + row_h * n + foot_in
         fig = plt.figure(figsize=(W, H))
         ax = fig.add_axes([0.0, foot_in / H, 1.0, row_h * n / H]); ax.set_xlim(0, 100); ax.set_ylim(0, n); ax.axis("off")
         x_m, x_o, x_s, x_u = 1.0, 24.0, 46.0, 77.0; pw = 10.0
-        # column headers (figure coords, just above the rows)
-        yh = (foot_in + row_h * n + 0.12) / H
-        for x, txt in ((x_m, S("method")), (x_o, S("col_o")), (x_s, f"{S('col_s')} · {primary_target} vs {control}" + (" ‡ coupled" if coupled else "")), (x_u, f"{S('col_u')} · {S('over', c=covs) if covs else ''}")):
-            fig.text(x / 100, yh, txt, fontsize=8.5, color=C["ink2"], va="bottom")
+        # column headers in TWO lines (figure coords, just above the rows): the label, then target/control or covariates
+        #     truncated to the column width, so long column names never run into the next header (user-simulation finding)
+        def _trunc(txt: str, n_ch: int) -> str:
+            return txt if len(txt) <= n_ch else txt[: n_ch - 1] + "…"
+        yh = (foot_in + row_h * n + 0.12) / H; yh2 = (foot_in + row_h * n + 0.30) / H
+        sub_s = _trunc(f"{primary_target} vs {control}", 30) + (" ‡" if coupled else "")
+        heads = ((x_m, S("method"), ""), (x_o, S("col_o"), ""), (x_s, S("col_s"), sub_s), (x_u, S("col_u"), _trunc(S("over", c=covs), 26) if covs else ""))
+        for x, txt, sub in heads:
+            fig.text(x / 100, yh2, txt, fontsize=8.5, color=C["ink2"], va="bottom")
+            if sub:
+                fig.text(x / 100, yh, sub, fontsize=7.0, color=C["ink2"], va="bottom")
+        if coupled:   # EN: the coupling note goes under the rows (left), never next to the column headers
+            fig.text(0.01, (foot_in - 0.14) / H, S("coupled"), fontsize=7.2, color=C["ink2"], va="bottom")
         fig.add_artist(plt.Line2D([0.0, 1.0], [yh - 0.01, yh - 0.01], color=C["grid"], lw=0.8, transform=fig.transFigure))
 
         def pill(x, y, word, color):

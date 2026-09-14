@@ -82,8 +82,13 @@ def check(config: str | Path | dict, *, printer: Callable[[str], None] = print) 
     rep["info"].append(t("c.evaluable", k=len(vals), n=len(skipped)))
     hint = {"sexo": "sex", "idade": "age", "C_arm": "arm", "C_waist": "waist", "C_calf": "calf"}
     need: dict[str, list[str]] = {}
+    def _why(w: str) -> str:
+        if w.startswith("missing inputs "): return t("c.why_missing", list=w[len("missing inputs "):])
+        if w.startswith("excluded: "): return t("c.why_excluded", reason=w[len("excluded: "):])
+        if w.startswith("closed method"): return t("c.why_closed")
+        return w
     for k, why in skipped.items():
-        rep["info"].append(t("c.skipped", k=k, why=why))
+        rep["info"].append(t("c.skipped", k=k, why=_why(why)))
         if why.startswith("missing inputs"):
             for inp in why[len("missing inputs "):].strip("[]").replace("'", "").split(", "):
                 need.setdefault(inp, []).append(k)
@@ -123,7 +128,7 @@ def check(config: str | Path | dict, *, printer: Callable[[str], None] = print) 
     est = cfg["audit"]["single"]["estimator"]
     if est in ("ridge", "logistic"):
         est = "logistic" if task == "classification" else "ridge"      # EN: effective default per task (§3.2)
-    rep["info"].append(t("c.preset", p=cfg["preset"], task=task, f=cfg["audit"]["cv"]["folds"], r=cfg["audit"]["cv"]["repeats"], B=B, est=est))
+    rep["info"].append(t("c.preset", p=cfg["preset"], task=(t(f"task.{task}") if task in ("regression", "classification", "auto") else task), f=cfg["audit"]["cv"]["folds"], r=cfg["audit"]["cv"]["repeats"], B=B, est=est))
     _emit(rep, printer)
     if rep["errors"]:
         raise CheckError(t("c.blocking", n=len(rep["errors"]), list=" | ".join(rep["errors"])))   # EN: reasons travel with the exception (API users)

@@ -90,7 +90,7 @@ def write_report(out_dir: Path, cfg: dict, tables: dict[str, pd.DataFrame], mani
     from .i18n import t
     parts.append(f"<h2>{t('h.figures')}</h2>")
     for f in figs:
-        key = f.stem.split("_")[0]
+        key = next((k for k in sorted(captions, key=len, reverse=True) if f.stem == k or f.stem.startswith(k + "_")), f.stem)   # EN: longest matching name (target_control ≠ target)
         parts.append(f"<figure><img src='{_img(f)}' alt='{f.stem}'><figcaption><b>{f.stem}</b> — {html.escape(captions.get(key, ''))}</figcaption></figure>")
     parts.append(f"<h2>{t('h.tables')}</h2>")
     for name, df in tables.items():

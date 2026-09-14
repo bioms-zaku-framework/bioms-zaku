@@ -177,7 +177,7 @@ def init(csv: str, out: str | None = None, *, ask: Callable[[str, str | None], s
     # EN: optional columns the catalogue equations need; empty = not mapped (check will list which methods are skipped and why)
     groups: dict[str, str] = {}
     for role, gname in GROUP_ROLES.items():
-        v = col(role, t("w.group_col", role=role), required=False,
+        v = col(role, t("w.group_col", role=f"{role} ({t('w.role.' + role)})"), required=False,
                 default=(strata if role == "sex" and strata else None))
         if v:
             groups[gname] = v
