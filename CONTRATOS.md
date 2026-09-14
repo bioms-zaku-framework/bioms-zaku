@@ -318,6 +318,19 @@ acende, ortogonal ⇒ apagada; identidade do item 4 no exemplo embarcado (1e-9);
 
 ---
 
+### 3.4 Idioma (v0.7, 14/09/2026)
+- Um único catálogo de mensagens (`i18n.py`), quatro línguas: `en`, `es`, `pt`, `it`. Teste exige as mesmas chaves e os mesmos campos de
+  formato nas quatro; nenhuma mensagem fica sem tradução em silêncio.
+- Escolha em um só lugar: `--lang` na CLI (vale para `init`, `check`, `run`) ou `language:` no YAML (o `init` pergunta o idioma primeiro e
+  grava). `figures.language` segue `language` salvo se declarado. A API (`run(cfg)`) lê `language` do YAML.
+- Traduzido: perguntas do `init`, mensagens do `check` e do `run`, `summary.md`, cabeçalhos do `report.html`, textos das figuras e
+  legendas do `figures/README.md`. NÃO traduzido, por reprodutibilidade entre usuários: nomes de colunas dos CSVs, chaves do YAML,
+  ids de métodos, vereditos (`SPECIFIC`, `TRACKS_CONTROL`, `BOTH`, `NEITHER`) e nomes das bandeiras.
+- Justificativa: a ferramenta é para pesquisadores; a leitura na própria língua é parte de ser intuitiva. O que é para máquina fica
+  estável.
+
+---
+
 ## 4. Contrato de SAÍDAS
 
 ### 4.1 Tabelas (CSV UTF-8, `,` e `.`, precisão completa, ordenação determinística; **só agregados**)
@@ -399,6 +412,7 @@ rápido é condição para outros pesquisadores usarem e aprimorarem.
 ---
 
 ## 6. Changelog
+- **v0.7.0 (14/09/2026)** — §3.4 idioma: catálogo único em en/es/pt/it, `--lang` e `language:`; figuras e legendas em italiano.
 - **v0.6.1 (14/09/2026)** — simulação de usuário externo no Colab: catálogo passa a ir DENTRO do pacote (instalação por wheel não o
   encontrava); CI instala o wheel (nunca editável) e roda um passo de usuário externo fora do repositório, Python 3.10–3.13; `init`
   mapeia sexo/idade/perímetros (papéis `sex`, `age`, `arm`, `waist`, `calf`; sugeridos, impressos com origem, `none` recusa) e escreve

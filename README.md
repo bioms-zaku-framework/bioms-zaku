@@ -63,6 +63,9 @@ ls zaku_out/example_quick                       # algebra sigma pairs redundancy
 The file also carries `lean_kg`, `alm_kg`, `fat_kg` (index × height², derived, no new draw) so that absolute masses can be
 used as targets: `bioms-zaku run examples/example_kg.yaml`. See *Geometry* below before choosing.
 
+Language / Idioma / Lingua: `bioms-zaku --lang pt init …` (or `language: pt` in the YAML; `init` asks it first). en, es, pt, it.
+Prompts, `check`/`run` messages, `summary.md`, report headings and figures follow it; CSV column names and YAML keys stay in English.
+
 Your own data — three commands / tres comandos / três comandos:
 
 ```bash

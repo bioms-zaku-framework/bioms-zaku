@@ -1,0 +1,78 @@
+"""EN: contract v0.7 — one message catalogue, four languages, identical keys and placeholders; the language chosen once
+(YAML `language` or --lang) reaches prompts, check, run, summary, report headings and figures. ES/PT/IT: catálogo único."""
+import re
+import subprocess
+import sys
+from pathlib import Path
+
+import pytest
+import yaml
+
+from bioms_zaku import plots
+from bioms_zaku.i18n import LANGS, MSG, get_language, set_language, t
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def _placeholders(s: str) -> set:
+    return set(re.findall(r"\{(\w+)", s))
+
+
+def test_catalogue_has_all_languages_and_identical_placeholders():
+    assert LANGS == ("en", "es", "pt", "it") and len(MSG) >= 90
+    for k, m in MSG.items():
+        assert set(m) == set(LANGS), k
+        assert all(_placeholders(m[l]) == _placeholders(m["en"]) for l in LANGS), k
+
+
+def test_figure_dictionaries_and_captions_cover_four_languages():
+    for D in (plots.I18N, plots.SC, plots.FIG):
+        assert set(D) == set(LANGS)
+        for l in LANGS:
+            assert set(D[l]) == set(D["en"])
+            for k, v in D["en"].items():
+                if isinstance(v, str):
+                    assert _placeholders(v) == _placeholders(D[l][k]), (l, k)
+    assert all(len(c) == 4 for c in plots.CAPTIONS.values())
+
+
+def test_set_language_and_fallback():
+    set_language("pt"); assert get_language() == "pt" and t("c.ok").startswith("check: OK — pronto")
+    set_language("it"); assert t("h.figures") == "Figure"
+    with pytest.raises(ValueError):
+        set_language("fr")
+    set_language("en")
+
+
+def test_language_flows_from_init_to_check_run_summary_and_figures(tmp_path):
+    from bioms_zaku.wizard import init
+    from bioms_zaku.check import check
+    from bioms_zaku.run import run
+    flags = {"R": "resistencia_ohm", "Xc": "reatancia_ohm", "H": "estatura_cm", "W": "massa_kg", "target": "lmi_dxa", "control": "fmi_dxa",
+             "covariates": "massa_kg,estatura_cm", "strata": "sexo", "id": "seqn", "independent": "yes"}
+    printed = []
+    out = init(str(ROOT / "examples/minimal_data.csv"), str(tmp_path / "pt.yaml"), map_flags=flags, lang="pt", printer=printed.append)
+    assert any(l.startswith("mapeamento:") for l in printed) and any("gravado" in l for l in printed)
+    cfg = yaml.safe_load(out.read_text(encoding="utf-8")); assert cfg["language"] == "pt"
+    cfg["data"]["path"] = str(ROOT / "examples/minimal_data.csv"); cfg["output"] = {"dir": str(tmp_path), "figures": True}; cfg["preset"] = "quick"
+    cfg["catalog"] = {"include": ["Lukaski1985_II", "Piccoli1994_RH"]}; cfg["audit"] = {"bootstrap": {"min_oob": 10}, "cv": {"folds": 3}}
+    (tmp_path / "pt.yaml").write_text(yaml.safe_dump(cfg))
+    lines = []; check(str(tmp_path / "pt.yaml"), printer=lines.append)
+    assert lines[-1].startswith("check: OK — pronto para rodar")
+    set_language("en")                                   # EN: the API must pick the YAML language by itself
+    res = run(str(tmp_path / "pt.yaml"), printer=lambda s: None)
+    summ = (res["out_dir"] / "summary.md").read_text(encoding="utf-8")
+    assert "## Estrato `" in summ and "- métodos avaliados:" in summ and "## Geometria do alvo e do controle" in summ
+    html = (res["out_dir"] / "report.html").read_text(encoding="utf-8"); assert "<h2>Figuras</h2>" in html and "<h2>Tabelas</h2>" in html
+    caps = (res["out_dir"] / "figures" / "README.md").read_text(encoding="utf-8"); assert caps.index("**PT**") < caps.index("**EN**")
+    assert res["manifest"]["config_resolved"]["figures"]["language"] == "pt"
+    set_language("en")
+
+
+def test_cli_lang_flag_overrides_yaml(tmp_path):
+    cfg = yaml.safe_load((ROOT / "examples/minimal.yaml").read_text(encoding="utf-8")); cfg["data"]["path"] = str(ROOT / "examples/minimal_data.csv"); cfg["language"] = "es"
+    p = tmp_path / "c.yaml"; p.write_text(yaml.safe_dump(cfg))
+    r = subprocess.run([sys.executable, "-m", "bioms_zaku.cli", "check", str(p)], capture_output=True, text=True, env={"PYTHONPATH": str(ROOT / "src"), "PATH": ""})
+    assert "check: OK — listo para ejecutar" in r.stdout
+    r = subprocess.run([sys.executable, "-m", "bioms_zaku.cli", "--lang", "it", "check", str(p)], capture_output=True, text=True, env={"PYTHONPATH": str(ROOT / "src"), "PATH": ""})
+    assert "check: OK — pronto per l'esecuzione" in r.stdout

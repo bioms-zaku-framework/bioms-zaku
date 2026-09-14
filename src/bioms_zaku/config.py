@@ -14,6 +14,7 @@ import yaml
 
 DEFAULTS: dict[str, Any] = {
     "run_name": "run",
+    "language": "en",   # EN: en | es | pt | it — messages, prompts, summary, report headings and figures (v0.7)
     "data": {"path": None, "encoding": "utf-8", "sep": "auto", "decimal": "auto", "columns": {},
              "drop_nonpositive": False, "impute": False, "max_missing_frac_warn": 0.10, "min_n": 30, "min_per_class": 20},
     "catalog": {"path": "builtin", "include": "curated", "exclude": [], "user_entries": []},   # EN: DEFAULT = curated methods only (§2.1/§3.2); "all" is an explicit choice
@@ -42,7 +43,7 @@ DEFAULTS: dict[str, Any] = {
     "output": {"dir": "./zaku_out", "figures": True, "supplementary_figures": False, "format": "csv"},
     # EN: figure customisation (all optional). language: en | es | pt (axis labels, legends, captions).
     # ES/PT: personalização das figuras (tudo opcional).
-    "figures": {"title": None, "subtitle": None, "language": "en", "labels": "full",   # labels: full | short (author year)
+    "figures": {"title": None, "subtitle": None, "language": None, "labels": "full",   # language None → top-level `language`   # labels: full | short (author year)
                 "palette": "default",   # "default" (validated blue/orange) | "brand" (BioMS violet/green) | {specific:, control:, muted:}
                 "font": "DejaVu Sans", "font_size": 8.5, "dpi": 300, "formats": ["png", "pdf"], "footer": True,
                 "captions": False},   # EN: in-figure explanatory legends off by default; the report/documentation text explains each figure
@@ -73,6 +74,11 @@ def resolve(cfg: dict | str | Path) -> dict:
     r = _merge(r, PRESETS[r["preset"]])
     if not r["data"]["columns"]:
         raise ValueError("data.columns is required")
+    from .i18n import LANGS
+    if r["language"] not in LANGS:
+        raise ValueError(f"language must be one of {LANGS}")
+    if r["figures"].get("language") is None:
+        r["figures"]["language"] = r["language"]
     inc = r["catalog"]["include"]
     if not (inc in ("all", "curated") or (isinstance(inc, list) and all(isinstance(x, str) for x in inc))):
         raise ValueError("catalog.include must be 'curated' (default), 'all', or a list of method ids")

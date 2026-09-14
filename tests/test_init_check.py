@@ -121,7 +121,7 @@ def test_init_explains_encoding_and_records_it(tmp_path):
 def test_interactive_init_reasks_on_typo_refuses_control_equal_to_target_and_prints_independence(tmp_path):
     # EN: terminal-simulation findings (2026-09-14). Scripted answers: a typo for Xc (re-asked), control = target (re-asked).
     from bioms_zaku.wizard import init, suggest
-    answers = iter(["", "reatancia_50_ohm", "reatancia_ohm", "", "", "", "", "lmi_dxa", "lmi_dxa", "fmi_dxa", "", "", "", "", "", "", "", "", "yes"])
+    answers = iter(["", "", "reatancia_50_ohm", "reatancia_ohm", "", "", "", "", "lmi_dxa", "lmi_dxa", "fmi_dxa", "", "", "", "", "", "", "", "", "yes"])   # first answer = language (Enter → en)
     def ask(prompt, default):
         return next(answers)
     printed = []

@@ -1,6 +1,9 @@
 # Changelog
 
 ## 0.1.0.dev0 — 2026-09-10 (unreleased)
+- Language selector (2026-09-14, contract v0.7): one message catalogue in en/es/pt/it (98 keys; identical keys and placeholders
+  tested), `--lang` on the CLI and `language:` in the YAML (asked first by `init`); prompts, check/run messages, summary, report
+  headings, figure texts and captions follow it. Machine-readable names (CSV columns, YAML keys, verdicts, flags) stay in English.
 - Terminal simulation (2026-09-14, interactive `init`): a typo in a column name re-asks instead of aborting; control equal to the
   target is refused; the independence answer is printed in the mapping (with a warning when `no`); the suggester recognises
   `reatancia`/`reatt` and `body_mass`/`massa`; prompts state the physical meaning of R, Xc, H, W. W is BODY MASS in kg (a scale

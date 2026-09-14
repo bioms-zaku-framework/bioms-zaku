@@ -87,16 +87,17 @@ def write_report(out_dir: Path, cfg: dict, tables: dict[str, pd.DataFrame], mani
     logo = _svg(LOGO)
     parts.append(f"<header>{'<img src=' + chr(34) + logo + chr(34) + ' alt=BioMS-Zaku>' if logo else ''}<div><h1>{html.escape(title)}</h1><p>{html.escape(sub)}</p></div></header><main>")
     parts.append("<section class='summary'>" + _md_to_html(summary_md) + "</section>")
-    parts.append("<h2>Figures</h2>")
+    from .i18n import t
+    parts.append(f"<h2>{t('h.figures')}</h2>")
     for f in figs:
         key = f.stem.split("_")[0]
         parts.append(f"<figure><img src='{_img(f)}' alt='{f.stem}'><figcaption><b>{f.stem}</b> — {html.escape(captions.get(key, ''))}</figcaption></figure>")
-    parts.append("<h2>Tables</h2>")
+    parts.append(f"<h2>{t('h.tables')}</h2>")
     for name, df in tables.items():
         if df is None or df.empty:
             continue
-        parts.append(f"<details><summary>{name}.csv · {len(df)} rows</summary>" + df.round(4).to_html(index=False, border=0, escape=True) + "</details>")
-    parts.append("<h2>Manifest</h2><details><summary>manifest.json</summary><pre>" + html.escape(json.dumps(manifest, indent=1, ensure_ascii=False, default=str)) + "</pre></details>")
+        parts.append(f"<details><summary>{name}.csv · {len(df)} {t('h.rows')}</summary>" + df.round(4).to_html(index=False, border=0, escape=True) + "</details>")
+    parts.append(f"<h2>{t('h.manifest')}</h2><details><summary>manifest.json</summary><pre>" + html.escape(json.dumps(manifest, indent=1, ensure_ascii=False, default=str)) + "</pre></details>")
     parts.append(f"</main><footer>BioMS Zaku {manifest.get('package_version', '')} · preset {manifest.get('preset', '')} · {manifest.get('finished_at', '')} · "
                  f"seeds cv={cfg['seeds']['cv']} bootstrap={cfg['seeds']['bootstrap']} · input sha256 {str(manifest.get('input_sha256', ''))[:12]}… · aggregates only, no row-level data</footer></body></html>")
     p = Path(out_dir) / "report.html"

@@ -23,6 +23,7 @@ from . import algebra as A
 from .audit import verdict_sensitivity, AuditConfig, AuditError, audit_method, combination_gain, default_estimator, utility_method
 from .catalog import BUILTIN_PATH, Catalog, build_catalog
 from .config import resolve
+from .i18n import set_language, t as _t
 from .design import design_index, holdout_split, by_stratum_split
 from .io import Dataset, read_table
 from .report import sha256_file, sha256_obj, write_manifest, write_summary, write_table
@@ -98,6 +99,7 @@ def run(config: dict | str | Path, *, printer: Callable[[str], None] = print) ->
     ES/PT: executa uma rodada completa.
     """
     cfg = resolve(config)
+    set_language(cfg["language"])   # EN: API and CLI alike (v0.7)
     # EN: BLAS/OpenMP threads are limited HERE, after import, so that run() called from Python (tests, notebooks, other
     #     packages) behaves exactly like the CLI: no oversubscription on small matrices. Env vars are also set for workers.
     for k in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS"):
@@ -261,7 +263,7 @@ def _run(cfg: dict, *, printer: Callable[[str], None]) -> dict:
             for k, jb in enumerate(jobs):
                 results.append(_audit_one(jb))
                 el = time.time() - t_s
-                printer(f"[{stratum}] audit {k + 1}/{len(jobs)} {jb[0]} | {el:.0f}s | ETA {el / (k + 1) * (len(jobs) - k - 1) / 60:.1f} min")
+                printer(_t("r.progress", s=stratum, k=k + 1, n=len(jobs), m=jb[0], el=f"{el:.0f}", eta=f"{el / (k + 1) * (len(jobs) - k - 1) / 60:.1f}"))
         for rows, urows, warn in results:
             T["audit"] += rows; T["utility"] += urows
             if warn:
@@ -337,7 +339,7 @@ def _run(cfg: dict, *, printer: Callable[[str], None]) -> dict:
             warnings.append(f"figures skipped: {e}")
     from .html import write_report
     write_report(out_dir, cfg, tables, manifest)
-    printer(f"done in {time.time() - t0:.0f}s → {out_dir}")
+    printer(_t("r.done", sec=f"{time.time() - t0:.0f}", out=out_dir))
     return {"tables": tables, "manifest": manifest, "out_dir": out_dir}
 
 
