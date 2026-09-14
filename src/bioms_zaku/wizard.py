@@ -18,9 +18,9 @@ from .io import SEP_DECIMAL_TRIALS, InputError
 # EN: name patterns used only to SUGGEST a column for each role (case-insensitive). ES/PT: padrões só para sugerir.
 SUGGEST = {
     "R": r"^(r|res|resist|resistance|resistencia|resistência)(_?ohm|50|_50)?$|resist",
-    "Xc": r"^(xc|react|reactance|reatancia|reatância|reactancia)(_?ohm|50|_50)?$|react",
+    "Xc": r"^(xc|react|reactance|reatancia|reatância|reactancia)(_?ohm|50|_50)?$|react|reat|reatt",
     "H": r"^(h|ht|height|estatura|altura|talla|stature)(_?cm|_?m)?$|height|estatura|altura|talla",
-    "W": r"^(w|wt|weight|peso|massa|mass|masa)(_?kg)?$|weight|peso|massa",
+    "W": r"^(w|wt|weight|peso|massa|mass|masa|body_?mass|bodymass)(_?(corporal|corporea|body|total))?(_?kg)?$|weight|peso|massa|mass|body_?mass",
     "strata": r"^(sex|sexo|gender|genero|género)(_.*)?$",
     "id": r"^(id|seqn|subject|participant|paciente|patient)(_.*)?$",
     # EN: optional columns that the catalogue EQUATIONS need (age, sex, circumferences); suggested, never assumed
@@ -59,10 +59,14 @@ def detect(path: Path, encoding: str = "utf-8") -> tuple[pd.DataFrame, str, str]
 
 
 def suggest(columns: list[str]) -> dict[str, str | None]:
+    """EN: suggest a column per role only when unambiguous. Two tiers: an ANCHORED match on the whole name (e.g. massa_corporal_kg)
+    wins over loose matches (massa_magra_dxa_kg also contains 'massa'); if no tier gives exactly one hit, no suggestion."""
     out: dict[str, str | None] = {}
     for role, pat in SUGGEST.items():
-        hits = [c for c in columns if re.search(pat, str(c).strip().lower())]
-        out[role] = hits[0] if len(hits) == 1 else None      # EN: suggest only when unambiguous
+        anchored = pat.split("|^")[0] if pat.startswith("^") else None
+        strict = [c for c in columns if anchored and re.fullmatch(anchored.lstrip("^").rstrip("$"), str(c).strip().lower())]
+        loose = [c for c in columns if re.search(pat, str(c).strip().lower())]
+        out[role] = strict[0] if len(strict) == 1 else (loose[0] if len(loose) == 1 else None)
     return out
 
 
@@ -133,16 +137,31 @@ def init(csv: str, out: str | None = None, *, ask: Callable[[str, str | None], s
         return v or None
 
     def col(role: str, prompt: str, required: bool = True, default: str | None = None) -> str | None:
-        v = get(role, prompt, default if default is not None else sug.get(role), required)
-        if v and v not in cols:
-            raise InputError(f"{role}: column {v!r} not in file (columns: {cols})")
-        return v
+        d = default if default is not None else sug.get(role)
+        for attempt in range(3):
+            v = get(role, prompt, d, required)
+            if not v or v in cols:
+                return v
+            if ask is None or role in flags:
+                raise InputError(f"{role}: column {v!r} not in file (columns: {cols})")
+            printer(f"  column {v!r} is not in the file — choose one of: {', '.join(cols)}")   # EN: interactive: ask again, never abort on a typo
+        raise InputError(f"{role}: no valid column after 3 attempts")
 
-    mapping = {r: col(r, f"column for {r}") for r in ("R", "Xc", "H", "W")}
-    units = {"H": get("H_unit", "unit of H (cm|m)", "cm"), "W": get("W_unit", "unit of W (kg|g)", "kg")}
+    MEANING = {"R": "resistance, ohm", "Xc": "reactance, ohm", "H": "stature/height", "W": "body mass measured on a scale, kg (the symbol W is the BIA literature's convention)"}
+    mapping = {r: col(r, f"column for {r} ({MEANING[r]})") for r in ("R", "Xc", "H", "W")}
+    units = {"H": get("H_unit", "unit of H (cm|m)", "cm"), "W": get("W_unit", "unit of body mass W (kg|g)", "kg")}
     if units["H"] not in ("cm", "m") or units["W"] not in ("kg", "g"):
         raise InputError("units must be H: cm|m and W: kg|g")
-    t = col("target", "target column (what the index should predict)"); c = col("control", "negative-control column (what it should NOT predict)")
+    t = col("target", "target column (what the index should predict)")
+    for attempt in range(3):
+        c = col("control", "negative-control column (what it should NOT predict; must differ from the target)")
+        if c != t:
+            break
+        if ask is None or "control" in flags:
+            raise InputError(f"control column {c!r} is the same as the target; the negative control must be a different measurement")
+        printer(f"  {c!r} is the target itself — the negative control must be a DIFFERENT measurement (e.g. fat mass when the target is lean mass)")
+    else:
+        raise InputError("control equals target after 3 attempts")
     cov = get("covariates", "covariate columns for the utility test, comma-separated (empty = skip)", f"{mapping['W']},{mapping['H']}", required=False)
     covariates = [x.strip() for x in (cov or "").split(",") if x.strip()]
     for x in covariates:
@@ -157,7 +176,8 @@ def init(csv: str, out: str | None = None, *, ask: Callable[[str, str | None], s
                 default=(strata if role == "sex" and strata else None))
         if v:
             groups[gname] = v
-    indep = (get("independent", "Are ALL targets/controls measured independently of R, Xc, H, W (yes/no)?", "no") or "no").lower() in ("yes", "y", "sim", "sí", "si", "true")
+    indep_raw = get("independent", "Are ALL targets/controls measured independently of R, Xc, H, W (yes/no)?", "no") or "no"
+    indep = indep_raw.lower() in ("yes", "y", "sim", "sí", "si", "true")
     tname = re.sub(r"\W+", "_", t).upper(); cname = re.sub(r"\W+", "_", c).upper()
     cfg = build_config(p, mapping, units=units, targets={tname: t}, controls={cname: c}, covariates=covariates, strata=strata, id_col=id_col,
                        sep=s, decimal=d, run_name=p.stem, independent=indep, groups=groups, encoding=encoding)
@@ -166,8 +186,10 @@ def init(csv: str, out: str | None = None, *, ask: Callable[[str, str | None], s
     printer("mapping:")
     for role, v in (("R", mapping["R"]), ("Xc", mapping["Xc"]), ("H", mapping["H"]), ("W", mapping["W"]), ("target", t), ("control", c),
                     ("covariates", ",".join(covariates) or None), ("strata", strata), ("id", id_col),
-                    *[(r, groups.get(g)) for r, g in GROUP_ROLES.items()]):
+                    *[(r, groups.get(g)) for r, g in GROUP_ROLES.items()], ("independent", "yes" if indep else "no")):
         printer(f"  {role:11s} ← {v if v else '(not mapped)'}" + (f"   [{origin[role]}]" if v and role in origin else ""))
+    if not indep:
+        printer("  ⚠ independent = no: check will warn; set yes only if NO target/control is computed from the mapped columns")
     printer("  catalogue: curated methods only (primary source read and approved); `catalog.include: all` audits the rest, marked *")
     printer(f"wrote {outp}  → next: bioms-zaku check {outp}")
     return outp

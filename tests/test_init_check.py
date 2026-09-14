@@ -116,3 +116,21 @@ def test_init_explains_encoding_and_records_it(tmp_path):
     assert cfg["data"]["encoding"] == "latin-1" and cfg["data"]["sep"] == ";" and cfg["data"]["decimal"] == ","
     from bioms_zaku.check import check
     check(str(out), printer=lambda s: None)          # EN: the YAML written by init passes check as is
+
+
+def test_interactive_init_reasks_on_typo_refuses_control_equal_to_target_and_prints_independence(tmp_path):
+    # EN: terminal-simulation findings (2026-09-14). Scripted answers: a typo for Xc (re-asked), control = target (re-asked).
+    from bioms_zaku.wizard import init, suggest
+    answers = iter(["", "reatancia_50_ohm", "reatancia_ohm", "", "", "", "", "lmi_dxa", "lmi_dxa", "fmi_dxa", "", "", "", "", "", "", "", "", "yes"])
+    def ask(prompt, default):
+        return next(answers)
+    printed = []
+    out = init(str(ROOT / "examples/minimal_data.csv"), str(tmp_path / "i.yaml"), ask=ask, printer=printed.append)
+    cfg = yaml.safe_load(out.read_text(encoding="utf-8"))
+    assert cfg["data"]["columns"]["variables"]["Xc"] == "reatancia_ohm" and cfg["data"]["columns"]["controls"] == {"FMI_DXA": "fmi_dxa"}
+    assert any("is not in the file" in l for l in printed) and any("is the target itself" in l for l in printed)
+    assert any(l.strip().startswith("independent") and "yes" in l for l in printed) and cfg["declarations"]["targets_independent_of_variables"] is True
+    with pytest.raises(InputError, match="same as the target"):
+        init(str(ROOT / "examples/minimal_data.csv"), str(tmp_path / "j.yaml"), map_flags={**FLAGS, "control": FLAGS["target"]}, printer=lambda s: None)
+    s = suggest(["id", "reatancia_50k_ohm", "resistencia_50k_ohm", "massa_corporal_kg", "estatura_cm"])
+    assert s["Xc"] == "reatancia_50k_ohm" and s["W"] == "massa_corporal_kg" and s["R"] == "resistencia_50k_ohm"

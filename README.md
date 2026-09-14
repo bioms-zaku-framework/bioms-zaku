@@ -50,7 +50,7 @@ whose mean vector and log-covariance Σ were estimated, per sex, from a **conven
 18–49 y, measured DXA, 50 kHz BIA; n = 2 792 women, 3 036 men). No real row is reproduced; only μ and Σ left the source, and
 they are published in `examples/example_data_params.json` (with the skew and kurtosis of the source logs, so the
 log-normal approximation can be judged) together with the generator `tools/make_example_data.py` and its seed. The
-file carries R, Xc, height, weight, age, three circumferences, DXA lean/appendicular/fat indices and one declared
+file carries R, Xc, height, body mass, age, three circumferences, DXA lean/appendicular/fat indices and one declared
 synthetic binary label. Use it to learn the method, to test the tool, and to decompose Σ by hand.
 
 ```bash
@@ -71,7 +71,7 @@ bioms-zaku check my_data.zaku.yaml   # validates data + configuration WITHOUT ru
 bioms-zaku run   my_data.zaku.yaml   # the analysis
 ```
 
-Non-interactive `init`: `bioms-zaku init my_data.csv --map R=resistance Xc=reactance H=height W=weight target=lmi control=fmi independent=yes`,
+Non-interactive `init`: `bioms-zaku init my_data.csv --map R=resistance Xc=reactance H=height W=body_mass target=lmi control=fmi independent=yes`,
 optionally adding `strata=sex id=subject age=age arm=arm_c waist=waist_c calf=calf_c` so that the catalogue equations that need
 sex, age or circumferences can be evaluated; `check` lists every method it cannot evaluate and which column it needs.
 The YAML maps columns to roles (see `CONTRATOS.md` §1): `variables` (R, Xc, H, W at the declared frequency), `units`,
@@ -120,7 +120,7 @@ catalog without curation and are audited only with `catalog.include: all`, marke
 ## Geometry of target and control / Geometría / Geometria (v0.6)
 
 Target and control often come from the same reference measurement and the same normalisation (lean/H² and fat/H² from one
-DXA scan; lean + fat + bone = weight, with H and W among the mapped variables). In the space of the mapped variables they
+DXA scan; lean + fat + bone = body mass, with H and W among the mapped variables). In the space of the mapped variables they
 can point almost the same way, and then an index close to that direction (W/H²-like) predicts both by arithmetic. The
 framework measures this with the algebra it already uses: the *implicit vector* of each target and control (OLS of the
 logs), the Σ-cosines index–target, index–control and target–control, and the exact identity r_log = cos_Σ·√R² for
@@ -128,7 +128,7 @@ monomial indices. Two flags with declared thresholds annotate the verdicts and n
 (‡ next to the index) and COUPLED_TARGET_CONTROL (‡ in the panel title). Tables `implicit_vectors.csv` and
 `geometry.csv`; block in `summary.md`. On the shipped example the target–control cosine is 0.90 (women) and 0.86 (men)
 for LMI vs FMI. Using absolute masses (kg) removes height from both sides and lowers the coupling but does not remove the
-coupling through weight, and it makes the target more "size", which favours volume indices (H²/R): a declared choice,
+coupling through body mass, and it makes the target more "size", which favours volume indices (H²/R): a declared choice,
 not a fix. Lesson 12 of the notebook works the whole thing by hand on four people.
 
 ## Reproducibility / Reproducibilidad / Reprodutibilidade

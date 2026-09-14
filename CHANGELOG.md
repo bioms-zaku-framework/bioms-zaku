@@ -1,6 +1,10 @@
 # Changelog
 
 ## 0.1.0.dev0 — 2026-09-10 (unreleased)
+- Terminal simulation (2026-09-14, interactive `init`): a typo in a column name re-asks instead of aborting; control equal to the
+  target is refused; the independence answer is printed in the mapping (with a warning when `no`); the suggester recognises
+  `reatancia`/`reatt` and `body_mass`/`massa`; prompts state the physical meaning of R, Xc, H, W. W is BODY MASS in kg (a scale
+  measures mass, not weight); the symbol W stays as the BIA literature's convention, the wording changes everywhere.
 - External-user audit on real subsamples (2026-09-14): `run` now performs the `check` pre-flight and stops on blocking problems
   (a 60-row sample produced a report with every audit skipped); `init` records `data.encoding` and, when the file is not
   utf-8, says which `--encoding` to pass instead of a traceback; CLI exit code 2 with a one-line message on input/validation errors.

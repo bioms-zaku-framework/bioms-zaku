@@ -17,7 +17,7 @@ def main(argv=None) -> int:
     sub.add_parser("version")
     i = sub.add_parser("init", help="build a configuration from a CSV (interactive; or --map role=column ...)")
     i.add_argument("csv"); i.add_argument("-o", "--out", default=None); i.add_argument("--sep", default="auto"); i.add_argument("--decimal", default="auto")
-    i.add_argument("--encoding", default="utf-8"); i.add_argument("--map", nargs="*", default=None, help="role=column pairs, e.g. R=resistencia Xc=reatancia H=estatura W=peso target=lmi control=fmi independent=yes")
+    i.add_argument("--encoding", default="utf-8"); i.add_argument("--map", nargs="*", default=None, help="role=column pairs, e.g. R=resistencia Xc=reatancia H=estatura W=massa_corporal target=lmi control=fmi independent=yes")
     c = sub.add_parser("check", help="validate configuration and data without running")
     c.add_argument("config")
     a = ap.parse_args(argv)
