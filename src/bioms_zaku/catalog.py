@@ -26,9 +26,9 @@ NON_MONOMIAL_DERIVED = ("PhA", "Z")   # EN: usable in expressions, never in a mo
 VECTOR_TOL_MAX = 1e-4                 # EN: numeric slack for the log-linear identity check only, not an approximation budget
 FORMS = ("monomial", "composite", "closed")
 KINDS = ("index", "equation")
-SOURCES = ("pdf_table", "pdf_text", "pmc_text", "abstract", "review_table")
+SOURCES = ("pdf_table", "pdf_text", "pmc_text", "abstract", "review_table", "proposed")   # EN: "proposed" = the researcher's own index, not published (v0.9)
 CONFIDENCE = ("high", "medium", "low")
-DEFAULT_CONFIDENCE = {"pdf_table": "high", "pdf_text": "high", "pmc_text": "high", "abstract": "medium", "review_table": "low"}
+DEFAULT_CONFIDENCE = {"pdf_table": "high", "pdf_text": "high", "pmc_text": "high", "abstract": "medium", "review_table": "low", "proposed": "high"}   # EN: proposed = the author's own formula
 REQUIRED = ("id", "label", "authors", "year", "doi", "kind", "target", "form", "frequency_khz", "validity", "provenance")
 # EN: what the author says the method measures, as a category the report can compare with the declared kind of the
 #     audit target/control (§2.1). A fat index audited against a lean-mass target is expected to "track the control".
@@ -92,6 +92,7 @@ class Entry:
     # ES/PT: curado = passou pela leitura crítica documentada da fonte primária; só curados entram na auditoria por padrão.
     curated: bool = False
     curation_record: str | None = None       # EN: where the reading is recorded (e.g. "LEITURAS.md §2, 2026-09-11")
+    proposed: bool = False                   # EN: researcher's own index (provenance.formula_source = "proposed"): no DOI, never curated, never takes precedence, marked ◇
 
     @property
     def inputs(self) -> frozenset[str]:
@@ -107,7 +108,15 @@ class Entry:
     def confidence(self) -> str:
         return self.provenance.get("confidence", "low")
 
-    def evaluate(self, env: Mapping[str, np.ndarray], branch: np.ndarray | None = None) -> np.ndarray:
+    @property
+    def designed(self) -> bool:
+        return self.provenance.get("formula_source") == "designed"
+
+    @property
+    def uses_sample_stats(self) -> bool:
+        return any(ce.uses_sample_stats for ce in self.exprs.values())
+
+    def evaluate(self, env: Mapping[str, np.ndarray], branch: np.ndarray | None = None, record: list | None = None) -> np.ndarray:
         """
         EN: Evaluate the method on `env` (arrays). With branches, `branch` gives each row's group value.
         ES: Evalúa el método en `env`. Con ramas, `branch` da el valor de grupo por fila.
@@ -116,7 +125,7 @@ class Entry:
         if self.form == "closed" or not self.exprs:
             raise CatalogError(f"{self.id}: closed method cannot be evaluated")
         if self.branch_group is None:
-            out = self.exprs[None].evaluate(env)
+            out = self.exprs[None].evaluate(env, record)
             return np.asarray(out, dtype=float)
         if branch is None:
             raise CatalogError(f"{self.id}: branch values for group {self.branch_group!r} are required")
@@ -127,7 +136,7 @@ class Entry:
             mask = branch.astype(str) == str(key)
             if mask.any():
                 sub = {k: (v[mask] if isinstance(v, np.ndarray) and np.ndim(v) == 1 and len(v) == n else v) for k, v in env.items()}
-                out[mask] = np.asarray(ce.evaluate(sub), dtype=float)
+                out[mask] = np.asarray(ce.evaluate(sub, record), dtype=float)
         return out
 
 
@@ -154,7 +163,8 @@ class Catalog:
         ES: orden de precedencia: año, fecha (si hay), DOI. Regla fija.
         PT: ordem de precedência: ano, data (se houver), DOI. Regra fixa.
         """
-        return sorted(self.entries, key=lambda e: (e.year, e.date or "9999-99-99", e.doi or f"pmid:{e.pmid}"))
+        # EN: proposed (unpublished) indices come after every published method whatever their year (v0.9)
+        return sorted(self.entries, key=lambda e: (e.proposed or e.designed, e.year, e.date or "9999-99-99", e.doi or f"pmid:{e.pmid}" if e.doi or e.pmid else e.id))
 
 
 # ----------------------------------------------------------------------------------------------
@@ -197,8 +207,21 @@ def build_catalog(raw: dict, *, source_path: str | None = None, resolve_doi: boo
 
 def _parse_entry(e: dict, i: int, canon: tuple[str, ...], rng_seed: int) -> Entry:
     where = f"entry #{i} ({e.get('id', '?')})"
+    proposed = isinstance(e.get("provenance"), dict) and e["provenance"].get("formula_source") == "proposed"
+    if proposed:
+        # EN: a researcher's own index (v0.9): no publication, so no DOI/year/validity are demanded; defaults are explicit and
+        #     recorded. `target` (what it intends to measure), `authors` and `expr` stay required. Never curated, never precedence.
+        import datetime as _dt
+        if e.get("curated"):
+            raise CatalogError(f"{where}: a proposed index cannot be curated")
+        if "expr" not in e and "expr_by_group" not in e:
+            raise CatalogError(f"{where}: a proposed index needs `expr` (its formula in R, Xc, H, W)")
+        e = {"label": e.get("id"), "year": _dt.date.today().year, "doi": None, "kind": "index", "frequency_khz": 50,
+             "form": "monomial" if e.get("vector") else "composite", "validity": {"age": None, "bmi": None, "sex": None, "population": None}, **e}
+        e["provenance"] = {"confidence": "high", "verified_by": e.get("authors", "author"), "verified_on": _dt.date.today().isoformat(), **e["provenance"]}   # EN: the formula is the author's own text: no transcription uncertainty; verifier = author, date = today
+        e["validity"] = {"age": None, "bmi": None, "sex": None, "population": None, **(e["validity"] or {})}
     for k in REQUIRED:
-        if k not in e:
+        if k not in e and not (proposed and k == "doi"):
             raise CatalogError(f"{where}: missing required field {k!r}")
     if e["kind"] not in KINDS:
         raise CatalogError(f"{where}: kind must be one of {KINDS}")
@@ -206,7 +229,7 @@ def _parse_entry(e: dict, i: int, canon: tuple[str, ...], rng_seed: int) -> Entr
         raise CatalogError(f"{where}: form must be one of {FORMS}")
     if not isinstance(e["year"], int):
         raise CatalogError(f"{where}: year must be an integer")
-    if not e.get("doi") and not e.get("pmid"):
+    if not e.get("doi") and not e.get("pmid") and not proposed:
         raise CatalogError(f"{where}: doi is required (pmid accepted only when the work has no DOI)")
     fk = e["frequency_khz"]
     if isinstance(fk, (list, tuple)):
@@ -300,7 +323,7 @@ def _parse_entry(e: dict, i: int, canon: tuple[str, ...], rng_seed: int) -> Entr
         exclusion_reason=e.get("exclusion_reason"), pmid=e.get("pmid"), date=e.get("date"), derivation_sample=e.get("derivation_sample"),
         check_example=e.get("check_example"), n=e.get("n"), r2=e.get("r2"), see=e.get("see"), target_kind=e.get("target_kind"),
         device=e.get("device"), reference_method=e.get("reference_method"), notes=e.get("notes"),
-        curated=bool(e.get("curated", False)), curation_record=e.get("curation_record"),
+        curated=bool(e.get("curated", False)), curation_record=e.get("curation_record"), proposed=proposed,
     )
     if ent.check_example is not None:
         _check_example(where, ent)

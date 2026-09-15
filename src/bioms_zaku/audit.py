@@ -42,6 +42,7 @@ class AuditConfig:
     B: int = 2000
     min_oob: int = 20
     max_attempts_factor: int = 6
+    min_B_eff: int | None = None          # EN: minimum VALID resamples (None → 10 % of B, at least 20, never more than B); below it the audit is refused (v1.0)
     seed_cv: int = 42
     seed_bootstrap: int = 42
     ci: float = 0.95
@@ -164,7 +165,13 @@ def oob_scores(configs: dict[str, np.ndarray], Y: np.ndarray, task: str, estimat
         keep = ~planned.any(axis=0)
         dropped = int((~keep).sum())
         store = {k: v[keep] for k, v in store.items()}
-    return store, len(tr) - dropped, dropped
+    b_eff = len(tr) - dropped
+    min_b = cfg.min_B_eff if cfg.min_B_eff is not None else min(cfg.B, max(20, int(0.10 * cfg.B)))
+    if b_eff < min_b:
+        # EN: found on a 33-row audit partition (2026-09-15): ONE valid resample gave zero-width intervals and spurious verdicts.
+        raise AuditError(f"bootstrap unreliable: only {b_eff} of {cfg.B} resamples kept >= min_oob={cfg.min_oob} rows out-of-bag (n={n}, "
+                         f"expected OOB ≈ {0.368 * n:.0f}); at least {min_b} valid resamples are required — provide more rows")
+    return store, b_eff, dropped
 
 
 # ----------------------------------------------------------------------------------------------
@@ -282,7 +289,7 @@ def audit_method(method_id: str, stratum: str, x: np.ndarray, targets: dict[str,
     Yall = np.column_stack([targets.get(k, controls.get(k)) for k in names])
     ok = np.isfinite(x) & np.isfinite(Yall).all(axis=1)
     if ok.sum() < cfg.min_n:
-        return rows
+        raise AuditError(f"only {int(ok.sum())} complete rows (index, targets, controls) < min_n={cfg.min_n}")   # EN: never skipped silently (v1.0)
     X = x[ok].reshape(-1, 1); Y = Yall[ok]; g = groups[ok] if groups is not None else None
     task = cfg.task
     if task == "auto":
@@ -354,7 +361,7 @@ def utility_method(method_id: str, stratum: str, x: np.ndarray, covariates: np.n
     Yall = np.column_stack([targets[k] for k in names])
     ok = np.isfinite(x) & np.isfinite(covariates).all(axis=1) & np.isfinite(Yall).all(axis=1)
     if ok.sum() < cfg.min_n:
-        return []
+        raise AuditError(f"only {int(ok.sum())} complete rows (index, covariates, targets) < min_n={cfg.min_n}")
     FA = covariates[ok]; FB = np.column_stack([FA, x[ok]]); Y = Yall[ok]; g = groups[ok] if groups is not None else None
     task = cfg.task if cfg.task != "auto" else infer_task(Y[:, 0])
     est = estimator if estimator is not None else default_estimator(task)

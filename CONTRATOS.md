@@ -135,7 +135,12 @@ mudança). A versão 1.0.0 nasceu da migração do catálogo do piloto (08/09/20
 
 ### 2.4 Gramática (árvore sintática, lista branca)
 Números; nomes canônicos das variáveis mapeadas e derivadas; nomes de `groups`; `+ - * / ** ( )`;
-`log exp sqrt atan atan2 abs min max`; `pi`. Nada mais. Violação → erro na carga.
+`log exp sqrt atan atan2 abs min max`; `pi`, `e`. **Estatísticas amostrais (v0.9):** `mean(x)`, `median(x)`, `sd(x)` reduzem o
+argumento sobre as linhas avaliadas (um estrato, os casos completos que entram na álgebra) a um único número, aplicado a
+todas as linhas (`sd` com ddof=1; NaN ignorado). Um índice que as usa não é fórmula fixa: seus valores mudam em cada amostra.
+Por isso: cada valor usado é registrado no manifesto (`sample_statistics[estrato][método]`), gera aviso na execução, aparece
+no resumo e na seção de rigor do relatório; `algebra.uses_sample_stats` marca o método. Nunca usam o alvo nem o controle
+(só variáveis mapeadas), logo não vazam informação do alvo para a validação cruzada. Nada mais. Violação → erro na carga.
 
 ### 2.5 Regra do índice não positivo
 Equação `affine` com valor ≤ 0 numa linha: linha fora da parte algébrica daquele método
@@ -214,6 +219,13 @@ output: {dir: ./zaku_out, figures: true}
 ```
 
 ### 3.2 Regras
+- **Bootstrap válido ou recusado (v1.0, 15/09/2026; caso: CrossFit, 107 homens, desenho deixou 33 para auditar → 1 reamostra válida em
+  2.000 → intervalos de largura zero e vereditos espúrios).** (a) A auditoria de um método é recusada, com aviso no manifesto, quando
+  o número de reamostras válidas (≥ `min_oob` fora da bolsa) fica abaixo de `max(20, 10 % de B)`, nunca acima de B; nenhum intervalo
+  degenerado é jamais publicado. (b) `check` e `start` avaliam `min_n` e a viabilidade do bootstrap **na partição de auditoria** de
+  cada estrato quando há desenho (`(1 − fraction) · n`), com rótulos, e bloqueiam com a saída (mais linhas ou sem estrato; a rodada
+  padrão não é afetada). Consequência prática: desenhar índices com auditoria válida exige ≈ 55 pessoas auditadas por estrato
+  (≈ 185 por estrato a 70/30). (c) Aviso no manifesto quando mais da metade das reamostras foi descartada num estrato. Testes.
 - **`run` valida antes de rodar (14/09/2026).** A mesma verificação de `check` roda no início de `run` (CLI e API); problema
   bloqueante para a execução com as mensagens do `check` e código de saída 2. Nunca se produz relatório com todas as auditorias
   puladas. `init` grava `data.encoding` e, se não conseguir decodificar, diz qual `--encoding` tentar (sem traceback).
@@ -373,7 +385,7 @@ excluídas) · 3 `precedence_tree` · 4 `specificity_quadrant` (escore controle 
 · 5 `screening_map` (assinatura) · 6 `sigma_transfer` · 7 `combination_gain`.
 **Portão:** inspeção de cada figura pelo Thalles antes do fechamento da v1.0.
 
-### 4.6 Relatório (`report.html`, v0.8 — plano aprovado em 14/09/2026; ver PLANO_v0.8_relatorio.md)
+### 4.6 Relatório (`report.html`, v0.8 — plano aprovado em 14/09/2026; ver PLANO_v0.8_relatorio.md; v0.9 — estrutura e referências, 15/09/2026)
 - **É a saída principal.** Um único arquivo, autocontido (figuras e tabelas embutidas), abre do disco sem servidor. Terminal:
   a última linha do `run` é o caminho do relatório e como abri-lo. Notebook: `run()` mostra o relatório inline.
 - **Seções, nesta ordem:** cabeçalho (título, preset, aviso se `quick`); resumo; para cada bloco de resultado — entrada e amostra,
@@ -389,7 +401,29 @@ excluídas) · 3 `precedence_tree` · 4 `specificity_quadrant` (escore controle 
   sem tocar tabelas nem manifesto (teste: hashes das tabelas inalterados). Os AVISOS gravados no manifesto são registro do
   momento da execução e ficam no idioma daquela execução, também dentro de um relatório re-renderizado.
 - **Determinismo:** `report.html` carrega data/hora e NÃO entra em `outputs_sha256`; os CSV embutidos são byte a byte os
-  arquivos hasheados (teste). Fora: interatividade, PDF.
+  arquivos hasheados (teste). Fora: gráficos interativos, filtros, troca de idioma dentro da página (o `render` resolve o idioma).
+- **Estrutura (v0.9, 15/09/2026).** Oito seções numeradas, nesta ordem, com índice fixo no topo: 1 Sobre (texto, citação, atribuição do
+  nome, e o **diagrama Zaku** — SVG fixo do método em quatro colunas: variáveis medidas → decomposição (vetores de exemplo exatos
+  H²/R, Xc/H, R/H; Σ esquemática; identidade r = aᵀΣb/√(aᵀΣa·bᵀΣb)) → auditoria fora da amostra → vereditos; gravado também em
+  `figures/zaku_method.svg`, no idioma da execução); 2 Números-chave (pessoas, estratos, métodos e curados, vereditos do alvo
+  primário como selos coloridos, valor acrescentado k de n, acoplamento alvo↔controle por estrato — todos lidos das tabelas, testado);
+  3 Resumo em texto (`summary.md`, dobrado); 4 Figuras, agrupadas por família (ficha de vereditos aberta; as outras fechadas; uma
+  aberta por vez; título humano traduzido, legenda uma vez por família, clique amplia); 5 Resultados, um bloco dobrável por
+  bloco de resultado, **um aberto por vez** (`<details name>` nativo, sem biblioteca), com o texto de método e as tabelas
+  (numéricos alinhados à direita; no máximo 1000 linhas mostradas, o CSV embutido é sempre completo); 6 Rigor; 7 Referências;
+  8 Manifesto. Cores dos vereditos idênticas às figuras. Impressão abre todas as seções (folha de impressão + `beforeprint`).
+  Nenhum recurso externo: CSS, JS e imagens embutidos.
+- **Referências (v0.9).** Seção fixa, em três partes: (a) métodos de bioimpedância avaliados NESTA execução, uma linha por fonte
+  (entradas do catálogo agrupadas por DOI; ano e autores do catálogo, título e periódico do registro verificado); (b) métodos
+  estatísticos e algébricos, lista fixa etiquetada com o bloco a que dá suporte — Kronmal 1993 e Atchley 1976 (razões e índices),
+  Nevill & Holder 1995 e Heymsfield 2007 (escalonamento alométrico), Spearman 1904, Lipsitch 2010 (controles negativos), Hoerl &
+  Kennard 1970 (ridge), Stone 1974 (validação cruzada), Bengio & Grandvalet 2004 (por que os intervalos vêm do bootstrap),
+  Efron 1979 (bootstrap), Cover 1974 (combinações); (c) software executado (NumPy, SciPy, pandas, scikit-learn, Matplotlib).
+  Regra: **nenhum DOI entra sem resolver no Crossref**; os registros (`references.py`) foram gerados dos metadados do Crossref em
+  15/09/2026, não digitados; entradas listadas como publicadas, sem tradução. Na verificação, dois candidatos foram recusados: o DOI
+  10.1097/ede.0b013e3181e4bfd7 (é a errata de Lipsitch 2010; o artigo é 10.1097/ede.0b013e3181d61eeb) e 10.1111/sms.12780 (artigo de
+  cintura, não referência geral de alometria). Teste: todo DOI do catálogo tem registro; a errata não entra; as referências do
+  relatório são exatamente as dos métodos da execução.
 
 ### 4.5 Progresso
 CLI e API imprimem, por estrato e método, contagem, tempo decorrido e estimativa de término, desde o
@@ -430,6 +464,51 @@ rápido é condição para outros pesquisadores usarem e aprimorarem.
 ---
 
 ## 6. Changelog
+- **v1.0.0-rc1 (15/09/2026)** — §3.5 caminho guiado `start` (PLANO_v1.0_fluxo.md): cinco telas, navegação (`<`, `?`, resumo,
+  corrigir linha), sugestões sem veredito antes do aceite, aceitar/editar/não, índice próprio, rodada final nas linhas nunca vistas;
+  YAML gravado por tela e reprodutível com `run`; `--map --yes`; Ctrl+C 130. `init` deixa de perguntar `design`. Rigor acrescentado
+  pela simulação de usuário: auditoria nunca pula método em silêncio; `check` bloqueia desenho com partição de auditoria < `min_n`
+  por estrato; `propose` recusa fórmula sem valor auditável, constante, id de catálogo, e avisa repetição de método publicado;
+  segunda sessão sobre o mesmo arquivo reaproveita respostas e pergunta antes de descartar índices próprios; resposta inválida
+  em sim/não é repetida. Estágio de desenho compartilhado (`design_all`). Guia de 10 minutos em português.
+- **v0.9.0 (15/09/2026)** — §4.6 estrutura do relatório: índice fixo, oito seções numeradas, números-chave, figuras por família e
+  blocos de resultado como sanfona (um aberto por vez), diagrama Zaku do método (SVG fixo, 4 línguas, também em `figures/`),
+  seção de Referências com registros verificados no Crossref (métodos da execução + métodos estatísticos + software), tabelas com
+  numéricos alinhados, impressão e ampliação de figuras sem recurso externo.
+  Boas-vindas no terminal (`banner.py`): só em `bioms-zaku` sem comando, `--version` e no início do `init` interativo; nunca em
+  `run`/`check`/`render`/`init --map`; cor só em terminal (NO_COLOR, TERM=dumb respeitados). Teste.
+  Garantia de margens do diagrama: todo texto declara a caixa que o contém; estimativa conservadora de largura reduz a fonte e
+  prende `textLength` quando preciso (teste unitário) e `tools/audit_diagram.py` mede cada texto no Chrome em 4 línguas × 8 fontes.
+  Cabeçalho do relatório em cinza-claro, logo centralizada, nome em degradê, título "Dados: <nome>" e "Pesquisador: <nome>";
+  `check` termina com o comando `run` pronto para colar. Identidade do estudo (`study.data_name`, `study.researcher`): perguntada
+  no `init`, gravada no YAML (portanto no SHA-256 da configuração) e no manifesto; muda o hash da configuração, nunca as tabelas.
+- **Índices propostos (v0.9, aprovado em 15/09/2026).** Entrada de `user_entries` com `provenance.formula_source: proposed`: o índice
+  do próprio pesquisador. Dispensa DOI, ano, validade e frequência (padrões explícitos: ano corrente, 50 kHz, validade nula,
+  confiança alta porque a fórmula é o texto do autor, verificador = autor, data = execução); exige `id`, `authors`, `target`, `expr`.
+  Nunca curado (erro se `curated: true`); nunca ganha precedência de método publicado, seja qual for o ano (chave de ordenação
+  `(proposto, ano, data, DOI)`); marcado ◇ em tabelas (`algebra.proposed`), figuras e legendas, resumo, números-chave e referências
+  ("índice proposto pelo pesquisador, não publicado"). Só entra na auditoria quando listado em `catalog.include` (lista pode
+  conter `curated` = curados ∪ ids); `check` avisa quando declarado e não incluído. Forma: `monomial` se `vector` for dado
+  (verificado exato), senão `composite` (vetor ajustado + R²). Circularidade: `expr` só aceita variáveis mapeadas. Testes.
+  Os oito índices BioMS do autor (Mota 2026: 1, 2, 4, 5, 6R, 7, 8, 9; recuperados dos notebooks de junho/agosto) estão em
+  `examples/bioms_mota_proposed.yaml` como entradas propostas; BioMS_2 usa `mean(PhA)` (média amostral, registrada). Teste.
+  Comando `bioms-zaku propose <yaml>` (§3, v0.9): acrescenta índices próprios pergunta a pergunta; cada fórmula passa pela mesma
+  validação do catálogo e é avaliada nos dados do YAML antes de ser aceita (contagem de finitos/positivos, mín/mediana/máx,
+  estatísticas amostrais usadas); id inválido ou repetido e fórmula recusada são pedidos de novo; nada é adivinhado.
+  `--lang` na CLI sobrepõe `language` do YAML em `check` e `run` escrevendo-o na configuração (o manifesto registra o idioma usado).
+- **Desenho de vários índices e ortogonalidade (v0.9, aprovado em 15/09/2026; ver §2.7).** `design` aceita uma lista de blocos
+  `{target, id, orthogonal_to?}`; UMA partição (semente do primeiro bloco, linhas com todos os alvos/controles finitos, estratificada)
+  vale para todos os índices desenhados, que são auditados nas mesmas linhas nunca vistas; manifesto `design.indices[id].per_stratum`
+  (chaves = rótulos dos estratos) com vetor, R² de desenho, e, se ortogonal, vetor do controle, cos_Σ e R² sem restrição. Marca △ em
+  tabelas (`algebra.designed`), figuras, resumo, números-chave e referências; nunca precedência sobre método publicado.
+  **Teorema registrado e testado:** o vetor de MQO do alvo, t̂, satisfaz t̂ᵀΣ(ĉ − βt̂) = 0 com β = t̂ᵀΣĉ/t̂ᵀΣt̂ — o melhor preditor do alvo é,
+  por construção, condicionalmente não informativo sobre a projeção do controle. Logo o **desenho simples é o índice "limpo"** no
+  sentido do controle negativo condicional (S2 ≈ 0 fora da amostra no caso construído, veredito SPECIFIC). `orthogonal_to` impõe
+  cos_Σ = 0 **marginal** com uma coluna (forma fechada: a = a_MQO − (ĉᵀΣa_MQO/ĉᵀΣĉ)·ĉ); serve para incômodos (tamanho corporal), e
+  condicionado ao alvo esse índice tende a acompanhar a coluna (S2 sobe no caso construído) — o relatório diz isso. O `init`
+  pergunta `design: none | target | control | both` e escreve desenhos simples; `orthogonal_to` só por YAML. Com `control` ou
+  `both`, o `init` escreve o pareamento nas duas direções (controle vira alvo também): todo método é auditado nos dois sentidos e o
+  índice desenhado para o controle é auditado contra o seu próprio alvo; a triagem mantém o primeiro alvo como primário.
 - **v0.8.0 (14/09/2026)** — §4.6 relatório como produto: textos de método por bloco (4 línguas, números da configuração),
   botões CSV/Excel, seção de rigor, inline no notebook; logo passa a ir dentro do pacote.
 - **v0.7.0 (14/09/2026)** — §3.4 idioma: catálogo único em en/es/pt/it, `--lang` e `language:`; figuras e legendas em italiano.

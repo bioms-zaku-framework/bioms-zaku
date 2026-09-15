@@ -118,17 +118,22 @@ def test_T6_html_is_well_formed(run_pt):
 def test_T7_text_agrees_with_tables(run_pt):
     res, txt = run_pt
     aud = res["tables"]["audit"]; vc = aud.verdict.value_counts()
-    assert f"SPECIFIC {vc.get('SPECIFIC', 0)} · TRACKS_CONTROL {vc.get('TRACKS_CONTROL', 0)} · BOTH {vc.get('BOTH', 0)} · NEITHER {vc.get('NEITHER', 0)}" in txt
+    for k in ("SPECIFIC", "TRACKS_CONTROL", "BOTH", "NEITHER"):                # summary line: pills keep the verdict token and its count
+        assert f">{k} {vc.get(k, 0)}</span>" in txt, k
     assert f"métodos avaliados: {len(res['tables']['algebra'])}" in txt
+    # key numbers read from the tables and the manifest
+    assert f"<div class='v'>{res['manifest']['rows_out']}</div><div class='l'>pessoas analisadas</div>" in txt
+    assert f"<div class='v'>{res['tables']['algebra'].method_id.nunique()}</div><div class='l'>métodos avaliados</div>" in txt
+    assert f"Específico {vc.get('SPECIFIC', 0)}</span>" in txt and f"Acompanha ctrl {vc.get('TRACKS_CONTROL', 0)}</span>" in txt
     for name in ("audit", "algebra", "geometry"):
         assert res["manifest"]["outputs_sha256"][f"{name}.csv"] in txt      # rigour section lists every hash
 
 
 def test_T8_no_english_leak_in_pt_report(run_pt):
     _, txt = run_pt
-    for en in ("How it was computed", "How to read it", "Rigour applied", "download CSV", "Rigour of this run", "Results", "not curated"):
+    for en in ("How it was computed", "How to read it", "Rigour applied", "download CSV", "Rigour of this run", ">Results<", "not curated", "Key numbers", "Verdict sheet", "measured variables", "click to enlarge", ">References<"):
         assert en not in txt, en
-    for pt in ("Como foi calculado", "Como ler", "Rigor aplicado", "baixar CSV", "Rigor desta execução", "Resultados"):
+    for pt in ("Como foi calculado", "Como ler", "Rigor aplicado", "baixar CSV", "Rigor desta execução", "Resultados", "Números-chave", "Ficha de vereditos", "variáveis medidas", "Referências"):
         assert pt in txt, pt
 
 
@@ -174,3 +179,32 @@ def test_nine_content_fixes_of_2026_09_15(tmp_path):
     assert c2["strata_labels"] == {"0": "F", "1": "M"} and c2["data"]["columns"]["targets"] == {"lmi_dxa": "lmi_dxa"}
     assert any(l.strip().startswith("labels") and "0=F,1=M" in l for l in printed)
     set_language("en")
+
+
+def test_v09_structure_accordion_diagram_and_references(run_pt):
+    # EN: v0.9 (2026-09-15): sticky contents, eight numbered sections in a fixed order, result blocks as an exclusive accordion
+    #     (one open at a time, the first open by default), figures grouped by family with translated titles, the Zaku method
+    #     diagram inline and on disk, references restricted to the methods of the run, no external resource, print + lightbox.
+    res, txt = run_pt; out = res["out_dir"]
+    anchors = ["about", "key", "summary", "figures", "results", "rigor", "refs", "manifest"]
+    assert all(f"href='#{a}'" in txt for a in anchors)
+    pos = [txt.index(f"id='{a}'") for a in anchors]; assert pos == sorted(pos)          # sections in reading order
+    blocks = re.findall(r"<details class='block' name='results'( open)?>", txt)
+    assert len(blocks) >= 5 and blocks[0] == " open" and sum(b == " open" for b in blocks) == 1
+    figs = re.findall(r"<details class='block' name='figures'( open)?><summary><span class='n'>4\.\d</span>([^<]+)", txt)
+    assert figs and figs[0][0] == " open" and figs[0][1] == "Ficha de vereditos" and "Mapa do controle negativo condicional" in [f[1] for f in figs]
+    assert "Zaku: o método numa imagem" in txt and "<svg xmlns='http://www.w3.org/2000/svg'" in txt
+    svg = (out / "figures" / "zaku_method.svg").read_text(encoding="utf-8"); assert svg in txt          # same diagram inline and on disk
+    assert "variáveis medidas" in svg and "measured variables" not in svg
+    # references: exactly the sources of the methods evaluated, each linked; the statistical block tagged with block titles
+    from bioms_zaku.run import _load_catalog
+    cat = _load_catalog(res["manifest"]["config_resolved"]); used = set(res["tables"]["algebra"].method_id)
+    for e in cat.entries:
+        assert (f"https://doi.org/{e.doi}" in txt) == (e.id in used), e.id
+    assert "https://doi.org/10.1152/jappl.1969.27.4.531" not in txt                      # Hoffer 1969 not in this run
+    assert "doi.org/10.1097/ede.0b013e3181d61eeb" in txt and "ede.0b013e3181e4bfd7" not in txt
+    assert "<span class='tag'>Especificidade (controle negativo condicional)</span>" in txt
+    assert "verificados em 2026-" in txt
+    assert not re.search(r"(src|href)=['\"]https?://(?!doi\.org|www\.jmlr\.org|jmlr\.org|github\.com)", txt)   # nothing loaded from the network
+    assert "beforeprint" in txt and "id='lb'" in txt and "<meta name='viewport'" in txt
+    assert ">r(a,b) = aᵀΣb / √(aᵀΣa · bᵀΣb)</text>" in svg and "<span class='brand'>BioMS Zaku</span>" in txt   # formula on its own line (bounds: tests/test_diagram.py); grey header, brand in gradient

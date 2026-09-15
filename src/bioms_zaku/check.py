@@ -27,6 +27,8 @@ def check(config: str | Path | dict, *, printer: Callable[[str], None] = print) 
     """EN: returns a report dict; raises CheckError on blocking problems. ES/PT: relatório; erro quando bloqueante."""
     rep: dict = {"errors": [], "warnings": [], "info": []}
     cfg = resolve(config)
+    from .i18n import set_language as _sl
+    _sl(cfg["language"])   # EN: API and CLI alike: the YAML language applies (as in run(); v0.9)
     d = cfg["data"]; cols = dict(d["columns"])
     if cfg["strata"] is not None:
         if cols.get("strata") not in (None, cfg["strata"]):
@@ -39,6 +41,8 @@ def check(config: str | Path | dict, *, printer: Callable[[str], None] = print) 
         rep["errors"].append(t("c.input_err", err=e))
         _emit(rep, printer); raise CheckError("input contract violated")
     rep["info"].append(t("c.input", rin=ds.info["rows_in"], rout=ds.info["rows_out"], sep=repr(ds.info.get("sep_used")), dec=repr(ds.info.get("decimal_used"))))
+    st = cfg.get("study") or {}
+    rep["info"].append(t("c.study", d=st.get("data_name") or Path(str(cfg["data"]["path"])).stem, r=st.get("researcher") or "—"))
     rep["warnings"] += ds.info["warnings"]
     for k, v in ds.info["rows_dropped"].items():
         if v:
@@ -69,7 +73,7 @@ def check(config: str | Path | dict, *, printer: Callable[[str], None] = print) 
     # strata sizes
     if ds.strata:
         for s, n in ds.frame[ds.strata].value_counts().items():
-            rep["info"].append(t("c.stratum_n", s=s, n=int(n)))
+            rep["info"].append(t("c.stratum_n", s={str(k): str(v) for k, v in (cfg.get("strata_labels") or {}).items()}.get(str(s), s), n=int(n)))
     # catalog methods
     cat = _load_catalog(cfg)
     vals, skipped = _values(cat, ds, ds.frame)
@@ -80,6 +84,13 @@ def check(config: str | Path | dict, *, printer: Callable[[str], None] = print) 
         n_nc = sum(1 for e in full.entries if not e.curated and e.status != "excluded")
         rep["info"].append(t("c.curated", k=len(cat.entries), n=n_nc))
     rep["info"].append(t("c.evaluable", k=len(vals), n=len(skipped)))
+    prop = [e.id for e in cat.entries if e.proposed]
+    if prop:
+        rep["info"].append(t("c.proposed", ids=", ".join(prop)))
+    inc_ids = set(inc) if isinstance(inc, list) else set()
+    for ue in cfg["catalog"].get("user_entries") or []:
+        if isinstance(ue, dict) and (ue.get("provenance") or {}).get("formula_source") == "proposed" and ue.get("id") not in inc_ids and inc != "all" and "all" not in inc_ids:
+            rep["warnings"].append(t("c.proposed_not_included", id=ue.get("id")))
     hint = {"sexo": "sex", "idade": "age", "C_arm": "arm", "C_waist": "waist", "C_calf": "calf"}
     need: dict[str, list[str]] = {}
     def _why(w: str) -> str:
@@ -107,23 +118,35 @@ def check(config: str | Path | dict, *, printer: Callable[[str], None] = print) 
     # bootstrap feasibility per stratum (smallest complete-case n)
     B, mo = cfg["audit"]["bootstrap"]["B"], cfg["audit"]["bootstrap"]["min_oob"]
     groups = [("all", ds.frame)] if not ds.strata else [(str(s), g) for s, g in ds.frame.groupby(ds.strata)]
+    lab = {str(k): str(v) for k, v in (cfg.get("strata_labels") or {}).items()}
+    # EN: when indices are designed, only the AUDIT partition (1 − fraction) carries every audit number: the feasibility rules apply
+    #     to it, per stratum (found on CrossFit, 2026-09-15: 107 rows passed, the 33 audited left one valid resample).
+    specs = ([cfg["design"]] if isinstance(cfg["design"], dict) else list(cfg["design"])) if cfg.get("design") else []
+    audit_share = (1 - float(specs[0].get("fraction", 0.70))) if specs and specs[0].get("split", "holdout") == "holdout" else 1.0
     for s, g in groups:
         n_min = min((int(np.isfinite(vals[k][g.index]).sum()) for k in vals), default=0) if vals else 0
         n_t = int(g[ds.targets[0]].notna().sum())
-        n = min(n_min, n_t)
-        if n and n < d["min_n"]:
-            rep["errors"].append(t("c.min_n", s=s, n=n, m=d["min_n"]))
-        elif n and 0.368 * n < mo:
-            rep["errors"].append(t("c.oob_bad", s=s, oob=f"{0.368 * n:.0f}", m=mo))
+        n_full = min(n_min, n_t); n = int(round(audit_share * n_full)); s_lab = lab.get(s, s)
+        if n_full and n < d["min_n"]:
+            rep["errors"].append(t("c.design_too_small", s=s_lab, na=n, m=d["min_n"]) if specs else t("c.min_n", s=s_lab, n=n, m=d["min_n"]))
+        elif n_full and 0.368 * n < mo:
+            rep["errors"].append(t("c.design_oob", s=s_lab, na=n, oob=f"{0.368 * n:.0f}", m=mo) if specs else t("c.oob_bad", s=s_lab, oob=f"{0.368 * n:.0f}", m=mo))
         else:
-            rep["info"].append(t("c.oob_ok", s=s, n=n, oob=f"{0.368 * n:.0f}", m=mo, B=B))
+            rep["info"].append(t("c.oob_ok", s=s_lab, n=n, oob=f"{0.368 * n:.0f}", m=mo, B=B))
     # design partition
     if cfg.get("design"):
-        dg = cfg["design"]; tgt = dg["target"]
-        n_t = int(ds.frame[tgt].notna().sum()); fr = float(dg.get("fraction", 0.70))
-        rep["info"].append(t("c.design_info", tgt=tgt, fr=f"{fr:.0%}", n=n_t, na=int(round((1 - fr) * n_t))))
-        if (1 - fr) * n_t < 100:
-            rep["warnings"].append(t("c.design_small"))
+        specs = [cfg["design"]] if isinstance(cfg["design"], dict) else list(cfg["design"])
+        for dg in specs:
+            tgt = dg["target"]; orth = dg.get("orthogonal_to")
+            if tgt not in ds.frame:
+                rep["errors"].append(t("c.design_col", col=tgt)); continue
+            if orth is not None and (orth not in ds.frame or orth == tgt):
+                rep["errors"].append(t("c.design_orth_bad", col=str(orth), tgt=tgt)); continue
+            n_t = int(ds.frame[tgt].notna().sum()) if orth is None else int((ds.frame[tgt].notna() & ds.frame[orth].notna()).sum()); fr = float(dg.get("fraction", 0.70))
+            rep["info"].append(t("c.design_info", tgt=tgt, fr=f"{fr:.0%}", n=n_t, na=int(round((1 - fr) * n_t))) + (t("c.design_orth", c=orth) if orth else ""))
+            if (1 - fr) * n_t < 100:
+                rep["warnings"].append(t("c.design_small"))
+            # EN: the audit needs data.min_n complete rows PER STRATUM on the audit partition; below that every method is skipped (v1.0)
     task = cfg["audit"]["task"] if cfg["audit"]["task"] != "auto" else ds.target_types[ds.targets[0]]
     est = cfg["audit"]["single"]["estimator"]
     if est in ("ridge", "logistic"):

@@ -1,6 +1,65 @@
 # Changelog
 
 ## 0.1.0.dev0 — 2026-09-10 (unreleased)
+- Bootstrap validity (2026-09-15, found on a 33-row audit partition): the audit refuses a method when fewer than max(20, 10 % of B)
+  resamples are valid (never a zero-width interval); `check`/`start` apply min_n and the out-of-bag rule to the AUDIT partition per
+  stratum when indices are designed, with labels and the way out; warning when more than half of the resamples were dropped.
+  Guided screens: "question k of n" and a blank line between questions; `Biceps_cm`-style names suggested for the arm; stratum
+  labels in the check's count lines; designed indices named from the target column; the final configuration of `start` is
+  checked again; the report's input text says how many rows went to the design.
+- v1.0 guided path (2026-09-15, PLANO_v1.0_fluxo.md): `bioms-zaku start dados.csv` — one path through the three uses (standard,
+  suggestions with accept/edit/no, own index); `<` back, `?` help, numbered summary and "correct a line?"; the YAML is written
+  after each screen and reproduces the tables byte for byte with `run`; `--map … --yes` for scripts; Ctrl+C exits 130 cleanly;
+  `init` no longer asks about design. The design stage of `run` is a shared function (`design_all`) so suggestions and the final
+  run see the same vectors. Findings of a scripted user simulation, all fixed and tested: invalid yes/no answers are asked again;
+  suggestions are refused before being shown when a stratum's audit partition would fall below `data.min_n`; `propose` rejects
+  formulas with fewer than `min_n` positive finite values, constant formulas (also from `mean()`), ids of the catalogue, and warns
+  when a formula orders people like a published method; a second `start` on the same file offers the previous answers and asks
+  before dropping own indices; scalar formulas become columns; the audit never skips a method silently for lack of rows (warning),
+  and `check` blocks a design whose audit partition per stratum is too small, with the way out. `GUIA_10_MINUTOS.md` (pt).
+- Design of several indices, one shared partition, optional Σ-orthogonality (2026-09-15): `design` takes a list; all designed
+  indices are audited on the same never-seen rows; `init` asks `design: none|target|control|both`; designed indices marked △
+  everywhere, never precedence, with a method block in the report. Recorded and tested theorem: the OLS vector is conditionally
+  orthogonal to the control's projection, so the plain design is the cleaned index for the conditional negative control; the
+  marginal `orthogonal_to` (closed form) serves nuisance columns and tends to track the column conditionally (shown on a
+  constructed case). Manifest `design.indices[id].per_stratum` keyed by stratum labels.
+- `bioms-zaku propose analise.yaml` (2026-09-15): a common user adds own indices question by question (id, name, what it
+  measures, formula); every formula is validated at once with the same catalogue rules as a run and evaluated on the data
+  (finite/positive counts, min/median/max, sample statistics used); invalid ids and formulas are asked again; entries are
+  written as proposed and listed in `catalog.include`; init's header is kept. `--lang` now overrides the YAML language for
+  `check` and `run` by writing it into the configuration (so the manifest records the language actually used). Tested.
+- Sample statistics in formulas (2026-09-15): `mean`, `median`, `sd` (and the constant `e`) in the expression grammar; each
+  value used is recorded per stratum in the manifest, warned about, listed in the summary and in the rigour section;
+  `algebra.uses_sample_stats`. `check()` from the API now applies the YAML language like `run()`. The author's eight BioMS
+  indices ship as proposed entries in `examples/bioms_mota_proposed.yaml` (tested end to end, mean verified against the data).
+- Proposed indices (2026-09-15): a researcher's own formula enters the audit as a `user_entries` item with
+  `provenance.formula_source: proposed` — no DOI needed, explicit defaults recorded, never curated, never precedence over a
+  published method, marked ◇ in tables, figures, summary, key numbers and references; audited only when listed in
+  `catalog.include` (`[curated, my_id]` = curated ∪ ids); `check` warns when declared but not included. Tested (defaults,
+  rejections, exact-vector check, precedence, include semantics, marks).
+- Study identity (2026-09-15): `init` asks the data set name (default: file name) and the researcher responsible; both go
+  to `study:` in the YAML, hence into the configuration SHA-256, the manifest (`study`), the `check` output, the report
+  header (logo centred, "Data: <name>", "Researcher: <name>"), the rigour table and the footer. Tested: same data with a
+  different researcher → different config hash, identical tables.
+- Diagram texts bound to their boxes (2026-09-15, after two overflows found by the user): every text element knows its box;
+  a conservative glyph-width estimate reduces the font and pins `textLength` when needed, so no font substitution can push a
+  text past the edge. Unit test on the generator's bounds (tests/test_diagram.py) and a headless-Chrome measurement of every
+  text against its box in four languages × eight font stacks (tools/audit_diagram.py, all inside; the audit is proven to flag
+  an injected overflow). Report header: light grey, logo kept, brand name in the gradient; `check` ends with the `run` command.
+- Terminal welcome (2026-09-15): `bioms-zaku` with no command and `bioms-zaku --version` print the letters in the brand
+  gradient, the name attribution and the three commands, in the chosen language; the interactive `init` opens with the short
+  form. Never in `run`, `check`, `render`, `init --map` or the plain `version` subcommand; colour only on a terminal
+  (NO_COLOR and TERM=dumb respected). Tested.
+- Report structure and references (2026-09-15, contract v0.9 §4.6): sticky table of contents; eight numbered sections; key
+  numbers read from the tables (people, strata, methods, verdict pills, added value, target↔control coupling); figures grouped
+  by family with translated titles, one family open at a time, click to enlarge; result blocks as an exclusive accordion (native
+  `<details name>`, no library); tables with right-aligned numerics (1000 rows shown, CSV always complete); the Zaku method
+  diagram (fixed SVG in the run language, inline and in `figures/zaku_method.svg`); a References section built from Crossref
+  metadata verified on 2026-09-15 (`references.py`: the bioimpedance sources of the methods actually evaluated, the statistical
+  and algebraic antecedents tagged by result block, the software executed) — two candidate DOIs were rejected at verification
+  (the Lipsitch 2010 erratum, a waist-girth paper); print stylesheet that opens every section; verdict colours identical to the
+  figures. Tests: structure and order, exclusive accordion, diagram inline = on disk, references = methods of the run, every
+  catalogue DOI has a verified record, no external resource, no English leak in pt (new strings included).
 - Content review of the report, nine fixes (2026-09-15): screening classes carry the four conditional verdicts (BOTH and
   NEITHER were wrongly 'inconclusive'); Σ-transfer table header without inner pipes; no contract references (§, v0.x) in
   user text; the overwrite note is an operational note (manifest `notes`, rigour section), not a scientific warning; R² in

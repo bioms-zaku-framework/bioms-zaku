@@ -15,6 +15,7 @@ import yaml
 DEFAULTS: dict[str, Any] = {
     "run_name": "run",
     "language": "en",   # EN: en | es | pt | it — messages, prompts, summary, report headings and figures (v0.7)
+    "study": {"data_name": None, "researcher": None},   # EN: shown in the report header, part of the hashed configuration (v0.9); data_name None → file stem
     "data": {"path": None, "encoding": "utf-8", "sep": "auto", "decimal": "auto", "columns": {},
              "drop_nonpositive": False, "impute": False, "max_missing_frac_warn": 0.10, "min_n": 30, "min_per_class": 20},
     "catalog": {"path": "builtin", "include": "curated", "exclude": [], "user_entries": []},   # EN: DEFAULT = curated methods only (§2.1/§3.2); "all" is an explicit choice
@@ -79,6 +80,11 @@ def resolve(cfg: dict | str | Path) -> dict:
         raise ValueError(f"language must be one of {LANGS}")
     if r["figures"].get("language") is None:
         r["figures"]["language"] = r["language"]
+    dz = r.get("design")
+    if dz is not None:
+        specs = [dz] if isinstance(dz, dict) else dz
+        if not isinstance(specs, list) or not all(isinstance(x, dict) and x.get("target") for x in specs):
+            raise ValueError("design must be a block with `target` or a list of such blocks (each may add orthogonal_to, id, fraction, seed)")
     inc = r["catalog"]["include"]
     if not (inc in ("all", "curated") or (isinstance(inc, list) and all(isinstance(x, str) for x in inc))):
         raise ValueError("catalog.include must be 'curated' (default), 'all', or a list of method ids")

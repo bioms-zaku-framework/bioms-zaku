@@ -37,7 +37,7 @@ excel = ["openpyxl>=3.1"]   # EN: optional — tables.xlsx next to the report
 Homepage = "https://github.com/bioms-zaku-framework/bioms-zaku"
 
 [project.scripts]
-bioms-zaku = "bioms_zaku.cli:main"
+bioms-zaku = "bioms_zaku.cli:entry"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/bioms_zaku"]

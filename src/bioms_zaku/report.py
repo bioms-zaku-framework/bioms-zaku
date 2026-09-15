@@ -66,6 +66,8 @@ def write_summary(out_dir: Path, cfg: dict, tables: dict[str, pd.DataFrame], man
     if cfg["preset"] != "full":
         L += [t("s.preset_note", p=cfg["preset"], r=cfg["audit"]["cv"]["repeats"], B=cfg["audit"]["bootstrap"]["B"]), ""]
     L += [t("s.package", v=__version__, cat=manifest.get("catalog_version"), rin=manifest.get("input_rows"), rout=manifest.get("rows_out"), sc=cfg["seeds"]["cv"], sb=cfg["seeds"]["bootstrap"]), ""]
+    if (manifest.get("design") or {}).get("n_design"):
+        L += [t("s.design_rows", nd=manifest["design"]["n_design"], na=manifest["design"]["n_audit"]), ""]
     L += [t("s.sample"), ""]
     for w in manifest.get("warnings", []):
         L.append(f"- ⚠ {w}")
@@ -77,6 +79,22 @@ def write_summary(out_dir: Path, cfg: dict, tables: dict[str, pd.DataFrame], man
         L += [t("s.stratum", s=s), ""]
         a = alg[alg.stratum == s]; r = red[red.stratum == s] if red is not None else None
         L.append(t("s.methods", n=len(a), poor=int(a.poor_monomial.sum())))
+        if "proposed" in a and bool(a["proposed"].astype(bool).any()):
+            L.append(t("s.proposed", list=", ".join(sorted(a[a["proposed"].astype(bool)].method_id))))
+        dz = (manifest.get("design") or {}).get("indices") or {}
+        items = []
+        for did, spec in dz.items():
+            ps = (spec.get("per_stratum") or {}).get(s)
+            if ps is None:
+                continue
+            vec = ", ".join(f"{v} {x:+.2f}" for v, x in zip(manifest["design"].get("variables", []), ps["vector_design"]))
+            items.append(t("s.designed_item", id=did, t=spec["target"], orth=(t("s.designed_orth", c=spec["orthogonal_to"]) if spec.get("orthogonal_to") else ""), vec=vec,
+                           r2=f"{ps['r2_design']:.3f}", r2u=(t("s.designed_r2u", r2u=f"{ps['r2_unconstrained']:.3f}") if ps.get("r2_unconstrained") is not None else "")))
+        if items:
+            L.append(t("s.designed", list="; ".join(items)))
+        ss = (manifest.get("sample_statistics") or {}).get(s) or {}
+        if ss:
+            L.append(t("s.sample_stats", list="; ".join(f"{m}: " + ", ".join(f"{k} = {x:.4g}" for k, x in d.items()) for m, d in sorted(ss.items()))))
         if r is not None and len(r):
             rr = r[r.redundant]
             L.append(t("s.redundant", thr=cfg["algebra"]["redundancy_threshold"], k=len(rr), n=int((~r.identity_of.notna()).sum()))

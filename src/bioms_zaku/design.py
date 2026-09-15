@@ -84,6 +84,10 @@ class DesignedIndex:
     vector_refit_full: np.ndarray | None
     r2_refit_full: float | None
     split: Split
+    orthogonal_to: str | None = None          # EN: control the vector was made Σ-orthogonal to (v0.9), None = plain fit
+    control_vector: np.ndarray | None = None  # EN: implicit vector of the control on the design partition
+    cos_control_design: float | None = None   # EN: cos_Σ(vector_design, control_vector) on the design partition (0 by construction)
+    r2_unconstrained: float | None = None     # EN: R² of the plain fit, for comparison with r2_design
 
     def expr(self, use_refit: bool = False) -> str:
         v = self.vector_refit_full if (use_refit and self.vector_refit_full is not None) else self.vector_design
@@ -95,19 +99,73 @@ class DesignedIndex:
         return np.exp(np.log(X) @ v)
 
 
+def _log_design(frame: pd.DataFrame, cols: Sequence[str], variables: Sequence[str]) -> tuple[np.ndarray, dict[str, np.ndarray], np.ndarray]:
+    """EN: rows with finite, positive `cols` and finite variables; returns (mask, {col: ln values}, ln X)."""
+    X = frame.loc[:, list(variables)].to_numpy(dtype=float)
+    ok = np.isfinite(X).all(axis=1) & (X > 0).all(axis=1)
+    ys = {}
+    for c in cols:
+        y = frame[c].to_numpy(dtype=float); ok &= np.isfinite(y) & (y > 0); ys[c] = y
+    return ok, {c: np.log(y[ok]) for c, y in ys.items()}, np.log(X[ok])
+
+
+def _ols(ly: np.ndarray, LX: np.ndarray) -> tuple[np.ndarray, float]:
+    A = np.column_stack([np.ones(len(ly)), LX]); beta, *_ = np.linalg.lstsq(A, ly, rcond=None)
+    resid = ly - A @ beta
+    return beta[1:], 1.0 - float((resid ** 2).sum()) / float(((ly - ly.mean()) ** 2).sum())
+
+
+def _r2_of(ly: np.ndarray, LX: np.ndarray, a: np.ndarray) -> float:
+    """EN: R² of ln(target) explained by the fixed vector `a` (intercept refitted)."""
+    pred = LX @ a; pred = pred - pred.mean() + ly.mean()
+    return 1.0 - float(((ly - pred) ** 2).sum()) / float(((ly - ly.mean()) ** 2).sum())
+
+
+def orthogonal_fit(ly: np.ndarray, lc: np.ndarray, LX: np.ndarray) -> tuple[np.ndarray, np.ndarray, float, float, float]:
+    """
+    EN: constrained least squares (v0.9): the vector `a` that best explains ln(target) among those Σ-orthogonal to the control's
+        implicit vector ĉ, i.e. aᵀΣĉ = 0 (cos_Σ(a, ĉ) = 0). Closed form: a = a_ols − (ĉᵀΣa_ols / ĉᵀΣĉ)·ĉ, with Σ the covariance of the
+        log-variables on the same rows (the Σ-projection of a_ols onto ĉ is removed). Returns (a, ĉ, R²_constrained, R²_unconstrained, cos).
+    ES/PT: mínimos quadrados com a restrição de ortogonalidade a ĉ na métrica Σ; forma fechada.
+    """
+    a_ols, r2_u = _ols(ly, LX); c_hat, _ = _ols(lc, LX)
+    Xc = LX - LX.mean(axis=0); S = (Xc.T @ Xc) / max(len(LX) - 1, 1)
+    denom = float(c_hat @ S @ c_hat)
+    if denom <= 0:
+        raise DesignError("orthogonal_to: the control has no variance in the log-variables on the design partition")
+    a = a_ols - (float(c_hat @ S @ a_ols) / denom) * c_hat
+    cos = float(a @ S @ c_hat) / float(np.sqrt((a @ S @ a) * denom)) if float(a @ S @ a) > 0 else 0.0
+    return a, c_hat, _r2_of(ly, LX, a), r2_u, cos
+
+
 def design_index(frame: pd.DataFrame, target: str, variables: Sequence[str], split: Split, *, index_id: str,
-                 refit_full: bool = True) -> DesignedIndex:
+                 refit_full: bool = True, orthogonal_to: str | None = None) -> DesignedIndex:
     """
     EN: fit ln(target) ~ ln(variables) on the design partition (target must be > 0); optionally refit on all rows for the
-        deployable vector. The audited numbers must come from `split.audit` rows only (enforced by the orchestrator).
-    ES/PT: ajusta na partição de desenho; reajuste opcional em todas as linhas para o vetor de uso prático.
+        deployable vector. With `orthogonal_to` (a control column), the vector is constrained to cos_Σ = 0 with the control's
+        implicit vector on the same rows (v0.9). The audited numbers must come from `split.audit` rows only (enforced by the orchestrator).
+    ES/PT: ajusta na partição de desenho; com `orthogonal_to`, restrição de cosseno zero com o controle; reajuste opcional em todas as linhas.
     """
-    y = frame[target].to_numpy(float)
+    if orthogonal_to is None:
+        y = frame[target].to_numpy(float)
+        d = frame[split.design]
+        beta, r2, n_used, n_nonpos = fit_log_linear(y[split.design], d, variables)
+        if n_nonpos:
+            raise DesignError(f"target {target!r} has {n_nonpos} non-positive values in the design partition; a designed monomial needs a positive target")
+        vr, r2r = (None, None)
+        if refit_full:
+            vr, r2r, _, _ = fit_log_linear(y, frame, variables)
+        return DesignedIndex(index_id, target, tuple(variables), beta, r2, n_used, vr, r2r, split)
+    if orthogonal_to == target:
+        raise DesignError("orthogonal_to must differ from the target")
     d = frame[split.design]
-    beta, r2, n_used, n_nonpos = fit_log_linear(y[split.design], d, variables)
-    if n_nonpos:
-        raise DesignError(f"target {target!r} has {n_nonpos} non-positive values in the design partition; a designed monomial needs a positive target")
+    ok, ls, LX = _log_design(d, [target, orthogonal_to], variables)
+    if ok.sum() < len(variables) + 2:
+        raise DesignError("not enough rows with positive target and control for the orthogonal design")
+    a, c_hat, r2, r2_u, cos = orthogonal_fit(ls[target], ls[orthogonal_to], LX)
     vr, r2r = (None, None)
     if refit_full:
-        vr, r2r, _, _ = fit_log_linear(y, frame, variables)
-    return DesignedIndex(index_id, target, tuple(variables), beta, r2, n_used, vr, r2r, split)
+        ok_f, ls_f, LX_f = _log_design(frame, [target, orthogonal_to], variables)
+        vr, _, r2r, _, _ = orthogonal_fit(ls_f[target], ls_f[orthogonal_to], LX_f)
+    return DesignedIndex(index_id, target, tuple(variables), a, r2, int(ok.sum()), vr, r2r, split,
+                         orthogonal_to=orthogonal_to, control_vector=c_hat, cos_control_design=cos, r2_unconstrained=r2_u)

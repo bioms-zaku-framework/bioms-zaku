@@ -12,7 +12,8 @@ import sys
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="bioms-zaku", description="BioMS Zaku — decompose, audit and design indices")
     ap.add_argument("--lang", default=None, choices=["en", "es", "pt", "it"], help="language of messages, prompts, summary and figures (default: YAML `language`, else en)")
-    sub = ap.add_subparsers(dest="cmd", required=True)
+    ap.add_argument("--version", action="store_true", help="show the welcome banner and the version")
+    sub = ap.add_subparsers(dest="cmd", required=False)   # EN: no command → welcome banner (v0.9); `version` stays plain for scripts
     r = sub.add_parser("run", help="run a configuration file (YAML)")
     r.add_argument("config"); r.add_argument("--threads", type=int, default=None)
     sub.add_parser("version")
@@ -23,10 +24,19 @@ def main(argv=None) -> int:
     c.add_argument("config")
     rd = sub.add_parser("render", help="re-write summary, figures and report of a finished run in another language (no recomputation)")
     rd.add_argument("out_dir")
+    pr = sub.add_parser("propose", help="add your own indices to a configuration, one question at a time (formula checked on your data)")
+    pr.add_argument("config")
+    st = sub.add_parser("start", help="the guided path: columns → standard run → suggestions (accept/edit/no) → your own index → final report")
+    st.add_argument("csv"); st.add_argument("-o", "--out", default=None); st.add_argument("--sep", default="auto"); st.add_argument("--decimal", default="auto")
+    st.add_argument("--encoding", default="utf-8"); st.add_argument("--map", nargs="*", default=None, help="role=column pairs (no questions)")
+    st.add_argument("--yes", action="store_true", help="accept every suggestion (scripts, CI)")
     a = ap.parse_args(argv)
     from .i18n import set_language, t
     if a.lang:
         set_language(a.lang)
+    if a.cmd is None or a.version:                       # EN: a person at the terminal: welcome + the three commands
+        from .banner import banner
+        print(banner(full=True)); return 0
     if a.cmd == "version":
         from . import __version__; print(__version__); return 0
     if a.cmd == "init":
@@ -39,38 +49,68 @@ def main(argv=None) -> int:
         except InputError as e:
             print(t("cli.init_err", e=e), file=sys.stderr); return 2
         return 0
+    if a.cmd == "start":
+        from .start import start
+        from .io import InputError
+        flags = dict(kv.split("=", 1) for kv in (a.map or [])) or None
+        ask = None if flags else (lambda prompt, default: input(prompt + ": "))
+        try:
+            start(a.csv, a.out, ask=ask, map_flags=flags, yes=a.yes, sep=a.sep, decimal=a.decimal, encoding=a.encoding, lang=a.lang)
+        except InputError as e:
+            print(t("cli.start_err", e=e), file=sys.stderr); return 2
+        return 0
+    if a.cmd == "propose":
+        from .propose import propose
+        from .io import InputError
+        try:
+            propose(a.config, ask=lambda prompt, default: input(prompt + (f" [{default}]" if default else "") + ": "), lang=a.lang)
+        except InputError as e:
+            print(t("cli.propose_err", e=e), file=sys.stderr); return 2
+        return 0
     if a.cmd == "render":
         from .run import render
         render(a.out_dir, a.lang)
         return 0
+    def _with_lang(path: str):
+        """EN: --lang overrides the YAML `language` by writing it into the configuration (manifest and report follow it)."""
+        if not a.lang:
+            return path
+        import yaml
+        y = yaml.safe_load(open(path, encoding="utf-8")) or {}
+        y["language"] = a.lang
+        return y
     if a.cmd == "check":
         from .check import CheckError, check
-        if not a.lang:
-            import yaml
-            set_language((yaml.safe_load(open(a.config, encoding="utf-8")) or {}).get("language", "en"))
         try:
-            check(a.config)
+            check(_with_lang(a.config))
         except CheckError:
             return 2
+        print(t("cli.next_run", cmd=f"bioms-zaku{' --lang ' + a.lang if a.lang else ''} run {a.config}"))   # EN: the run command, ready to paste (v0.9)
         return 0
     threads = a.threads
     import yaml
     _y = yaml.safe_load(open(a.config, encoding="utf-8")) or {}
     if threads is None:
         threads = int(_y.get("threads", 1))
-    if not a.lang:
-        set_language(_y.get("language", "en"))
     for k in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS"):
         os.environ[k] = str(threads)
     from .run import run
     from .check import CheckError
     from .io import InputError
     try:
-        run(a.config)
+        run(_with_lang(a.config))
     except (CheckError, InputError) as e:
         print(t("cli.run_stopped", e=e), file=sys.stderr); return 2
     return 0
 
 
+def entry() -> int:
+    """EN: console entry point: Ctrl+C ends cleanly (exit code 130, the shell convention) instead of a traceback."""
+    try:
+        return main()
+    except KeyboardInterrupt:
+        print("\ninterrupted — nothing else was written", file=sys.stderr); return 130
+
+
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(entry())

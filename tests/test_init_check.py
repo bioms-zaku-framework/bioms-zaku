@@ -41,8 +41,11 @@ def test_init_rejects_unknown_column_and_missing_required(tmp_path):
 def test_check_blocks_design_without_declaration(tmp_path):
     cfg = yaml.safe_load((ROOT / "examples/minimal.yaml").read_text(encoding="utf-8"))
     cfg["data"]["path"] = str(ROOT / "examples/minimal_data.csv"); cfg["design"] = {"target": "LMI_DXA"}
+    cfg["audit"] = {"bootstrap": {"min_oob": 10}}                       # EN: 150 rows → 45 audited; min_oob 10 keeps the bootstrap feasible (the rule under test is the declaration)
+    lines = []
     with pytest.raises(CheckError):
-        check(cfg, printer=lambda s: None)
+        check(cfg, printer=lines.append)
+    assert any("targets_independent_of_variables" in l for l in lines)
     cfg["declarations"] = {"targets_independent_of_variables": True}
     assert not check(cfg, printer=lambda s: None)["errors"]
 
@@ -121,7 +124,7 @@ def test_init_explains_encoding_and_records_it(tmp_path):
 def test_interactive_init_reasks_on_typo_refuses_control_equal_to_target_and_prints_independence(tmp_path):
     # EN: terminal-simulation findings (2026-09-14). Scripted answers: a typo for Xc (re-asked), control = target (re-asked).
     from bioms_zaku.wizard import init, suggest
-    answers = iter(["", "", "reatancia_50_ohm", "reatancia_ohm", "", "", "", "", "lmi_dxa", "lmi_dxa", "fmi_dxa", "", "", "", "", "", "", "", "", "", "yes"])   # language, R, Xc(typo, ok), H, W, units×2, target, control(=target, then fmi), cov, strata, labels, id, sex, age, arm, waist, calf, yes
+    answers = iter(["", "", "", "", "reatancia_50_ohm", "reatancia_ohm", "", "", "", "", "lmi_dxa", "lmi_dxa", "fmi_dxa", "", "", "", "", "", "", "", "", "", "yes"])   # language, R, Xc(typo, ok), H, W, units×2, target, control(=target, then fmi), cov, strata, labels, id, sex, age, arm, waist, calf, yes
     def ask(prompt, default):
         return next(answers)
     printed = []
@@ -141,7 +144,7 @@ def test_init_shows_language_with_its_origin_and_run_prints_an_open_command(tmp_
     from bioms_zaku.run import run
     printed = []; init(str(ROOT / "examples/minimal_data.csv"), str(tmp_path / "l.yaml"), map_flags=FLAGS, lang="pt", printer=printed.append)
     assert any(l.strip().startswith("idioma") and "pt" in l and "[opção]" in l for l in printed)
-    answers = iter(["it"] + [""] * 6 + ["lmi_dxa", "fmi_dxa"] + [""] * 9 + ["yes"])
+    answers = iter(["it"] + [""] * 8 + ["lmi_dxa", "fmi_dxa"] + [""] * 9 + ["yes"])
     printed = []; init(str(ROOT / "examples/minimal_data.csv"), str(tmp_path / "m.yaml"), ask=lambda p, d: next(answers), printer=printed.append)
     assert any(l.strip().startswith("lingua") and "it" in l and "[risposta]" in l for l in printed)
     cfg = yaml.safe_load((ROOT / "examples/minimal.yaml").read_text(encoding="utf-8")); cfg["data"]["path"] = str(ROOT / "examples/minimal_data.csv")
@@ -153,7 +156,7 @@ def test_init_shows_language_with_its_origin_and_run_prints_an_open_command(tmp_
 
 def test_interactive_init_explains_itself_and_map_mode_stays_quiet(tmp_path):
     from bioms_zaku.wizard import init
-    answers = iter(["pt"] + [""] * 6 + ["lmi_dxa", "fmi_dxa"] + [""] * 9 + ["yes"])
+    answers = iter(["pt"] + [""] * 8 + ["lmi_dxa", "fmi_dxa"] + [""] * 9 + ["yes"])
     printed = []; init(str(ROOT / "examples/minimal_data.csv"), str(tmp_path / "h.yaml"), ask=lambda p, d: next(answers), printer=printed.append)
     txt = "\n".join(printed)
     assert "Vou perguntar qual coluna do seu arquivo faz cada papel" in txt and "controle negativo: uma medida que os índices NÃO deveriam prever" in txt

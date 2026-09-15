@@ -58,7 +58,7 @@ def test_strata_transfer_classification_and_design(tmp_path):
     cfg["declarations"] = {"targets_independent_of_variables": True}   # EN: synthetic DXA targets are not computed from R, Xc, H, W
     res = run(cfg, printer=lambda s: None); t = res["tables"]
     assert "sigma_transfer" in t and len(t["sigma_transfer"]) == 4
-    assert "designed_LMI" in set(t["algebra"].method_id) and res["manifest"]["design"]["n_audit"] == 72 and set(res["manifest"]["design"]["per_stratum"]) == {"0", "1"}
+    assert "designed_LMI" in set(t["algebra"].method_id) and res["manifest"]["design"]["n_audit"] == 72 and set(res["manifest"]["design"]["indices"]["designed_LMI"]["per_stratum"]) == {"0", "1"}
     assert not (res["out_dir"] / "figures" / "supplementary").exists()   # supplementary off by default
     # classification path: binary target with permuted-null control built in the CSV
     df = pd.read_csv(p); rng = np.random.default_rng(0); df["diab_perm"] = rng.permutation(df["diab"].to_numpy()); df.to_csv(p, index=False)

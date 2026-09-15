@@ -34,6 +34,15 @@ Outputs are aggregate tables (full precision), a manifest (hashes, versions, see
 Row-level data never leave the run. Figures accept `figures: {title, subtitle, language: en|es|pt, palette, captions}`.
 How to read each figure: `docs/index.html`, section 3.
 
+## Start here / Comece aqui
+
+```
+pip install "bioms-zaku[plots,excel]"
+bioms-zaku --lang pt start dados.csv        # one guided path: columns → standard run → suggestions (accept/edit/no) → your own index → report
+```
+`<` goes back, `?` repeats the help, Enter accepts the suggestion. Everything answered is written to `dados.zaku.yaml`, so
+`bioms-zaku run dados.zaku.yaml` repeats the analysis without questions. Portuguese guide: `GUIA_10_MINUTOS.md`.
+
 ## Install / Instalar
 
 ```bash
@@ -56,6 +65,8 @@ synthetic binary label. Use it to learn the method, to test the tool, and to dec
 ```bash
 bioms-zaku run examples/example_quick.yaml      # 7 curated indices, preset quick, ~20 s
 bioms-zaku run examples/example_full.yaml       # same data, preset full (5×50 CV, B = 2000), for reporting
+bioms-zaku                                      # welcome: the three commands, in your language (--lang pt)
+bioms-zaku propose analise.yaml                 # add your own indices, one question at a time (formula checked on your data)
 bioms-zaku run examples/minimal.yaml            # 150 rows, the smallest possible run
 ls zaku_out/example_quick                       # algebra sigma pairs redundancy sigma_transfer audit utility combinations screening sensitivity threshold_sensitivity (.csv) manifest.json summary.md report.html figures/
 ```
@@ -120,6 +131,46 @@ and are therefore `composite`: their exponent vector is fitted per stratum and t
 eight whose primary source was critically read (`curated: true`, with `curation_record`). The predictive equations stay in the
 catalog without curation and are audited only with `catalog.include: all`, marked * in every output.
 
+## Test your own index / Probar su propio índice / Testar o seu próprio índice (v0.9)
+
+A formula of yours enters the audit beside the published methods as a **proposed** entry: no DOI, never curated, never
+precedence over a published method, marked ◇ in every table and figure. Any expression in R, Xc, H, W is accepted
+(`+ - * / **`, `log`, `exp`, `sqrt`, `atan`, `max`, the constants `pi` and `e`, and the sample statistics `mean`, `median`, `sd`, whose
+values are recorded per stratum and flagged); a pure product gets an exact vector, anything else a fitted vector with its R².
+The author's own eight BioMS indices are shipped this way in `examples/bioms_mota_proposed.yaml`.
+It is audited only when listed in `catalog.include`:
+
+```yaml
+catalog:
+  include: [curated, meu_indice]        # the curated methods plus yours; the default (curated) never audits a proposal
+  user_entries:
+    - id: meu_indice
+      label: "H²·Xc/R (Mota, proposta 2026)"
+      authors: Mota
+      target: lean_mass                  # what it intends to measure
+      expr: "H**2 * Xc / R"
+      provenance: {formula_source: proposed, note: "hipótese: a reatância pondera a água intracelular"}
+```
+
+You do not have to edit the YAML by hand: `bioms-zaku propose analise.yaml` asks id, name, what it measures and the formula,
+one at a time; each formula is checked at once against the grammar and evaluated on your data (finite, positive, min/median/max,
+sample statistics used), then written to the YAML and included in the audit.
+
+The report then says whether it repeats a published index (redundancy), whether it is specific to the target against the
+control, whether it adds value over the covariates, and whether it lies parallel to the control. `bioms-zaku check` warns when a
+proposal is declared but not included. ES: un índice propio entra como `proposed` (sin DOI, nunca curado, marcado ◇).
+PT: um índice seu entra como `proposed` (sem DOI, nunca curado, marcado ◇).
+
+## Design your own index from the data / Diseñar / Desenhar (v0.9)
+
+`init` asks `design: none | target | control | both`. For each, the exponents of R, Xc, H, W are fitted to ln(target) by least
+squares on 70 % of the rows (per stratum) and the index is audited on the other 30 %, never seen, like any published method
+(marked △). A recorded and tested property makes this the right way to "clean the signal": the best predictor of the target
+is, by construction, conditionally uninformative about the control's projection, so the plain design is the specific index
+in the sense of the conditional negative control — and the audit checks whether that survived out of sample. In the YAML,
+`design:` is a list; `orthogonal_to: <column>` adds marginal Σ-orthogonality to a nuisance column (body size), which is a
+different goal and usually fails the conditional control (the report says so).
+
 ## Geometry of target and control / Geometría / Geometria (v0.6)
 
 Target and control often come from the same reference measurement and the same normalisation (lean/H² and fat/H² from one
@@ -134,7 +185,7 @@ for LMI vs FMI. Using absolute masses (kg) removes height from both sides and lo
 coupling through body mass, and it makes the target more "size", which favours volume indices (H²/R): a declared choice,
 not a fix. Lesson 12 of the notebook works the whole thing by hand on four people.
 
-## The report / El informe / O relatório (v0.8)
+## The report / El informe / O relatório (v0.9)
 
 `report.html` is the main output: one self-contained file (figures and tables embedded) that opens from disk. In a notebook
 `run()` shows it inline. Each result block carries three fixed paragraphs — *how it was computed · how to read it · rigour
@@ -144,6 +195,13 @@ adds `tables.xlsx` (one sheet per table) next to the report. A *Rigour of this r
 input hash, the SHA-256 of every output table, wall time and warnings. The report recomputes nothing — which is why
 `bioms-zaku --lang en render zaku_out/my_run` re-writes summary, figures and report of a finished run in another language
 in seconds, leaving tables and manifest untouched.
+
+Since v0.9 the report opens with a sticky table of contents and the **Zaku method diagram** (also saved as
+`figures/zaku_method.svg`), shows key numbers read from the tables, groups figures by family and result blocks as an accordion
+(one open at a time), and ends with a **References** section: the bioimpedance sources of the methods evaluated in the run, the
+statistical and algebraic antecedents (ratio indices, allometric scaling, negative controls, ridge, cross-validation, bootstrap,
+combinations) tagged by result block, and the software executed. Every record comes from Crossref metadata verified on
+2026-09-15 (`references.py`); nothing is loaded from the network when the report is opened.
 
 ## Reproducibility / Reproducibilidad / Reprodutibilidade
 

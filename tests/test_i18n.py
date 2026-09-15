@@ -63,7 +63,7 @@ def test_language_flows_from_init_to_check_run_summary_and_figures(tmp_path):
     res = run(str(tmp_path / "pt.yaml"), printer=lambda s: None)
     summ = (res["out_dir"] / "summary.md").read_text(encoding="utf-8")
     assert "## Estrato `" in summ and "- métodos avaliados:" in summ and "## Geometria do alvo e do controle" in summ
-    html = (res["out_dir"] / "report.html").read_text(encoding="utf-8"); assert "<h2>Figuras</h2>" in html and "<h2>Resultados</h2>" in html and "Rigor desta execução" in html
+    html = (res["out_dir"] / "report.html").read_text(encoding="utf-8"); assert "Figuras</h2>" in html and "Resultados</h2>" in html and "Rigor desta execução" in html
     caps = (res["out_dir"] / "figures" / "README.md").read_text(encoding="utf-8"); assert caps.index("**PT**") < caps.index("**EN**")
     assert res["manifest"]["config_resolved"]["figures"]["language"] == "pt"
     set_language("en")
@@ -87,9 +87,10 @@ def test_html_report_has_a_caption_for_every_figure_and_no_english_leak_in_pt(tm
     res = run(cfg, printer=lambda s: None)
     html = (res["out_dir"] / "report.html").read_text(encoding="utf-8")
     import re as _re
-    empties = _re.findall(r"<figcaption><b>([^<]+)</b> — </figcaption>", html)
-    assert empties == [], f"figures without caption: {empties}"
-    assert "target_control</b> — Mapa do controle negativo condicional" in html
+    fams = _re.findall(r"<details class='block' name='figures'(?: open)?><summary><span class='n'>4\.\d</span>([^<]+)<span class='hint'>[^<]*</span></summary><div class='body'>(<p class='hint'>)?", html)
+    empties = [f for f, cap in fams if not cap]
+    assert fams and empties == [], f"figure families without caption: {empties}"
+    assert "Mapa do controle negativo condicional<span class='hint'>" in html and "<p class='hint'>Mapa do controle negativo condicional" in html
     assert "coupled in the measured space" not in html and "missing inputs" not in html
     set_language("en")
 
@@ -113,7 +114,7 @@ def test_render_changes_language_without_recomputing(tmp_path):
     assert "## Estrato" in (out / "summary.md").read_text(encoding="utf-8")
     render(out, "en", printer=lambda s: None)
     assert "## Stratum" in (out / "summary.md").read_text(encoding="utf-8")
-    html = (out / "report.html").read_text(encoding="utf-8"); assert "<h2>Figures</h2>" in html and "Rigour of this run" in html and "Como foi calculado" not in html
+    html = (out / "report.html").read_text(encoding="utf-8"); assert "Figures</h2>" in html and "Rigour of this run" in html and "Como foi calculado" not in html
     caps = (out / "figures" / "README.md").read_text(encoding="utf-8"); assert caps.index("**EN**") < caps.index("**PT**")
     after = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in out.glob("*.csv")}
     assert after == before and (out / "manifest.json").read_bytes() == man_before          # nothing recomputed

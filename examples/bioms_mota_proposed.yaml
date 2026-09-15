@@ -1,0 +1,58 @@
+# EN: the eight BioMS indices proposed by T. Mota (2026), written for BioMS Zaku as proposed entries (v0.9).
+#     Paste this whole `catalog:` block into your analysis YAML (replacing its `catalog:` block) and run `bioms-zaku check`.
+#     Variables: R, Xc (ohm), H (cm), H_m (m), W (body mass, kg), PhA = atan(Xc/R) in degrees; e = Euler's number.
+#     LMI (Levi Micheli 2022) = PhA·H/R; "massa" in the original notebooks = LMI·H_m². Original code lines are kept in `note`.
+#     BioMS_2 uses the sample mean of PhA: it is computed per stratum on the rows entering the algebra, recorded in the manifest
+#     and flagged in the report, because such an index takes different values in every sample.
+# PT: os oito índices BioMS propostos por T. Mota (2026), como entradas propostas do Zaku. Cole este bloco `catalog:` no seu YAML.
+catalog:
+  include: [curated, BioMS_1, BioMS_2, BioMS_4, BioMS_5, BioMS_6R, BioMS_7, BioMS_8, BioMS_9]
+  user_entries:
+    - id: BioMS_1
+      label: "BioMS_1, IDC cilindro (Mota 2026)"
+      authors: Mota T
+      target: lean_mass
+      expr: "(PhA * H / R * H_m**2) / ((H_m**2) * (R / H_m))"
+      provenance: {formula_source: proposed, note: "original: massa / ((h**2) * (R / h)) — analise_bioms_2.ipynb, 2026-06-13"}
+    - id: BioMS_2
+      label: "BioMS_2, LMI × sigmoide de PhA (Mota 2026)"
+      authors: Mota T
+      target: lean_mass
+      expr: "(PhA * H / R) * (1 / (1 + exp(-(PhA - mean(PhA)))))"
+      provenance: {formula_source: proposed, note: "original: lmi * (1 / (1 + exp(-(pha - pha.mean())))) — sample mean of PhA, per stratum"}
+    - id: BioMS_4
+      label: "BioMS_4, massa/h³ × √PhA (Mota 2026)"
+      authors: Mota T
+      target: lean_mass
+      expr: "((PhA * H / R * H_m**2) / H_m**3) * sqrt(PhA)"
+      provenance: {formula_source: proposed, note: "original: (massa / (h**3)) * sqrt(pha)"}
+    - id: BioMS_5
+      label: "BioMS_5, massa^0.75/h × PhA (Mota 2026)"
+      authors: Mota T
+      target: lean_mass
+      expr: "(((PhA * H / R * H_m**2)**0.75) / H_m) * PhA"
+      provenance: {formula_source: proposed, note: "original: ((massa**0.75) / h) * pha"}
+    - id: BioMS_6R
+      label: "BioMS_6R, massa/h^1.73 (Mota 2026, revisado)"
+      authors: Mota T
+      target: lean_mass
+      expr: "(100 * PhA * H_m**3 / R) / H_m**1.73"
+      provenance: {formula_source: proposed, note: "revised 2026-08-20 (analise_final_KDMILE.ipynb): (100*pha*h**3/R) / h**1.73; original BioMS_6 = (massa / (h**1.73)) * exp(pha_rad)"}
+    - id: BioMS_7
+      label: "BioMS_7, log LMI + PhA/e (Mota 2026)"
+      authors: Mota T
+      target: lean_mass
+      expr: "log(PhA * H / R + 1e-6) + (PhA / e)"
+      provenance: {formula_source: proposed, note: "original: log(lmi + 1e-6) + (pha / e)"}
+    - id: BioMS_8
+      label: "BioMS_8, massa/h ÷ gordura/R³ × PhA^e (Mota 2026)"
+      authors: Mota T
+      target: lean_mass
+      expr: "((PhA * H / R * H_m**2) / H_m) / (max(W - PhA * H / R * H_m**2, 0.1) / (R**3 + 1e-9)) * (PhA ** e)"
+      provenance: {formula_source: proposed, note: "original: ((massa / h) / ((peso - massa).clip(lower=0.1) / (R**3 + 1e-9))) * (pha ** e)"}
+    - id: BioMS_9
+      label: "BioMS_9, Xc/h × log LMI, stiffness (Mota 2026)"
+      authors: Mota T
+      target: lean_mass
+      expr: "(Xc / H_m) * log(PhA * H / R + 1e-6)"
+      provenance: {formula_source: proposed, note: "original: (Xc / h) * log(lmi + 1e-6)"}

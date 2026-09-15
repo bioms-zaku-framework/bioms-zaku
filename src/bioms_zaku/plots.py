@@ -43,22 +43,22 @@ STYLE = {"title": None, "subtitle": None, "language": "en", "labels": "full", "f
 
 # EN: axis/legend texts in three languages. ES/PT: textos dos eixos e legendas.
 I18N = {
-    "it": {"board": "Quadro dei verdetti", "stratum": "strato", "target": "target", "control": "controllo", "orig": "originalità\n1 − max |Spearman| con un metodo precedente (log)",
+    "it": {"des": "△ progettato su questi dati (partizione di progetto), verificato sull'altra", "prop": "◇ proposto dal ricercatore, non pubblicato", "board": "Quadro dei verdetti", "stratum": "strato", "target": "target", "control": "controllo", "orig": "originalità\n1 − max |Spearman| con un metodo precedente (log)",
            "spec": "specificità\n{m}(target) − {m}(controllo), intervallo 95%", "util": "valore aggiunto oltre le covariate\nΔ{m}, intervallo 95%",
            "no_util": "utilità non calcolata\n(nessuna covariata dichiarata)", "identity": "identità", "oov": "† = applicato per lo più fuori dalla validità dichiarata",
            "exp_title": "Vettori degli esponenti: come ogni indice dipende da R, Xc, H e W", "po_default": "Correlazione prevista dall'algebra vs misurata nei dati", "fixed": "fisso", "fit": "R² dell'adattamento", "gap": "scarto",
            "po_x": "prevista da Σ (Pearson dei log)", "po_y": "osservata", "po_title": "{s}: {n} coppie, mediana |scarto| {g:.3f}", "footer": "BioMS Zaku {v} · preset {p} · {d} · semi cv={c} bootstrap={b}"},
-    "en": {"board": "Verdict board", "stratum": "stratum", "target": "target", "control": "control", "orig": "originality\n1 − max |Spearman| with an earlier method (log)",
+    "en": {"des": "△ designed on this data (design partition), audited on the other", "prop": "◇ proposed by the researcher, not published", "board": "Verdict board", "stratum": "stratum", "target": "target", "control": "control", "orig": "originality\n1 − max |Spearman| with an earlier method (log)",
            "spec": "specificity\n{m}(target) − {m}(control), 95% interval", "util": "added value over covariates\nΔ{m}, 95% interval",
            "no_util": "utility not run\n(no covariates declared)", "identity": "identity", "oov": "† = applied mostly outside declared validity",
            "exp_title": "Exponent vectors: how each index depends on R, Xc, H and W", "po_default": "Correlation predicted by the algebra vs measured in the data", "fixed": "fixed", "fit": "fit R²", "gap": "gap",
            "po_x": "predicted from Σ (Pearson of logs)", "po_y": "observed", "po_title": "{s}: {n} pairs, median |gap| {g:.3f}", "footer": "BioMS Zaku {v} · preset {p} · {d} · seeds cv={c} bootstrap={b}"},
-    "es": {"board": "Cuadro de veredictos", "stratum": "estrato", "target": "objetivo", "control": "control", "orig": "originalidad\n1 − máx |Spearman| con un método anterior (log)",
+    "es": {"des": "△ diseñado en estos datos (partición de diseño), auditado en la otra", "prop": "◇ propuesto por el investigador, no publicado", "board": "Cuadro de veredictos", "stratum": "estrato", "target": "objetivo", "control": "control", "orig": "originalidad\n1 − máx |Spearman| con un método anterior (log)",
            "spec": "especificidad\n{m}(objetivo) − {m}(control), intervalo 95%", "util": "valor agregado sobre covariables\nΔ{m}, intervalo 95%",
            "no_util": "utilidad no calculada\n(sin covariables)", "identity": "identidad", "oov": "† = aplicado mayormente fuera de la validez declarada",
            "exp_title": "Vectores de exponentes: cómo cada índice depende de R, Xc, H y W", "po_default": "Correlación predicha por el álgebra vs medida en los datos", "fixed": "fijo", "fit": "ajuste R²", "gap": "brecha",
            "po_x": "predicho desde Σ (Pearson de logs)", "po_y": "observado", "po_title": "{s}: {n} pares, mediana |brecha| {g:.3f}", "footer": "BioMS Zaku {v} · preset {p} · {d} · semillas cv={c} bootstrap={b}"},
-    "pt": {"board": "Quadro de vereditos", "stratum": "estrato", "target": "alvo", "control": "controle", "orig": "originalidade\n1 − máx |Spearman| com um método anterior (log)",
+    "pt": {"des": "△ desenhado nestes dados (partição de desenho), auditado na outra", "prop": "◇ proposto pelo pesquisador, não publicado", "board": "Quadro de vereditos", "stratum": "estrato", "target": "alvo", "control": "controle", "orig": "originalidade\n1 − máx |Spearman| com um método anterior (log)",
            "spec": "especificidade\n{m}(alvo) − {m}(controle), intervalo 95%", "util": "valor acrescentado sobre covariáveis\nΔ{m}, intervalo 95%",
            "no_util": "utilidade não calculada\n(sem covariáveis)", "identity": "identidade", "oov": "† = aplicado majoritariamente fora da validade declarada",
            "exp_title": "Vetores de expoentes: como cada índice depende de R, Xc, H e W", "po_default": "Correlação prevista pela álgebra vs medida nos dados", "fixed": "fixo", "fit": "ajuste R²", "gap": "lacuna",
@@ -67,7 +67,7 @@ I18N = {
 
 
 SC = {
-    "it": {"title": "Verdetti", "col_o": "originalità", "col_s": "specificità", "col_u": "valore aggiunto", "method": "metodo",
+    "it": {"des": "△ progettato su questi dati (partizione di progetto), verificato sull'altra", "prop": "◇ proposto dal ricercatore, non pubblicato", "title": "Verdetti", "col_o": "originalità", "col_s": "specificità", "col_u": "valore aggiunto", "method": "metodo",
            "original": "Originale", "repeats": "Ripete", "identical": "Identico a", "specific": "Specifico", "tracks": "Segue il controllo",
            "inconc": "Inconclusivo", "both": "Misura entrambi", "neither": "Nessun segnale", "adds": "Aggiunge valore", "noadd": "Nessun valore aggiunto", "notest": "Non testato", "over": "oltre {c}", "coupled": "‡ target e controllo accoppiati nello spazio misurato",
            "leg1": "Originalità: un indice è originale quando nessun metodo precedente ordina le persone quasi allo stesso modo (|Spearman| < {thr}); altrimenti ripete quel metodo.",
@@ -75,7 +75,7 @@ SC = {
            "leg3": "Valore aggiunto: guadagno in {m} quando l'indice si aggiunge a {cov}. † applicato fuori dalla validità dichiarata dal metodo · * formula non curata (fonte primaria senza lettura critica).",
            "po_x": "correlazione prevista dall'algebra (da Σ)", "po_y": "correlazione misurata nei dati", "po_note": "punti sulla linea: previsione confermata",
            "exp_read": "esponente positivo: l'indice cresce con la variabile · negativo: decresce · R² dell'adattamento: quanto un'equazione a somma si comporta come un prodotto (fisso = esatto)"},
-    "en": {"title": "Verdicts", "col_o": "originality", "col_s": "specificity", "col_u": "added value", "method": "method",
+    "en": {"des": "△ designed on this data (design partition), audited on the other", "prop": "◇ proposed by the researcher, not published", "title": "Verdicts", "col_o": "originality", "col_s": "specificity", "col_u": "added value", "method": "method",
            "original": "Original", "repeats": "Repeats", "identical": "Identical to", "specific": "Specific", "tracks": "Tracks control",
            "inconc": "Inconclusive", "both": "Measures both", "neither": "No signal", "adds": "Adds value", "noadd": "No added value", "notest": "Not tested", "over": "over {c}", "coupled": "‡ target and control coupled in the measured space",
            "leg1": "Originality: an index is original when no earlier method orders people almost identically (|Spearman| < {thr}); otherwise it repeats that method.",
@@ -83,7 +83,7 @@ SC = {
            "leg3": "Added value: gain in {m} when the index is added to {cov}. † applied outside the method's declared validity · * formula not curated (primary source not critically read).",
            "po_x": "correlation predicted by the algebra (from Σ)", "po_y": "correlation measured in the data", "po_note": "points on the line: prediction confirmed",
            "exp_read": "positive exponent: the index grows with the variable · negative: it decreases · fit R²: how closely a sum-type equation behaves as a product (fixed = exact)"},
-    "es": {"title": "Veredictos", "col_o": "originalidad", "col_s": "especificidad", "col_u": "valor agregado", "method": "método",
+    "es": {"des": "△ diseñado en estos datos (partición de diseño), auditado en la otra", "prop": "◇ propuesto por el investigador, no publicado", "title": "Veredictos", "col_o": "originalidad", "col_s": "especificidad", "col_u": "valor agregado", "method": "método",
            "original": "Original", "repeats": "Repite", "identical": "Idéntico a", "specific": "Específico", "tracks": "Sigue control",
            "inconc": "No concluyente", "both": "Mide los dos", "neither": "Sin señal", "adds": "Agrega valor", "noadd": "No agrega valor", "notest": "No evaluado", "over": "sobre {c}", "coupled": "‡ objetivo y control acoplados en el espacio medido",
            "leg1": "Originalidad: un índice es original cuando ningún método anterior ordena a las personas casi igual (|Spearman| < {thr}); si no, repite ese método.",
@@ -91,7 +91,7 @@ SC = {
            "leg3": "Valor agregado: ganancia en {m} al añadir el índice a {cov}. † aplicado fuera de la validez declarada · * fórmula no curada (fuente primaria sin lectura crítica).",
            "po_x": "correlación predicha por el álgebra (desde Σ)", "po_y": "correlación medida en los datos", "po_note": "puntos sobre la línea: predicción confirmada",
            "exp_read": "exponente positivo: el índice crece con la variable · negativo: decrece · fit R²: cuán bien una ecuación aditiva se comporta como producto (fijo = exacto)"},
-    "pt": {"title": "Vereditos", "col_o": "originalidade", "col_s": "especificidade", "col_u": "valor acrescentado", "method": "método",
+    "pt": {"des": "△ desenhado nestes dados (partição de desenho), auditado na outra", "prop": "◇ proposto pelo pesquisador, não publicado", "title": "Vereditos", "col_o": "originalidade", "col_s": "especificidade", "col_u": "valor acrescentado", "method": "método",
            "original": "Original", "repeats": "Repete", "identical": "Idêntico a", "specific": "Específico", "tracks": "Acompanha ctrl",
            "inconc": "Inconclusivo", "both": "Mede os dois", "neither": "Sem sinal", "adds": "Acrescenta valor", "noadd": "Não acrescenta", "notest": "Não avaliado", "over": "sobre {c}", "coupled": "‡ alvo e controle acoplados no espaço medido",
            "leg1": "Originalidade: um índice é original quando nenhum método anterior ordena as pessoas quase igual (|Spearman| < {thr}); senão, repete esse método.",
@@ -191,25 +191,25 @@ plt.rcParams.update({"font.family": "DejaVu Sans", "font.size": 8.5, "axes.spine
 
 # ---------- i18n additions ----------
 FIG = {
-    "it": {"tc_title": "Che cosa aggiunge ogni indice: al target oltre il controllo, e al controllo oltre il target", "tc_xbar": "guadagno in {m} fuori campione quando si aggiunge l'indice", "tc_key1": "aggiunge alla previsione del TARGET ({t}) oltre il controllo ({c})", "tc_key2": "aggiunge alla previsione del CONTROLLO ({c}) oltre il target ({t})", "tc_note": "baffi = intervallo bootstrap 95 % (ricampionamenti appaiati) · tratteggiata = margine {mg} · * non curato",
+    "it": {"des": "△ progettato su questi dati (partizione di progetto), verificato sull'altra", "prop": "◇ proposto dal ricercatore, non pubblicato", "tc_title": "Che cosa aggiunge ogni indice: al target oltre il controllo, e al controllo oltre il target", "tc_xbar": "guadagno in {m} fuori campione quando si aggiunge l'indice", "tc_key1": "aggiunge alla previsione del TARGET ({t}) oltre il controllo ({c})", "tc_key2": "aggiunge alla previsione del CONTROLLO ({c}) oltre il target ({t})", "tc_note": "baffi = intervallo bootstrap 95 % (ricampionamenti appaiati) · tratteggiata = margine {mg} · * non curato",
            "lin_title": "Albero genealogico degli indici: chi è venuto prima, chi ripete chi, chi è specifico", "lin_x": "anno di pubblicazione",
            "lin_l1": "Ogni riga inizia con un indice originale (pieno); gli indici successivi che ordinano le persone quasi allo stesso modo (|Spearman| ≥ {thr}) pendono da esso, con la correlazione sul ramo.",
            "lin_l2": "Colore = verdetto di specificità per il target ({t}) rispetto al controllo ({c}): verde specifico · viola segue il controllo · grigio scuro entrambi · grigio chiaro nessun segnale. Bordo vuoto = non curato · † fuori dalla validità dichiarata · ◆ identità.",
            "ex_title": "Vettori degli esponenti e covarianza dei log Σ dello strato", "ex_read": "righe raggruppate per lignaggio (l'originale, poi gli indici ridondanti con esso) · a destra: che cosa dicono gli autori che misura, e R² dell'adattamento quando l'indice non è un prodotto esatto",
            "ex_sigma": "correlazione dei log (Σ)", "fixed": "prodotto esatto", "approx": "≈ prodotto, R² {r:.2f}", "kind": {"lean_mass": "massa magra", "fat_mass": "massa grassa", "body_water": "acqua corporea", "hydration": "idratazione", "cell_mass": "massa cellulare", "other": "altro", None: "—"}},
-    "en": {"tc_title": 'What each index adds: to the target beyond the control, and to the control beyond the target', "tc_xbar": 'gain in out-of-sample {m} when the index is added', "tc_key1": 'adds to the prediction of the TARGET ({t}) beyond the control ({c})', "tc_key2": 'adds to the prediction of the CONTROL ({c}) beyond the target ({t})', "tc_note": 'whiskers = 95 % bootstrap interval (paired resamples) · dashed = margin {mg} · * not curated',
+    "en": {"des": "△ designed on this data (design partition), audited on the other", "prop": "◇ proposed by the researcher, not published", "tc_title": 'What each index adds: to the target beyond the control, and to the control beyond the target', "tc_xbar": 'gain in out-of-sample {m} when the index is added', "tc_key1": 'adds to the prediction of the TARGET ({t}) beyond the control ({c})', "tc_key2": 'adds to the prediction of the CONTROL ({c}) beyond the target ({t})', "tc_note": 'whiskers = 95 % bootstrap interval (paired resamples) · dashed = margin {mg} · * not curated',
            "lin_title": "Family tree of the indices: who came first, who repeats whom, who is specific", "lin_x": "year of publication",
            "lin_l1": "Each row starts with an original index (filled); later indices that order people almost identically (|Spearman| ≥ {thr}) hang from it, with the correlation on the branch.",
            "lin_l2": "Colour = specificity verdict for the target ({t}) against the control ({c}): green specific · violet tracks the control · dark grey both · light grey no signal. Hollow edge = not curated · † outside declared validity · ◆ identity.",
            "ex_title": "Exponent vectors and the log-covariance Σ of the stratum", "ex_read": "rows grouped by lineage (original, then the indices redundant with it) · right: what the authors say it measures, and fit R² when the index is not an exact product",
            "ex_sigma": "correlation of logs (Σ)", "fixed": "exact product", "approx": "≈ product, R² {r:.2f}", "kind": {"lean_mass": "lean mass", "fat_mass": "fat mass", "body_water": "body water", "hydration": "hydration", "cell_mass": "cell mass", "other": "other", None: "—"}},
-    "es": {"tc_title": 'Qué añade cada índice: al objetivo más allá del control, y al control más allá del objetivo', "tc_xbar": 'ganancia en {m} fuera de muestra al añadir el índice', "tc_key1": 'añade a la predicción del OBJETIVO ({t}) más allá del control ({c})', "tc_key2": 'añade a la predicción del CONTROL ({c}) más allá del objetivo ({t})', "tc_note": 'bigotes = intervalo bootstrap 95 % (remuestras pareadas) · discontinua = margen {mg} · * no curada',
+    "es": {"des": "△ diseñado en estos datos (partición de diseño), auditado en la otra", "prop": "◇ propuesto por el investigador, no publicado", "tc_title": 'Qué añade cada índice: al objetivo más allá del control, y al control más allá del objetivo', "tc_xbar": 'ganancia en {m} fuera de muestra al añadir el índice', "tc_key1": 'añade a la predicción del OBJETIVO ({t}) más allá del control ({c})', "tc_key2": 'añade a la predicción del CONTROL ({c}) más allá del objetivo ({t})', "tc_note": 'bigotes = intervalo bootstrap 95 % (remuestras pareadas) · discontinua = margen {mg} · * no curada',
            "lin_title": "Árbol genealógico de los índices: quién vino primero, quién repite a quién, quién es específico", "lin_x": "año de publicación",
            "lin_l1": "Cada fila empieza con un índice original (relleno); los índices posteriores que ordenan a las personas casi igual (|Spearman| ≥ {thr}) cuelgan de él, con la correlación en la rama.",
            "lin_l2": "Color = veredicto de especificidad para el objetivo ({t}) contra el control ({c}): verde específico · violeta sigue el control · gris oscuro ambos · gris claro sin señal. Borde hueco = no curada · † fuera de la validez · ◆ identidad.",
            "ex_title": "Vectores de exponentes y la covarianza de logs Σ del estrato", "ex_read": "filas agrupadas por linaje (original, luego los índices redundantes con él) · derecha: qué dicen los autores que mide, y R² de ajuste cuando no es un producto exacto",
            "ex_sigma": "correlación de logs (Σ)", "fixed": "producto exacto", "approx": "≈ producto, R² {r:.2f}", "kind": {"lean_mass": "masa magra", "fat_mass": "masa grasa", "body_water": "agua corporal", "hydration": "hidratación", "cell_mass": "masa celular", "other": "otro", None: "—"}},
-    "pt": {"tc_title": 'O que cada índice acrescenta: ao alvo além do controle, e ao controle além do alvo', "tc_xbar": 'ganho em {m} fora da amostra ao juntar o índice', "tc_key1": 'acrescenta à predição do ALVO ({t}) além do controle ({c})', "tc_key2": 'acrescenta à predição do CONTROLE ({c}) além do alvo ({t})', "tc_note": 'bigodes = intervalo bootstrap 95 % (reamostras pareadas) · tracejado = margem {mg} · * não curada',
+    "pt": {"des": "△ desenhado nestes dados (partição de desenho), auditado na outra", "prop": "◇ proposto pelo pesquisador, não publicado", "tc_title": 'O que cada índice acrescenta: ao alvo além do controle, e ao controle além do alvo', "tc_xbar": 'ganho em {m} fora da amostra ao juntar o índice', "tc_key1": 'acrescenta à predição do ALVO ({t}) além do controle ({c})', "tc_key2": 'acrescenta à predição do CONTROLE ({c}) além do alvo ({t})', "tc_note": 'bigodes = intervalo bootstrap 95 % (reamostras pareadas) · tracejado = margem {mg} · * não curada',
            "lin_title": "Árvore genealógica dos índices: quem veio antes, quem repete quem, quem é específico", "lin_x": "ano de publicação",
            "lin_l1": "Cada linha começa com um índice original (cheio); os índices posteriores que ordenam as pessoas quase igual (|Spearman| ≥ {thr}) pendem dele, com a correlação no ramo.",
            "lin_l2": "Cor = veredito de especificidade para o alvo ({t}) contra o controle ({c}): verde específico · violeta acompanha o controle · cinza escuro ambos · cinza claro sem sinal. Borda vazada = não curada · † fora da validade · ◆ identidade.",
@@ -227,6 +227,23 @@ def _curated_by_method(alg: pd.DataFrame) -> dict:
     """EN: method_id -> curated (bool). Non-curated methods (§2.1) are drawn hollow and labelled *; they appear only with include: all."""
     a = alg.drop_duplicates("method_id")
     return dict(zip(a.method_id, a["curated"].astype(bool))) if "curated" in a else {m: True for m in a.method_id}
+
+
+def _proposed_by_method(alg: pd.DataFrame) -> dict:
+    """EN: method_id -> proposed (the researcher's own index, v0.9): hollow like non-curated, labelled ◇ instead of *."""
+    a = alg.drop_duplicates("method_id")
+    return dict(zip(a.method_id, a["proposed"].astype(bool))) if "proposed" in a else {}
+
+
+def _designed_by_method(alg: pd.DataFrame) -> dict:
+    """EN: method_id -> designed on this data (v0.9): labelled △ (fitted on the design partition, audited on the other)."""
+    a = alg.drop_duplicates("method_id")
+    return dict(zip(a.method_id, a["designed"].astype(bool))) if "designed" in a else {}
+
+
+def _mark(m, conf: dict, prop: dict, des: dict | None = None) -> str:
+    if (des or {}).get(m, False): return "△"
+    return "◇" if prop.get(m, False) else ("*" if not conf.get(m, True) else "")
 
 
 def _curated_by_method_stratum(alg: pd.DataFrame) -> dict:
@@ -286,7 +303,7 @@ def target_control(aud: pd.DataFrame, alg: pd.DataFrame, out_dir: Path, primary_
     if a.empty:
         return
     strata = sorted(a.stratum.unique()); lab = _label(alg); short = _short(lab)
-    conf = _curated_by_method(alg)
+    conf = _curated_by_method(alg); prop = _proposed_by_method(alg); des = _designed_by_method(alg)
     n = int(a.groupby("stratum").size().max()); row_h = 0.44
     head, foot = _margins(meta, caption=True); panel_top, panel_bot = 0.30, 0.45
     if STYLE["captions"]:
@@ -319,7 +336,7 @@ def target_control(aud: pd.DataFrame, alg: pd.DataFrame, out_dir: Path, primary_
             word, col = words.get(row.verdict, (row.verdict, C["muted"]))
             ax.text(1.02, y, word, transform=ax.get_yaxis_transform(), fontsize=7.2, va="center", ha="left", color="white", fontweight="bold",
                     bbox=dict(boxstyle="round,pad=0.35,rounding_size=0.8", fc=col, ec="none"))
-        ax.set_yticks(range(len(q))); ax.set_yticklabels([short.get(m, m) + ("*" if not conf.get(m, True) else "") + (" ‡" if m in par else "") for m in q.method_id], fontsize=7.4)
+        ax.set_yticks(range(len(q))); ax.set_yticklabels([short.get(m, m) + _mark(m, conf, prop, des) + (" ‡" if m in par else "") for m in q.method_id], fontsize=7.4)
         ax.set_ylim(-0.6, len(q) - 0.4); ax.set_xlim(xmin, xmax); ax.tick_params(axis="y", length=0)
         ax.set_xlabel(F("tc_xbar", m=metric), fontsize=7.5)
         ax.set_title(f"{T('stratum')} {st}" + (" · " + S("coupled") if coupled else ""), fontsize=9, loc="left")
@@ -332,7 +349,7 @@ def target_control(aud: pd.DataFrame, alg: pd.DataFrame, out_dir: Path, primary_
         fig.text(kx + 0.014, ky, F("tc_key1", t=primary_target, c=control), fontsize=7.4, va="center", color=C["ink"])
         fig.patches.append(FancyBboxPatch((kx + 0.42, ky - 0.006), 0.010, 0.012, boxstyle="square,pad=0", fc=C["control"], ec="none", transform=fig.transFigure, figure=fig))
         fig.text(kx + 0.434, ky, F("tc_key2", t=primary_target, c=control), fontsize=7.4, va="center", color=C["ink"])
-    _frame(fig, F("tc_title"), meta, caption=F("tc_note", mg=margin))
+    _frame(fig, F("tc_title"), meta, caption=F("tc_note", mg=margin) + (" · " + F("prop") if any(prop.values()) else "") + (" · " + F("des") if any(des.values()) else ""))
     fig.subplots_adjust(left=0.17, right=0.87, top=1 - (head + panel_top) / H, bottom=(foot + panel_bot) / H)
     _save(fig, out_dir, "target_control")
 
@@ -348,7 +365,7 @@ def lineage_tree(red: pd.DataFrame, alg: pd.DataFrame, aud: pd.DataFrame, out_di
     if red.empty or alg.empty:
         return
     A = alg.drop_duplicates("method_id").set_index("method_id"); yr = A.year.to_dict(); lab = _label(alg); short = _short(lab); order = _order(alg)
-    conf = _curated_by_method_stratum(alg)
+    conf = _curated_by_method_stratum(alg); prop = _proposed_by_method(alg); des = _designed_by_method(alg)
     oovd = alg.set_index(["method_id", "stratum"]).get("out_of_validity_frac", pd.Series(dtype=float)).to_dict()
     kinds = A.get("target_kind", pd.Series(dtype=object)).to_dict() if "target_kind" in A else {}
     for s in sorted(red.stratum.unique()):
@@ -528,7 +545,7 @@ def board(alg: pd.DataFrame, red: pd.DataFrame, aud: pd.DataFrame, uti: pd.DataF
     if alg.empty or red.empty or aud.empty:
         return
     strata = sorted(alg.stratum.unique()); order = _order(alg); lab = _label(alg)
-    conf = _curated_by_method_stratum(alg)
+    conf = _curated_by_method_stratum(alg); prop = _proposed_by_method(alg); des = _designed_by_method(alg)
     for s in strata:
         r = red[red.stratum == s].set_index("method_id")
         a = aud[(aud.stratum == s) & (aud.target == primary_target)].set_index("method_id")
@@ -600,7 +617,7 @@ def scorecard(alg: pd.DataFrame, red: pd.DataFrame, aud: pd.DataFrame, uti: pd.D
         return
     from matplotlib.patches import FancyBboxPatch
     order = _order(alg); lab = _label(alg); short = _short(lab)
-    conf = _curated_by_method_stratum(alg)
+    conf = _curated_by_method_stratum(alg); prop = _proposed_by_method(alg); des = _designed_by_method(alg)
     oovd = alg.set_index(["method_id", "stratum"]).get("out_of_validity_frac", pd.Series(dtype=float)).to_dict()
     for st in sorted(alg.stratum.unique()):
         r = red[red.stratum == st].set_index("method_id")
@@ -644,7 +661,7 @@ def scorecard(alg: pd.DataFrame, red: pd.DataFrame, aud: pd.DataFrame, uti: pd.D
             y = n - i - 0.5
             if i % 2 == 0:
                 ax.add_patch(FancyBboxPatch((0, y - 0.5), 100, 1.0, boxstyle="square,pad=0", fc="#f4f6fc", ec="none"))
-            flags = (" †" if oovd.get((m, st), 0) > 0.5 else "") + (" *" if not conf.get((m, st), True) else "") + (" ‡" if m in par else "")
+            flags = (" †" if oovd.get((m, st), 0) > 0.5 else "") + (" " + _mark(m, {m: conf.get((m, st), True)}, prop, des) if _mark(m, {m: conf.get((m, st), True)}, prop, des) else "") + (" ‡" if m in par else "")
             # EN: the method column is 23 % of the sheet; labels longer than that wrap to two lines instead of running into the pill
             wrapped = textwrap.wrap(lab.get(m, m), 30)[:2]
             if len(textwrap.wrap(lab.get(m, m), 30)) > 2:
@@ -681,7 +698,7 @@ def scorecard(alg: pd.DataFrame, red: pd.DataFrame, aud: pd.DataFrame, uti: pd.D
                 ax.text(x_u + pw + 0.8, y, f"{row.delta_mean:+.2f} [{row.delta_lo:+.2f}, {row.delta_hi:+.2f}]", fontsize=7, color=C["ink2"], va="center")
             else:
                 pill(x_u, y, S("notest"), C["muted"])
-        for k, txt in enumerate((S("leg1", thr=threshold), S("leg2", m=metric, t=primary_target, c=control, mg=margin), S("leg3", m=metric, cov=covs or "—"))):
+        for k, txt in enumerate((S("leg1", thr=threshold), S("leg2", m=metric, t=primary_target, c=control, mg=margin), S("leg3", m=metric, cov=covs or "—") + (" · " + S("prop") if any(prop.values()) else "") + (" · " + S("des") if any(des.values()) else ""))):
             if STYLE["captions"]:
                 fig.text(0.01, (foot_in - 0.28 - 0.2 * k) / H, txt, fontsize=6.8, color=C["ink2"], va="center")
         _title(fig, f"{S('title')} — {T('stratum')} {st} · {T('target')} {primary_target} vs {T('control')} {control}")
@@ -841,17 +858,21 @@ def compass(alg: pd.DataFrame, out_dir: Path) -> None:
     _save(fig, out_dir, "compass")
 
 
+from .i18n import MSG as _MSG
+CAPTIONS["zaku_method"] = tuple(_MSG["h.diagram_caption"][k] for k in ("en", "es", "pt", "it"))   # EN: same text as the report (v0.9)
+
+
 def write_captions(out_dir: Path) -> None:
     order = {"en": (0, 1, 2, 3), "es": (1, 0, 2, 3), "pt": (2, 0, 1, 3), "it": (3, 0, 1, 2)}[STYLE["language"] if STYLE["language"] in ("en", "es", "pt", "it") else "en"]
     L = ["# Figures — how to read them / cómo leerlas / como ler / come leggerle", "",
-         "Official: lineage · target_control · exponents · scorecard. Supplementary (on request): predicted_observed · board · sigma_transfer · combination_gain · compass.", ""]
+         "Official: lineage · target_control · exponents · scorecard · zaku_method (fixed method diagram, SVG). Supplementary (on request): predicted_observed · board · sigma_transfer · combination_gain · compass.", ""]
     for name, caps in CAPTIONS.items():
         tags = ("EN", "ES", "PT", "IT")
         L += [f"## {name}", ""] + [x for i in order for x in (f"**{tags[i]}** — {caps[i]}", "")]
     (out_dir / "README.md").write_text("\n".join(L), encoding="utf-8")
 
 
-OFFICIAL = ("lineage", "target_control", "exponents", "scorecard")   # EN: decision 2026-09-11 — tree, negative-control map, exponents+Σ, verdict sheet
+OFFICIAL = ("lineage", "target_control", "exponents", "scorecard", "zaku_method")   # EN: decision 2026-09-11 — tree, negative-control map, exponents+Σ, verdict sheet
 SUPPLEMENTARY = ("predicted_observed", "board", "sigma_transfer", "combination_gain", "compass")
 
 
@@ -881,4 +902,6 @@ def make_all(out_dir: Path, tables: dict, cfg: dict, *, supplementary: bool | No
         if primary:
             board(alg, red, aud, uti, sd, primary, threshold=cfg["algebra"]["redundancy_threshold"], margin=cfg["audit"]["utility_margin"], meta=meta)
         predicted_observed(tables.get("pairs", pd.DataFrame()), alg, sd, meta); sigma_transfer(tables.get("sigma_transfer"), sd); combination_gain(tables.get("combinations"), sd); compass(alg, sd)
+    from .diagram import write_diagram
+    write_diagram(fd)                                    # EN: fixed method diagram (SVG, current language) — v0.9
     write_captions(fd)

@@ -27,7 +27,7 @@ SUGGEST = {
     # EN: optional columns that the catalogue EQUATIONS need (age, sex, circumferences); suggested, never assumed
     "sex": r"^(sex|sexo|gender|genero|género)(_.*)?$",
     "age": r"^(age|idade|edad|years|anos|años)(_.*)?$|^age|^idade|^edad",
-    "arm": r"arm|braco|braço|brazo",
+    "arm": r"arm|braco|braço|brazo|biceps|bicep",
     "waist": r"waist|cintura",
     "calf": r"calf|panturrilha|pantorrilla",
 }
@@ -73,10 +73,12 @@ def suggest(columns: list[str]) -> dict[str, str | None]:
 
 def build_config(csv: Path, mapping: dict[str, str], *, units: dict[str, str], targets: dict[str, str], controls: dict[str, str],
                  covariates: list[str], strata: str | None, id_col: str | None, sep: str, decimal: str, run_name: str,
-                 preset: str = "full", independent: bool = False, groups: dict[str, str] | None = None, encoding: str = "utf-8", language: str = "en") -> dict:
+                 preset: str = "full", independent: bool = False, groups: dict[str, str] | None = None, encoding: str = "utf-8", language: str = "en",
+                 study: dict | None = None) -> dict:
     cfg = {
         "run_name": run_name,
         "language": language,
+        "study": {"data_name": (study or {}).get("data_name") or csv.stem, "researcher": (study or {}).get("researcher")},
         "data": {"path": str(csv), "sep": sep, "decimal": decimal, "encoding": encoding,
                  "columns": {"variables": {k: mapping[k] for k in ("R", "Xc", "H", "W") if k in mapping},
                              "units": units, "targets": targets, "controls": controls, "covariates": covariates,
@@ -118,6 +120,9 @@ def init(csv: str, out: str | None = None, *, ask: Callable[[str, str | None], s
         a = (ask("Language / Idioma / Língua / Lingua — en (English) · es (Español) · pt (Português) · it (Italiano) [en]", "en") or "").strip().lower()
         lang, lang_origin = (a or "en"), ("answer" if a else "default")
     lang = set_language(lang or (map_flags or {}).get("lang") or "en")
+    if ask is not None:                                    # EN: welcome, interactive only — never with --map (v0.9)
+        from .banner import banner
+        printer(banner(full=False))
     if sep != "auto" and decimal != "auto":
         df = pd.read_csv(p, sep=sep, decimal=decimal, encoding=encoding); s, d = sep, decimal
     else:
@@ -130,7 +135,7 @@ def init(csv: str, out: str | None = None, *, ask: Callable[[str, str | None], s
         if ask is not None:
             printer(t(key))
     if ask is not None:
-        printer(""); printer(t("w.intro")); printer("")
+        printer(t("w.intro")); printer("")
     sug = suggest(cols)
     flags = dict(map_flags or {})
     origin: dict[str, str] = {}   # EN: role -> "flag" | "answer" | "suggested" | "default"; printed at the end so nothing is silent
@@ -160,6 +165,10 @@ def init(csv: str, out: str | None = None, *, ask: Callable[[str, str | None], s
             printer(t("w.notin_again", col=repr(v), cols=", ".join(cols)))   # EN: interactive: ask again, never abort on a typo
         raise InputError(t("w.noattempts", role=role))
 
+    help_("w.help.data_name")
+    data_name = get("data_name", t("w.data_name"), p.stem, required=False) or p.stem
+    help_("w.help.researcher")
+    researcher = get("researcher", t("w.researcher"), None, required=False) or None
     help_("w.help.vars")
     mapping = {r: col(r, t("w.col_for", role=r, meaning=t(f"w.mean.{r}"))) for r in ("R", "Xc", "H", "W")}
     units = {"H": get("H_unit", t("w.unit_H"), "cm"), "W": get("W_unit", t("w.unit_W"), "kg")}
@@ -199,24 +208,36 @@ def init(csv: str, out: str | None = None, *, ask: Callable[[str, str | None], s
     # EN: optional columns the catalogue equations need; empty = not mapped (check will list which methods are skipped and why)
     groups: dict[str, str] = {}
     help_("w.help.groups")
+    taken = {tgt, c, *covariates}
     for role, gname in GROUP_ROLES.items():
+        dflt = strata if role == "sex" and strata else sug.get(role)
         v = col(role, t("w.group_col", role=f"{role} ({t('w.role.' + role)})"), required=False,
-                default=(strata if role == "sex" and strata else None))
+                default=(None if dflt in taken else dflt) or "")          # EN: never suggest the target/control/covariate as a catalogue input
         if v:
             groups[gname] = v
     help_("w.help.indep")
     indep_raw = get("independent", t("w.independent"), "no") or "no"
     indep = indep_raw.lower() in ("yes", "y", "sim", "sí", "si", "true")
+    # EN: designing indices is NOT asked here (v1.0): the guided path `bioms-zaku start` suggests them with accept/edit/no,
+    #     and the YAML `design:` block remains for scripts. Keeping init to the columns keeps the standard use simple.
+    dz = "none"; design_specs = None
     tname, cname = tgt, c   # EN: keys keep the original column names (the report shows what the user named)
-    cfg = build_config(p, mapping, units=units, targets={tname: tgt}, controls={cname: c}, covariates=covariates, strata=strata, id_col=id_col,
-                       sep=s, decimal=d, run_name=p.stem, independent=indep, groups=groups, encoding=encoding, language=lang)
+    # EN: when an index is designed for the control, the audit must also run in the reverse direction (control as target, target
+    #     as control); both pairings are written, every method is audited both ways, and the screening keeps the first target as primary.
+    targets = {tname: tgt}; controls = {cname: c}
+    cfg = build_config(p, mapping, units=units, targets=targets, controls=controls, covariates=covariates, strata=strata, id_col=id_col,
+                       sep=s, decimal=d, run_name=p.stem, independent=indep, groups=groups, encoding=encoding, language=lang,
+                       study={"data_name": data_name, "researcher": researcher})
     if strata_labels:
         cfg["strata_labels"] = strata_labels
+
     outp = Path(out) if out else p.with_suffix(".zaku.yaml")
     cfg["run_name"] = outp.name.split(".")[0]   # EN: the run is named after the YAML, not the CSV: two analyses of one file get two folders
     outp.write_text(HEADER + yaml.safe_dump(cfg, sort_keys=False, allow_unicode=True), encoding="utf-8")
     printer(t("w.mapping"))
     printer(f"  {t('w.lang_shown'):11s} ← {lang}   [{t('w.origin.' + lang_origin)}]")
+    printer(f"  {t('w.data_shown'):11s} ← {data_name}   [{t('w.origin.' + origin['data_name'])}]")
+    printer(f"  {t('w.researcher_shown'):11s} ← {researcher if researcher else t('w.not_mapped')}" + (f"   [{t('w.origin.' + origin['researcher'])}]" if researcher else ""))
     for role, v in (("R", mapping["R"]), ("Xc", mapping["Xc"]), ("H", mapping["H"]), ("W", mapping["W"]), ("target", tgt), ("control", c),
                     ("covariates", ",".join(covariates) or None), ("strata", strata), ("labels", ",".join(f"{k}={v}" for k, v in strata_labels.items()) or None), ("id", id_col),
                     *[(r, groups.get(g)) for r, g in GROUP_ROLES.items()], ("independent", "yes" if indep else "no")):
