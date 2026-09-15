@@ -190,8 +190,7 @@ def _run(cfg: dict, *, printer: Callable[[str], None]) -> dict:
                     drop_nonpositive=d["drop_nonpositive"], min_n=d["min_n"], min_per_class=d["min_per_class"])
     cat = _load_catalog(cfg)
     warnings = list(ds.info["warnings"])
-    if overwrite_note:
-        warnings.append(overwrite_note.lstrip("⚠ "))
+    notes = [overwrite_note.lstrip("⚠ ")] if overwrite_note else []   # EN: operational, not scientific: manifest + rigour section only
     frame = ds.frame
     manifest = {"run_name": cfg["run_name"], "config_resolved": cfg, "config_sha256": sha256_obj(cfg), "catalog_version": cat.version,
                 "catalog_sha256": sha256_file(cat.source_path) if cat.source_path and Path(cat.source_path).exists() else None,
@@ -396,7 +395,7 @@ def _run(cfg: dict, *, printer: Callable[[str], None]) -> dict:
     for name, df in tables.items():
         write_table(df, out_dir / f"{name}.csv", sort_keys.get(name, []))
     manifest.update(strata_used={s: int(len(fr)) for s, fr in strata}, methods_evaluated=sorted(set(tables["algebra"].method_id)) if not tables["algebra"].empty else [],
-                    methods_skipped=skipped_all, warnings=warnings, finished_at=time.strftime("%Y-%m-%dT%H:%M:%S"), wall_seconds=round(time.time() - t0, 1))
+                    methods_skipped=skipped_all, warnings=warnings, notes=notes, finished_at=time.strftime("%Y-%m-%dT%H:%M:%S"), wall_seconds=round(time.time() - t0, 1))
     manifest = write_manifest(out_dir, manifest)
     write_summary(out_dir, cfg, tables, manifest)
     if cfg["output"]["figures"]:

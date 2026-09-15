@@ -25,6 +25,7 @@ details{margin:10px 0}summary{cursor:pointer;font-weight:600}table{border-collap
 th,td{border-bottom:1px solid var(--line);padding:4px 8px;text-align:left;white-space:nowrap}th{background:#f4f6fc;position:sticky;top:0}
 pre{background:#f4f6fc;padding:10px;font-size:11px;overflow-x:auto}footer{color:var(--ink2);font-size:11px;padding:18px 28px;border-top:1px solid var(--line)}
 .summary p,.summary li{font-size:14px}
+.about{background:#f4f6fc;border-radius:8px;padding:6px 16px 10px;margin:14px 0}.about h2{border:0;margin:6px 0 4px}
 .method{background:#f7f5fb;border-left:3px solid var(--violet);padding:8px 12px;margin:8px 0 12px;font-size:13px}.method b{color:var(--violet)}
 .dl{display:inline-block;margin:4px 8px 4px 0;padding:3px 10px;border:1px solid var(--violet);border-radius:6px;color:var(--violet);text-decoration:none;font-size:12px}
 .dl:hover{background:var(--violet);color:#fff}.hint{font-size:12px;color:var(--ink2)}.kv td:first-child{font-weight:600;white-space:nowrap}
@@ -138,19 +139,36 @@ BLOCKS = (("m.input", ["sigma"]), ("m.redund", ["algebra", "pairs", "redundancy"
           ("m.screen", ["screening", "combinations"]))
 
 
-def _rigor_section(cfg: dict, manifest: dict) -> str:
+CITATION = {"title": "BioMS Zaku: an algebraic and predictive framework to decompose, audit and design bioimpedance indices and equations",
+            "authors": "Mota T, Martins C, Oliveira Gonçalves LC", "repo": "https://github.com/bioms-zaku-framework/bioms-zaku"}   # EN: kept equal to CITATION.cff (tested)
+
+
+def _about(cfg: dict, manifest: dict) -> str:
+    from .i18n import t
+    v = manifest.get("package_version", ""); c = manifest.get("catalog_version", "")
+    cite = f"{CITATION['authors']}. {CITATION['title']}. Version {v}. {CITATION['repo']}"
+    return (f"<section class='about'><h2>{t('h.about_title')}</h2><p>{html.escape(t('h.about', version=v, catalog=c))}</p>"
+            f"<p class='hint'><b>{t('h.cite')}:</b> {html.escape(cite)} · {html.escape(t('h.license'))}</p></section>")
+
+
+def _rigor_section(cfg: dict, manifest: dict, out_dir: Path | None = None, tables: dict | None = None) -> str:
     from .i18n import t
     v = manifest.get("versions") or {}
+    def _hash_line(k: str, x: str) -> str:
+        df = (tables or {}).get(k[:-4] if k.endswith(".csv") else k)
+        empty = df is None or df.empty                       # EN: "empty" = no data rows (the file still carries its header)
+        return f"{k}: {x}" + (f" ({t('h.empty')})" if empty else "")
     rows = [(t("h.rigor.preset"), f"{manifest.get('preset')} — CV {cfg['audit']['cv']['folds']}×{cfg['audit']['cv']['repeats']}, B={cfg['audit']['bootstrap']['B']}"),
             (t("h.rigor.seeds"), f"cv={cfg['seeds']['cv']}, bootstrap={cfg['seeds']['bootstrap']} · {manifest.get('resampling_scheme', '')}"),
             (t("h.rigor.versions"), f"bioms-zaku {manifest.get('package_version')} · catalog {manifest.get('catalog_version')} · " + " · ".join(f"{k} {x}" for k, x in v.items() if k != "platform")),
             (t("h.rigor.input"), f"{manifest.get('input_path')} · {manifest.get('input_rows')} → {manifest.get('rows_out')} · {manifest.get('input_sha256')}"),
-            (t("h.rigor.outputs"), "<br>".join(f"{k}: {x}" for k, x in (manifest.get("outputs_sha256") or {}).items())),
+            (t("h.rigor.outputs"), "<br>".join(_hash_line(k, x) for k, x in (manifest.get("outputs_sha256") or {}).items())),
             (t("h.rigor.time"), f"{manifest.get('wall_seconds')} s · {manifest.get('started_at')} → {manifest.get('finished_at')}"),
             (t("h.rigor.threads"), f"{manifest.get('threads')} / {manifest.get('n_jobs')}"),
             (t("h.rigor.decl"), str((cfg.get("declarations") or {}).get("targets_independent_of_variables"))),
-            (t("h.rigor.warnings"), "<br>".join(html.escape(w) for w in manifest.get("warnings") or []) or "—")]
-    body = "".join(f"<tr><td>{html.escape(k)}</td><td>{x if k in (t('h.rigor.outputs'), t('h.rigor.warnings')) else html.escape(str(x))}</td></tr>" for k, x in rows)
+            (t("h.rigor.warnings"), "<br>".join(html.escape(w) for w in manifest.get("warnings") or []) or "—"),
+            (t("h.rigor.notes"), "<br>".join(html.escape(w) for w in manifest.get("notes") or []) or "—")]
+    body = "".join(f"<tr><td>{html.escape(k)}</td><td>{x if k in (t('h.rigor.outputs'), t('h.rigor.warnings'), t('h.rigor.notes')) else html.escape(str(x))}</td></tr>" for k, x in rows)
     return f"<h2>{t('h.rigor_title')}</h2><table class='kv'>{body}</table><p class='hint'>{html.escape(t('h.rigor.determinism'))}</p>"
 
 
@@ -173,6 +191,7 @@ def write_report(out_dir: Path, cfg: dict, tables: dict[str, pd.DataFrame], mani
     parts = [f"<!doctype html><html lang='{cfg.get('language', 'en')}'><head><meta charset='utf-8'><title>{html.escape(title)}</title><style>{CSS}</style></head><body>"]
     logo = _svg(LOGO)
     parts.append(f"<header>{'<img src=' + chr(34) + logo + chr(34) + ' alt=BioMS-Zaku>' if logo else ''}<div><h1>{html.escape(title)}</h1><p>{html.escape(sub)}</p></div></header><main>")
+    parts.append(_about(cfg, manifest))
     parts.append("<section class='summary'>" + _md_to_html(summary_md) + "</section>")
     # ---- figures
     parts.append(f"<h2>{t('h.figures')}</h2>")
@@ -197,7 +216,7 @@ def write_report(out_dir: Path, cfg: dict, tables: dict[str, pd.DataFrame], mani
     if rest:
         parts.append(f"<h3>{html.escape(t('h.tables'))}</h3>" + _tables_block(rest, tables, out_dir, xlsx))
     # ---- rigour + manifest
-    parts.append(_rigor_section(cfg, manifest))
+    parts.append(_rigor_section(cfg, manifest, out_dir, tables))
     parts.append(f"<h2>{t('h.manifest')}</h2><details><summary>manifest.json</summary><pre>" + html.escape(json.dumps(manifest, indent=1, ensure_ascii=False, default=str)) + "</pre></details>")
     parts.append(f"</main><footer>BioMS Zaku {manifest.get('package_version', '')} · preset {manifest.get('preset', '')} · {manifest.get('finished_at', '')} · "
                  f"seeds cv={cfg['seeds']['cv']} bootstrap={cfg['seeds']['bootstrap']} · input sha256 {str(manifest.get('input_sha256', ''))[:12]}… · aggregates only, no row-level data</footer></body></html>")

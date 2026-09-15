@@ -141,6 +141,36 @@ def test_run_name_follows_the_yaml_and_overwrite_is_announced(tmp_path):
     cfg = _cfg(tmp_path, "same", language="en")
     lines = []; run(cfg, printer=lines.append); assert not any("already holds" in l for l in lines)
     lines = []; res = run(cfg, printer=lines.append)
-    assert any("already holds a previous run" in l for l in lines) and any("already holds" in w for w in res["manifest"]["warnings"])
+    assert any("already holds a previous run" in l for l in lines) and any("already holds" in w for w in res["manifest"]["notes"])
+    assert not any("already holds" in w for w in res["manifest"]["warnings"])           # operational note, not a scientific warning
+    summ = (res["out_dir"] / "summary.md").read_text(encoding="utf-8"); assert "already holds" not in summ
     txt = (res["out_dir"] / "report.html").read_text(encoding="utf-8"); assert "Estimator sensitivity (not requested)" in txt
+    set_language("en")
+
+
+def test_nine_content_fixes_of_2026_09_15(tmp_path):
+    # EN: line-by-line review by the user: no internal references, clean Σ-transfer header, R², empty tables marked, an
+    #     'about' section with a citation equal to CITATION.cff, strata labels and original column names from init.
+    from bioms_zaku.run import run
+    from bioms_zaku.wizard import init
+    from bioms_zaku.html import CITATION
+    cfg = _cfg(tmp_path, "nine", language="en"); cfg["strata"] = "sexo"; cfg["strata_labels"] = {0: "F", 1: "M"}
+    cfg["data"]["columns"]["groups"] = {"sexo": "sexo"}
+    res = run(cfg, printer=lambda s: None); txt = (res["out_dir"] / "report.html").read_text(encoding="utf-8")
+    summ = (res["out_dir"] / "summary.md").read_text(encoding="utf-8")
+    assert "§" not in txt and "§" not in summ and ", v0.5" not in txt and "v0.6" not in txt
+    assert "| median abs. error [95% boot] |" in summ and "|err|" not in summ
+    assert "(R², Ridge; conditional control)" in summ
+    empties = [f"{n}.csv" for n, df in res["tables"].items() if df is None or df.empty]
+    assert empties and all(f"{n}: {res['manifest']['outputs_sha256'][n]} (empty)" in txt for n in empties)   # every empty table is marked
+    assert "About this report" in txt and "How to cite" in txt and CITATION["title"] in txt
+    cff = (ROOT / "CITATION.cff").read_text(encoding="utf-8")
+    assert CITATION["title"] in cff and CITATION["repo"] in cff and all(n in cff for n in ("Mota", "Martins", "Oliveira Gonçalves"))
+    assert "## Stratum `F`" in summ and "## Stratum `M`" in summ                     # labels reach the report
+    flags = {"R": "resistencia_ohm", "Xc": "reatancia_ohm", "H": "estatura_cm", "W": "massa_kg", "target": "lmi_dxa", "control": "fmi_dxa",
+             "strata": "sexo", "labels": "0=F,1=M", "independent": "yes"}
+    printed = []; out = init(str(ROOT / "examples/minimal_data.csv"), str(tmp_path / "lab.yaml"), map_flags=flags, printer=printed.append)
+    c2 = yaml.safe_load(out.read_text(encoding="utf-8"))
+    assert c2["strata_labels"] == {"0": "F", "1": "M"} and c2["data"]["columns"]["targets"] == {"lmi_dxa": "lmi_dxa"}
+    assert any(l.strip().startswith("labels") and "0=F,1=M" in l for l in printed)
     set_language("en")

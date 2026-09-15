@@ -187,6 +187,15 @@ def init(csv: str, out: str | None = None, *, ask: Callable[[str, str | None], s
     strata = col("strata", t("w.strata"), required=False)
     help_("w.help.id")
     id_col = col("id", t("w.id"), required=False)
+    strata_labels: dict = {}
+    if strata:
+        help_("w.help.labels")
+        raw = get("labels", t("w.labels"), None, required=False)
+        if raw:
+            for pair in raw.split(","):
+                if "=" not in pair:
+                    raise InputError(f"labels: expected value=label pairs, got {raw!r}")
+                k, v = pair.split("=", 1); strata_labels[k.strip()] = v.strip()
     # EN: optional columns the catalogue equations need; empty = not mapped (check will list which methods are skipped and why)
     groups: dict[str, str] = {}
     help_("w.help.groups")
@@ -198,16 +207,18 @@ def init(csv: str, out: str | None = None, *, ask: Callable[[str, str | None], s
     help_("w.help.indep")
     indep_raw = get("independent", t("w.independent"), "no") or "no"
     indep = indep_raw.lower() in ("yes", "y", "sim", "sí", "si", "true")
-    tname = re.sub(r"\W+", "_", tgt).upper(); cname = re.sub(r"\W+", "_", c).upper()
+    tname, cname = tgt, c   # EN: keys keep the original column names (the report shows what the user named)
     cfg = build_config(p, mapping, units=units, targets={tname: tgt}, controls={cname: c}, covariates=covariates, strata=strata, id_col=id_col,
                        sep=s, decimal=d, run_name=p.stem, independent=indep, groups=groups, encoding=encoding, language=lang)
+    if strata_labels:
+        cfg["strata_labels"] = strata_labels
     outp = Path(out) if out else p.with_suffix(".zaku.yaml")
     cfg["run_name"] = outp.name.split(".")[0]   # EN: the run is named after the YAML, not the CSV: two analyses of one file get two folders
     outp.write_text(HEADER + yaml.safe_dump(cfg, sort_keys=False, allow_unicode=True), encoding="utf-8")
     printer(t("w.mapping"))
     printer(f"  {t('w.lang_shown'):11s} ← {lang}   [{t('w.origin.' + lang_origin)}]")
     for role, v in (("R", mapping["R"]), ("Xc", mapping["Xc"]), ("H", mapping["H"]), ("W", mapping["W"]), ("target", tgt), ("control", c),
-                    ("covariates", ",".join(covariates) or None), ("strata", strata), ("id", id_col),
+                    ("covariates", ",".join(covariates) or None), ("strata", strata), ("labels", ",".join(f"{k}={v}" for k, v in strata_labels.items()) or None), ("id", id_col),
                     *[(r, groups.get(g)) for r, g in GROUP_ROLES.items()], ("independent", "yes" if indep else "no")):
         printer(f"  {role:11s} ← {v if v else t('w.not_mapped')}" + (f"   [{t('w.origin.' + origin[role])}]" if v and role in origin else ""))
     if not indep:

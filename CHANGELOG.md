@@ -1,6 +1,12 @@
 # Changelog
 
 ## 0.1.0.dev0 — 2026-09-10 (unreleased)
+- Content review of the report, nine fixes (2026-09-15): screening classes carry the four conditional verdicts (BOTH and
+  NEITHER were wrongly 'inconclusive'); Σ-transfer table header without inner pipes; no contract references (§, v0.x) in
+  user text; the overwrite note is an operational note (manifest `notes`, rigour section), not a scientific warning; R² in
+  the audit line; empty tables marked in the hash list; `init` asks labels for the stratum values (`labels=0=F,1=M`) and
+  keeps the original column names as target/control keys; an 'About this report' section with citation (equal to
+  CITATION.cff, tested) and licence.
 - Summary formatting (2026-09-15): thresholds shown with fixed precision after a CSV round-trip (0.03, not 0.0299…);
   the Σ-transfer block keeps the CSV order in both `run` and `render`.
 - `render` (2026-09-14): re-write summary, figures and report of a finished run in another language from the saved tables,

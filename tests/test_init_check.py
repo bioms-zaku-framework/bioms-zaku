@@ -121,13 +121,13 @@ def test_init_explains_encoding_and_records_it(tmp_path):
 def test_interactive_init_reasks_on_typo_refuses_control_equal_to_target_and_prints_independence(tmp_path):
     # EN: terminal-simulation findings (2026-09-14). Scripted answers: a typo for Xc (re-asked), control = target (re-asked).
     from bioms_zaku.wizard import init, suggest
-    answers = iter(["", "", "reatancia_50_ohm", "reatancia_ohm", "", "", "", "", "lmi_dxa", "lmi_dxa", "fmi_dxa", "", "", "", "", "", "", "", "", "yes"])   # first answer = language (Enter → en)
+    answers = iter(["", "", "reatancia_50_ohm", "reatancia_ohm", "", "", "", "", "lmi_dxa", "lmi_dxa", "fmi_dxa", "", "", "", "", "", "", "", "", "", "yes"])   # language, R, Xc(typo, ok), H, W, units×2, target, control(=target, then fmi), cov, strata, labels, id, sex, age, arm, waist, calf, yes
     def ask(prompt, default):
         return next(answers)
     printed = []
     out = init(str(ROOT / "examples/minimal_data.csv"), str(tmp_path / "i.yaml"), ask=ask, printer=printed.append)
     cfg = yaml.safe_load(out.read_text(encoding="utf-8"))
-    assert cfg["data"]["columns"]["variables"]["Xc"] == "reatancia_ohm" and cfg["data"]["columns"]["controls"] == {"FMI_DXA": "fmi_dxa"}
+    assert cfg["data"]["columns"]["variables"]["Xc"] == "reatancia_ohm" and cfg["data"]["columns"]["controls"] == {"fmi_dxa": "fmi_dxa"}   # keys = original names
     assert any("is not in the file" in l for l in printed) and any("is the target itself" in l for l in printed)
     assert any(l.strip().startswith("independent") and "yes" in l for l in printed) and cfg["declarations"]["targets_independent_of_variables"] is True
     with pytest.raises(InputError, match="same as the target"):
@@ -141,7 +141,7 @@ def test_init_shows_language_with_its_origin_and_run_prints_an_open_command(tmp_
     from bioms_zaku.run import run
     printed = []; init(str(ROOT / "examples/minimal_data.csv"), str(tmp_path / "l.yaml"), map_flags=FLAGS, lang="pt", printer=printed.append)
     assert any(l.strip().startswith("idioma") and "pt" in l and "[opção]" in l for l in printed)
-    answers = iter(["it"] + [""] * 6 + ["lmi_dxa", "fmi_dxa"] + [""] * 8 + ["yes"])
+    answers = iter(["it"] + [""] * 6 + ["lmi_dxa", "fmi_dxa"] + [""] * 9 + ["yes"])
     printed = []; init(str(ROOT / "examples/minimal_data.csv"), str(tmp_path / "m.yaml"), ask=lambda p, d: next(answers), printer=printed.append)
     assert any(l.strip().startswith("lingua") and "it" in l and "[risposta]" in l for l in printed)
     cfg = yaml.safe_load((ROOT / "examples/minimal.yaml").read_text(encoding="utf-8")); cfg["data"]["path"] = str(ROOT / "examples/minimal_data.csv")
@@ -153,7 +153,7 @@ def test_init_shows_language_with_its_origin_and_run_prints_an_open_command(tmp_
 
 def test_interactive_init_explains_itself_and_map_mode_stays_quiet(tmp_path):
     from bioms_zaku.wizard import init
-    answers = iter(["pt"] + [""] * 6 + ["lmi_dxa", "fmi_dxa"] + [""] * 8 + ["yes"])
+    answers = iter(["pt"] + [""] * 6 + ["lmi_dxa", "fmi_dxa"] + [""] * 9 + ["yes"])
     printed = []; init(str(ROOT / "examples/minimal_data.csv"), str(tmp_path / "h.yaml"), ask=lambda p, d: next(answers), printer=printed.append)
     txt = "\n".join(printed)
     assert "Vou perguntar qual coluna do seu arquivo faz cada papel" in txt and "controle negativo: uma medida que os índices NÃO deveriam prever" in txt

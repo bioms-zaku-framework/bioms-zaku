@@ -29,14 +29,20 @@ def screening_table(redundancy: pd.DataFrame, audit: pd.DataFrame, utility: pd.D
         df["useful"] = False
     df["useful"] = df["useful"].fillna(False).astype(bool)
     df["identity"] = df["identity_of"].notna()
-    df["specific"] = df["verdict"].map({"SPECIFIC": True, "TRACKS_CONTROL": False, "MEASURES_CONTROL": False})   # NaN when BOTH/NEITHER/absent
-    df["class"] = [_cls(i, rd, sp, us) for i, rd, sp, us in zip(df["identity"], df["redundant"], df["specific"], df["useful"])]
+    df["specific"] = df["verdict"].map({"SPECIFIC": True, "TRACKS_CONTROL": False, "MEASURES_CONTROL": False, "BOTH": False, "NEITHER": False})   # NaN only when absent
+    df["class"] = [_cls(i, rd, v, us) for i, rd, v, us in zip(df["identity"], df["redundant"], df["verdict"], df["useful"])]
     return df[["method_id", "stratum", "redundant", "specific", "useful", "identity", "class"]].sort_values(["stratum", "method_id"]).reset_index(drop=True)
 
 
-def _cls(identity: bool, redundant: bool, specific, useful: bool) -> str:
+VERDICT_WORD = {"SPECIFIC": "specific", "TRACKS_CONTROL": "tracks-control", "MEASURES_CONTROL": "tracks-control", "BOTH": "both", "NEITHER": "no-signal"}
+
+
+def _cls(identity: bool, redundant: bool, verdict, useful: bool) -> str:
+    """EN: class = origin × conditional verdict × utility. 'inconclusive' ONLY when the audit gave no verdict (skipped/absent);
+    BOTH and NEITHER are conclusive verdicts of the conditional rule (v0.5) and appear as 'both' / 'no-signal'."""
     if identity:
         return "identity"
-    if specific is None or (isinstance(specific, float) and specific != specific):
+    word = VERDICT_WORD.get(verdict)
+    if word is None:
         return "inconclusive"
-    return f"{'redundant' if redundant else 'original'}-{'specific' if specific else 'nonspecific'}-{'useful' if useful else 'notuseful'}"
+    return f"{'redundant' if redundant else 'original'}-{word}-{'useful' if useful else 'notuseful'}"

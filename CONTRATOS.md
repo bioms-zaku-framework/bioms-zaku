@@ -346,7 +346,7 @@ acende, ortogonal ⇒ apagada; identidade do item 4 no exemplo embarcado (1e-9);
 | `combinations.csv` | par ordenado × estrato × alvo | `host_id, added_id, r_log_predicted, score_host, score_pair, gain_mean, gain_lo, gain_hi, p_gain` |
 | `sensitivity.csv` | como `audit.csv` | + `estimator_primary, verdict_primary, verdict_changed, s1_primary, s1_delta, s2_primary, s2_delta, disc_primary, disc_delta` |
 | `threshold_sensitivity.csv` | método × estrato × alvo × margem × P | `verdict, verdict_default, changed` (reclassificação, sem reajuste) |
-| `screening.csv` | método × estrato | `method_id, stratum, redundant, specific, useful, identity, class` |
+| `screening.csv` | método × estrato | `method_id, stratum, redundant, specific, useful, identity, class`; `class` = {original\|redundant}-{specific\|tracks-control\|both\|no-signal}-{useful\|notuseful}, `identity`, ou `inconclusive` SÓ quando a auditoria não deu veredito (15/09: BOTH e NEITHER são conclusivos, antes caíam em inconclusive) |
 | `implicit_vectors.csv` (v0.6) | estrato × papel × nome | `stratum, role (target/control), name, n, fit_r2, poor_projection, e_<var>…` |
 | `geometry.csv` (v0.6) | método × estrato × alvo | `method_id, stratum, target, control, n, vector_source, cos_target, cos_control, cos_target_control, r_log_target_observed, r_log_target_identity, r_log_target_gap, r_log_control_observed, r_log_control_identity, r_log_control_gap, fit_r2_target, fit_r2_control, poor_projection, flag_parallel_to_control, flag_coupled_target_control, thresholds` |
 
