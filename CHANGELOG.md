@@ -1,6 +1,8 @@
 # Changelog
 
 ## 0.1.0.dev0 — 2026-09-10 (unreleased)
+- Summary formatting (2026-09-15): thresholds shown with fixed precision after a CSV round-trip (0.03, not 0.0299…);
+  the Σ-transfer block keeps the CSV order in both `run` and `render`.
 - `render` (2026-09-14): re-write summary, figures and report of a finished run in another language from the saved tables,
   no recomputation, tables and manifest untouched (tested). Lineage captions in es/pt completed (the 'family tree' half
   was missing); caption length parity across languages is now tested.

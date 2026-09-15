@@ -121,11 +121,11 @@ def write_summary(out_dir: Path, cfg: dict, tables: dict[str, pd.DataFrame], man
     ts = tables.get("threshold_sensitivity")
     if ts is not None and not ts.empty:
         n_rows = ts.groupby(["stratum", "method_id", "target"]).ngroups; ch = ts[ts.changed]
-        L += [t("s.thr_title"), "", t("s.thr_intro", margins=[float(v) for v in sorted(ts.margin.unique())], ps=[float(v) for v in sorted(ts.p_specific.unique())],
+        L += [t("s.thr_title"), "", t("s.thr_intro", margins=[round(float(v), 4) for v in sorted(ts.margin.unique())], ps=[round(float(v), 4) for v in sorted(ts.p_specific.unique())],
                                       n=n_rows, k=ch.groupby(["stratum", "method_id", "target"]).ngroups), ""]
         if len(ch):
             L += [t("s.thr_header"), "|---|---|---|---|---|---|---|"]
-            L += [f"| {x.stratum} | {x.method_id} | {x.target} | {x.margin} | {x.p_specific} | {x.verdict} | {x.verdict_default} |" for x in ch.itertuples()]
+            L += [f"| {x.stratum} | {x.method_id} | {x.target} | {x.margin:g} | {x.p_specific:g} | {x.verdict} | {x.verdict_default} |" for x in ch.itertuples()]
         L.append("")
     se = tables.get("sensitivity")
     if se is not None and not se.empty:
@@ -134,7 +134,7 @@ def write_summary(out_dir: Path, cfg: dict, tables: dict[str, pd.DataFrame], man
         L += [f"| {x.stratum} | {x.method_id} | {x.target} | {x.s1_primary:+.3f} | {x.s1_mean:+.3f} | {x.s2_primary:+.3f} | {x.s2_mean:+.3f} | {x.verdict_primary} | {x.verdict} |" for x in se.itertuples()]
         L.append("")
     if "sigma_transfer" in tables and not tables["sigma_transfer"].empty:
-        tr = tables["sigma_transfer"]
+        tr = tables["sigma_transfer"].sort_values(["sigma_from", "observed_in"]).reset_index(drop=True)   # EN: same order as the CSV
         L += [t("s.transfer_title"), "", t("s.transfer_header"), "|---|---|---|---|---|---|---|---|"]
         L += [f"| {x.sigma_from} | {x.observed_in} | {x.type} | {x.pairs} | {x.median_abs_err:.3f} [{x.median_abs_err_lo:.3f}, {x.median_abs_err_hi:.3f}] | {x.p90_abs_err:.3f} | {x.frac_within_tol:.2f} | {x.excess_median:+.3f} [{x.excess_lo:+.3f}, {x.excess_hi:+.3f}] |" for x in tr.itertuples()]
         L.append("")

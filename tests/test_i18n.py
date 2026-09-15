@@ -120,3 +120,18 @@ def test_render_changes_language_without_recomputing(tmp_path):
     r = subprocess.run([sys.executable, "-m", "bioms_zaku.cli", "--lang", "it", "render", str(out)], capture_output=True, text=True, env={"PYTHONPATH": str(ROOT / "src"), "PATH": ""})
     assert r.returncode == 0 and "## Strato" in (out / "summary.md").read_text(encoding="utf-8")
     set_language("en")
+
+
+def test_render_formats_thresholds_cleanly_and_keeps_table_order(tmp_path):
+    from bioms_zaku.run import run, render
+    cfg = yaml.safe_load((ROOT / "examples/minimal.yaml").read_text(encoding="utf-8"))
+    cfg["data"]["path"] = str(ROOT / "examples/minimal_data.csv"); cfg["output"] = {"dir": str(tmp_path), "figures": False}; cfg["language"] = "en"
+    cfg["catalog"] = {"include": ["Lukaski1985_II", "Piccoli1994_RH", "Baumgartner1988_PhA"]}; cfg["audit"] = {"bootstrap": {"min_oob": 10}, "cv": {"folds": 3}}
+    res = run(cfg, printer=lambda s: None); out = res["out_dir"]
+    s1 = (out / "summary.md").read_text(encoding="utf-8")
+    render(out, "en", printer=lambda s: None)
+    s2 = (out / "summary.md").read_text(encoding="utf-8")
+    assert "0.0299" not in s2 and "[0.02, 0.03, 0.05]" in s2
+    block = lambda s: s.split("## Sensitivity of verdicts")[0]      # everything before the (timestamp-free) sensitivity block must match
+    assert block(s1) == block(s2)
+    set_language("en")

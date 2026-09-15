@@ -386,7 +386,8 @@ excluídas) · 3 `precedence_tree` · 4 `specificity_quadrant` (escore controle 
   de independência); manifesto.
 - **O relatório não recalcula nada:** lê tabelas, manifesto e configuração. Uma fonte de verdade. Consequência: `bioms-zaku --lang xx
   render <pasta>` (ou `render(pasta, lang)` na API) regrava resumo, figuras e relatório de uma execução concluída em outro idioma,
-  sem tocar tabelas nem manifesto (teste: hashes das tabelas inalterados).
+  sem tocar tabelas nem manifesto (teste: hashes das tabelas inalterados). Os AVISOS gravados no manifesto são registro do
+  momento da execução e ficam no idioma daquela execução, também dentro de um relatório re-renderizado.
 - **Determinismo:** `report.html` carrega data/hora e NÃO entra em `outputs_sha256`; os CSV embutidos são byte a byte os
   arquivos hasheados (teste). Fora: interatividade, PDF.
 
