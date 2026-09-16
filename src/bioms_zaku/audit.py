@@ -60,7 +60,9 @@ def default_estimator(task: str):
     """EN/ES/PT: Ridge(α=1) for regression; L2 logistic (C=1, lbfgs, 1000 it.) for classification (§3.2)."""
     if task == "regression":
         return Ridge(alpha=1.0)
-    return LogisticRegression(penalty="l2", C=1.0, solver="lbfgs", max_iter=1000)
+    # EN: L2 is the default penalty; naming it (`penalty="l2"`) is deprecated since scikit-learn 1.8 and flooded the terminal with
+    #     one FutureWarning per fit (248 500 lines in a 400-row session, 2026-09-16). Version-safe form:
+    return LogisticRegression(C=1.0, solver="lbfgs", max_iter=1000)
 
 
 def make_pipeline(estimator, impute: bool = False) -> Pipeline:

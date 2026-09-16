@@ -138,3 +138,14 @@ def test_events_per_variable_is_computed_per_model_flagged_below_ten_and_never_a
     cp = tmp_path / "c.yaml"; cp.write_text(yaml.safe_dump(cfg), encoding="utf-8")
     rep = check(str(cp), printer=lambda s: None)
     assert not rep["errors"] and any("Peduzzi" in w for w in rep["warnings"]), rep
+
+
+def test_default_estimators_emit_no_warning_when_fitted():
+    """EN: found 2026-09-16 — `penalty="l2"` is deprecated in scikit-learn ≥ 1.8 and printed one FutureWarning per fit."""
+    import warnings
+    rng = np.random.default_rng(8); X = rng.normal(size=(80, 2)); y = (X[:, 0] + rng.normal(size=80) > 0).astype(int)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")                                  # third-party DeprecationWarnings are hidden from users anyway
+        warnings.simplefilter("error", FutureWarning); warnings.simplefilter("error", UserWarning)
+        make_pipeline(default_estimator("classification")).fit(X, y).predict_proba(X)
+        make_pipeline(default_estimator("regression")).fit(X, X[:, 0]).predict(X)

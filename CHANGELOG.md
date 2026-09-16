@@ -1,6 +1,10 @@
 # Changelog
 
 ## 0.1.0.dev0 — 2026-09-10 (unreleased)
+- Found in the scripted user simulation with the installed package (2026-09-16): the logistic estimator named `penalty="l2"`,
+  deprecated in scikit-learn 1.8, printed one FutureWarning per fit (248 500 lines in a 400-row session) — removed (L2 is the
+  default), with a test that the default estimators fit without user-visible warnings; parallel runs (`n_jobs > 1`) now print
+  progress with ETA per finished method, results re-ordered by job index (byte-identical to the sequential run, tested).
 - One row per person (2026-09-16, user decision): repeated ids are refused at input with the instruction to aggregate; the input
   layer used to promise a "cluster mode" that the bootstrap never implemented. Cluster bootstrap (Field & Welsh 2007) recorded as
   future work in the contract. Contract also states that D under the L2 penalty is compared between models under the same

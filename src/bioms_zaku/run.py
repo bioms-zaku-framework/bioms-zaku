@@ -418,8 +418,16 @@ def _run(cfg: dict, *, printer: Callable[[str], None]) -> dict:
                 for mid in vecs]
         t_s = time.time()
         if cfg["n_jobs"] > 1:
+            # EN: v1.2 — progress with ETA also in parallel (one line per finished method); results re-ordered by job index,
+            #     so the tables are byte-identical to the sequential run (§3.2).
+            from concurrent.futures import as_completed
             with ProcessPoolExecutor(max_workers=cfg["n_jobs"]) as ex:
-                results = list(ex.map(_audit_one, jobs))
+                futs = {ex.submit(_audit_one, jb): i for i, jb in enumerate(jobs)}
+                done: dict[int, tuple] = {}
+                for k, fu in enumerate(as_completed(futs)):
+                    i = futs[fu]; done[i] = fu.result(); el = time.time() - t_s
+                    printer(_t("r.progress", s=stratum, k=k + 1, n=len(jobs), m=jobs[i][0], el=f"{el:.0f}", eta=f"{el / (k + 1) * (len(jobs) - k - 1) / 60:.1f}"))
+                results = [done[i] for i in range(len(jobs))]
         else:
             results = []
             for k, jb in enumerate(jobs):
