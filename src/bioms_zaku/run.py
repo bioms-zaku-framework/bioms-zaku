@@ -406,7 +406,7 @@ def _run(cfg: dict, *, printer: Callable[[str], None]) -> dict:
         # ---- audit
         targets = {t: fr[t].to_numpy(float) for t in ds.targets}
         controls = {c: fr[c].to_numpy(float) for c in ds.controls}
-        groups = fr[ds.id].to_numpy() if ds.id and fr[ds.id].duplicated().any() else None
+        groups = None      # EN: v1.2 — repeated ids are refused at input (one row per person); grouped resampling is future work
         cov = fr[ds.covariates].to_numpy(float) if ds.covariates else None
         task = cfg["audit"]["task"]
         scale = cfg["audit"]["scale"]

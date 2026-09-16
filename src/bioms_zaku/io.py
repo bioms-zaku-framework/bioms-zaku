@@ -187,7 +187,11 @@ def read_table(source: str | os.PathLike | pd.DataFrame, mapping: Mapping | dict
                 if len(vc) and vc.min() < min_per_class:
                     info["warnings"].append(f"{name}: a class has < {min_per_class} cases in a stratum; audit will skip it there")
     if m.id and out[m.id].duplicated().any():
-        info["warnings"].append(f"repeated id in {m.id!r}: cluster mode (bootstrap and CV grouped by id)")
+        # EN: v1.2 (decision of 2026-09-16): one row per person. The bootstrap resamples rows as independent persons, so repeated
+        #     measurements would give intervals that are too narrow; a cluster bootstrap (Field & Welsh 2007) is future work.
+        dup = out.loc[out[m.id].duplicated(), m.id].nunique()
+        raise InputError(f"repeated id in {m.id!r} ({dup} ids with more than one row): the audit needs ONE row per person — "
+                         f"aggregate repeated measurements (e.g. the mean per person, or one visit) before running")
     info["rows_out"] = int(len(out))
     out = out.reset_index(drop=True)
     return Dataset(frame=out, variables=var_names, derived=derived, targets=list(m.targets), controls=list(m.controls),

@@ -276,9 +276,13 @@ def _kpi(cfg: dict, manifest: dict, tables: dict, cat) -> str:
             cards.append(("—", t("k.useful_none"), ""))
         if geo is not None and not geo.empty:
             g = geo[geo.target == tgt]
-            lines = [f"{s}: {t('k.yes') if bool(g[g.stratum == s].flag_coupled_target_control.any()) else t('k.no')} (cos_Σ {float(g[g.stratum == s].cos_target_control.iloc[0]):.2f})" for s in sorted(set(g.stratum))]
-            anyc = bool(g.flag_coupled_target_control.any())
-            cards.append((t("k.yes") if anyc else t("k.no"), t("k.coupled"), " · ".join(lines)))
+            # EN: v1.2 — a suppressed flag (poor projection, R² below min_fit_r2) is NOT "not coupled": the card says undetermined.
+            def _state(gs):
+                if bool(gs.flag_coupled_target_control.any()):
+                    return t("k.yes")
+                return t("k.undet") if ("poor_projection" in gs and bool(gs.poor_projection.astype(bool).any())) else t("k.no")
+            lines = [f"{s}: {_state(g[g.stratum == s])} (cos_Σ {float(g[g.stratum == s].cos_target_control.iloc[0]):.2f})" for s in sorted(set(g.stratum))]
+            cards.append((_state(g), t("k.coupled"), " · ".join(lines)))
     body = "".join(f"<div class='card'><div class='v'>{v}</div><div class='l'>{html.escape(l)}</div><div class='s'>{s}</div></div>" for v, l, s in cards)
     return f"<section id='key'>{_h2(2, 'key', t('n.key'))}<div class='kpi'>{body}</div></section>"
 

@@ -205,6 +205,24 @@ def test_v09_structure_accordion_diagram_and_references(run_pt):
     assert "doi.org/10.1097/ede.0b013e3181d61eeb" in txt and "ede.0b013e3181e4bfd7" not in txt
     assert "<span class='tag'>Especificidade (controle negativo condicional)</span>" in txt
     assert "verificados em 2026-" in txt
-    assert not re.search(r"(src|href)=['\"]https?://(?!doi\.org|www\.jmlr\.org|jmlr\.org|github\.com)", txt)   # nothing loaded from the network
+    assert not re.search(r"(src|href)=['\"]https?://(?!doi\.org|www\.jmlr\.org|jmlr\.org|github\.com|www\.ijcai\.org)", txt)   # nothing loaded from the network
     assert "beforeprint" in txt and "id='lb'" in txt and "<meta name='viewport'" in txt
     assert ">r(a,b) = aᵀΣb / √(aᵀΣa · bᵀΣb)</text>" in svg and "<span class='brand'>BioMS Zaku</span>" in txt   # formula on its own line (bounds: tests/test_diagram.py); grey header, brand in gradient
+
+
+def test_coupled_card_says_undetermined_when_the_projection_is_poor():
+    """EN: v1.2 — a suppressed coupling flag (poor projection) must not read as 'not coupled' (track-and-field report, cos −0.98)."""
+    import pandas as pd
+    from bioms_zaku.html import _kpi
+    from bioms_zaku.i18n import set_language
+    set_language("pt")
+    aud = pd.DataFrame(dict(method_id=["a"], stratum=["all"], target=["y"], control=["c"], verdict=["NEITHER"], n=[60]))
+    geo = pd.DataFrame(dict(method_id=["a"], stratum=["all"], target=["y"], control=["c"], cos_target_control=[-0.98],
+                            flag_coupled_target_control=[False], poor_projection=[True]))
+    alg = pd.DataFrame(dict(method_id=["a"], stratum=["all"], curated=[True], proposed=[False], designed=[False]))
+    cfg = {"data": {"columns": {"covariates": []}}, "audit": {"verdict": {"margin": 0.03}}}
+    html_out = _kpi(cfg, {"strata_used": {"all": 60}, "rows_in": 60}, {"audit": aud, "geometry": geo, "algebra": alg, "utility": None}, None)
+    assert "indeterminado (projeção pobre)" in html_out and ">não<" not in html_out
+    geo["poor_projection"] = [False]
+    html_out2 = _kpi(cfg, {"strata_used": {"all": 60}, "rows_in": 60}, {"audit": aud, "geometry": geo, "algebra": alg, "utility": None}, None)
+    assert "não (cos_Σ -0.98)" in html_out2

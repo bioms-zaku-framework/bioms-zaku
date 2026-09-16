@@ -22,7 +22,7 @@ import numpy as np
 import pandas as pd
 from sklearn.base import clone
 from sklearn.linear_model import LogisticRegression, Ridge
-from sklearn.metrics import balanced_accuracy_score, r2_score, roc_auc_score
+from sklearn.metrics import r2_score, roc_auc_score
 from sklearn.model_selection import GroupKFold, RepeatedKFold, RepeatedStratifiedKFold
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
@@ -143,6 +143,18 @@ def _resolve_estimator(estimator, task: str):
     if callable(estimator) and not hasattr(estimator, "fit"):
         return estimator(task)
     return estimator
+
+
+EPV_MIN = 10.0        # EN: Peduzzi et al. 1996 — below 10 events per variable logistic coefficients are biased and unstable
+DISTINCT_FRACTION = 0.632   # EN: share of distinct persons in a bootstrap training draw (Efron 1983)
+
+
+def events_per_variable(y: np.ndarray, n_predictors: int) -> tuple[int, float]:
+    """EN: (events = size of the smaller class, EPV in a bootstrap training draw = 0.632·events / predictors). Peduzzi 1996 rule
+        applied to what the audit actually fits; reported, never a barrier (decision of 2026-09-16)."""
+    _, counts = np.unique(y[np.isfinite(y)], return_counts=True)
+    ev = int(counts.min()) if len(counts) else 0
+    return ev, float(DISTINCT_FRACTION * ev / max(1, n_predictors))
 
 
 def metric_name(task: str) -> str:
@@ -321,6 +333,9 @@ class AuditRow:
     metric_control: str = ""                               # EN: 'R2' or 'D_Tjur' for the S2 side
     auroc_cv_target_full: float = float("nan")             # EN: descriptive AUROC of target | control + index (classification targets)
     auroc_cv_control_full: float = float("nan")            # EN: descriptive AUROC of control | target + index (classification controls)
+    events_min_class: int = 0                              # EN: v1.2 — smaller class of the classification column(s) audited
+    epv_train: float = float("nan")                        # EN: 0.632·events / 2 predictors (index + control) in a bootstrap draw
+    epv_low: bool = False                                  # EN: below 10 (Peduzzi 1996): read the verdict as exploratory
     s1_mean: float = float("nan")
     s1_lo: float = float("nan")
     s1_hi: float = float("nan")
@@ -391,6 +406,10 @@ def audit_method(method_id: str, stratum: str, x: np.ndarray, targets: dict[str,
             row.verdict = verdict_conditional(s1, s2, cfg)
             row.ci_level, row.k_methods = cfg.ci, int(cfg.k_methods)
             row.control_task, row.metric_control = tasks[ic], metric_name(tasks[ic])
+            cls_cols = [j for j in (it, ic) if tasks[j] == "classification"]
+            if cls_cols:
+                ev, epv = min((events_per_variable(Y[:, j], 2) for j in cls_cols), key=lambda z: z[1])
+                row.events_min_class, row.epv_train, row.epv_low = ev, epv, bool(epv < EPV_MIN)
             if tasks[it] == "classification":
                 row.auroc_cv_target_full = cv_score(configs[f"idx+ctrl:{c}"], Y[:, it], "classification", ests[it], cfg, g, metric="auroc")
             if tasks[ic] == "classification":
@@ -424,6 +443,9 @@ class UtilityRow:
     margin: float
     useful: bool
     auroc_cv_with: float = float("nan")   # EN: v1.2 — descriptive AUROC of target | covariates + index (classification)
+    events_min_class: int = 0
+    epv_train: float = float("nan")      # EN: 0.632·events / (covariates + 1) predictors
+    epv_low: bool = False
 
 
 def utility_method(method_id: str, stratum: str, x: np.ndarray, covariates: np.ndarray, cov_names: Sequence[str],
@@ -451,6 +473,7 @@ def utility_method(method_id: str, stratum: str, x: np.ndarray, covariates: np.n
                          cs["mean"], cs["lo"], cs["hi"], cs["p"], cfg.utility_margin, bool(cs["lo"] > cfg.utility_margin))
         if tasks[i] == "classification":
             row.auroc_cv_with = cv_score(FB, Y[:, i], "classification", ests[i], cfg, g, metric="auroc")
+            row.events_min_class, row.epv_train = events_per_variable(Y[:, i], FB.shape[1]); row.epv_low = bool(row.epv_train < EPV_MIN)
         out.append(row)
     return out
 

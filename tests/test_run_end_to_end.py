@@ -163,3 +163,14 @@ def test_rerun_into_the_same_folder_never_lists_figures_of_an_earlier_run(tmp_pa
     assert not any(n.startswith(("scorecard_F", "lineage_M", "old")) for n in left), left
     html = (res["out_dir"] / "report.html").read_text(encoding="utf-8")
     assert "scorecard_F" not in html and "lineage_M" not in html and "scorecard_all" in html
+
+
+def test_n_jobs_never_changes_a_number_and_auto_resolves_to_an_integer(tmp_path):
+    """EN: v1.2 — `n_jobs: auto` (cores − 1) is the default; contract §3.2: identical tables for any n_jobs."""
+    from bioms_zaku.config import resolve
+    from bioms_zaku.run import run
+    c1 = _cfg(tmp_path, "j1"); c1["n_jobs"] = 1
+    c2 = _cfg(tmp_path, "j2"); c2["n_jobs"] = 2
+    m1 = run(c1, printer=lambda s: None)["manifest"]; m2 = run(c2, printer=lambda s: None)["manifest"]
+    assert m1["outputs_sha256"] == m2["outputs_sha256"] and m1["n_jobs"] == 1 and m2["n_jobs"] == 2
+    r = resolve(_cfg(tmp_path, "auto")); assert isinstance(r["n_jobs"], int) and r["n_jobs"] >= 1

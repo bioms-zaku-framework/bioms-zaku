@@ -55,6 +55,12 @@ def check(config: str | Path | dict, *, printer: Callable[[str], None] = print) 
             rep["info"].append(t("c.classif", name=name, vc=vc))
             if min(vc.values()) < d["min_per_class"]:
                 rep["errors"].append(t("c.class_small", name=name, n=min(vc.values()), m=d["min_per_class"]))
+            from .audit import EPV_MIN, events_per_variable
+            p_max = 1 + len(ds.covariates or []) if ds.covariates else 2
+            p_max = max(p_max, 2)
+            ev, epv = events_per_variable(s.dropna().to_numpy(float), p_max)
+            if epv < EPV_MIN:
+                rep["warnings"].append(t("c.epv_low", name=name, ev=ev, p=p_max, epv=f"{epv:.1f}"))
             # EN: v1.2 (found 2026-09-16: sex as control AND as stratum passed check) — inside every stratum the label must
             #     vary and each class must reach min_per_class, otherwise the audit there is impossible.
             if ds.strata:

@@ -42,7 +42,7 @@ DEFAULTS: dict[str, Any] = {
     "seeds": {"cv": 42, "bootstrap": 42},
     "preset": "full",
     "threads": 1,
-    "n_jobs": 1,
+    "n_jobs": "auto",   # EN: v1.2 — "auto" = all cores but one (resolved here); any int accepted; never changes a number (§3.2)
     "output": {"dir": "./zaku_out", "figures": True, "supplementary_figures": False, "format": "csv"},
     # EN: figure customisation (all optional). language: en | es | pt (axis labels, legends, captions).
     # ES/PT: personalização das figuras (tudo opcional).
@@ -77,6 +77,11 @@ def resolve(cfg: dict | str | Path) -> dict:
     r = _merge(r, PRESETS[r["preset"]])
     if not r["data"]["columns"]:
         raise ValueError("data.columns is required")
+    if r["n_jobs"] == "auto":
+        import os
+        r["n_jobs"] = max(1, (os.cpu_count() or 2) - 1)
+    if not isinstance(r["n_jobs"], int) or r["n_jobs"] < 1:
+        raise ValueError("n_jobs must be 'auto' or an integer >= 1")
     from .i18n import LANGS
     if r["language"] not in LANGS:
         raise ValueError(f"language must be one of {LANGS}")

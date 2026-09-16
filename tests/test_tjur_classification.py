@@ -109,3 +109,32 @@ def test_geometry_skips_pairs_whose_control_is_a_label_and_a_constant_target_nev
     vecs = {"H2R": np.array([-1.0, 0.0, 2.0, 0.0])}; vals = {"H2R": (fr.H ** 2 / fr.R).to_numpy()}
     imp, geo = A.geometry_tables(vecs, vals, fr, ["R", "Xc", "H", "W"], {"fat": fat}, {}, {"fat": "label"}, "all")
     assert geo.empty                                                        # the pair with a label control is skipped, no crash
+
+
+def test_events_per_variable_is_computed_per_model_flagged_below_ten_and_never_a_barrier(tmp_path):
+    """EN: Peduzzi 1996 applied to a bootstrap training draw (0.632 × smaller class ÷ predictors); reported, not enforced."""
+    from bioms_zaku.audit import EPV_MIN, events_per_variable
+    y = np.r_[np.ones(40), np.zeros(360)]
+    ev, epv = events_per_variable(y, 2); assert ev == 40 and abs(epv - 0.632 * 40 / 2) < 1e-9 and epv > EPV_MIN
+    ev2, epv2 = events_per_variable(np.r_[np.ones(20), np.zeros(200)], 3); assert ev2 == 20 and epv2 < EPV_MIN
+    rng = np.random.default_rng(7); n = 260
+    z = rng.normal(0, 1, n); x = z + rng.normal(0, 0.5, n)
+    y = (z > np.quantile(z, 1 - 24 / n)).astype(int); ctrl = rng.integers(0, 2, n)        # 24 events: EPV ≈ 7.6 < 10
+    r = audit_method("x", "all", x, {"y": y}, {"ctrl": ctrl}, {"y": "ctrl"}, QUICK)[0]
+    assert r.events_min_class == 24 and r.epv_low and abs(r.epv_train - 0.632 * 24 / 2) < 1e-9 and r.verdict != "INCONCLUSIVE"
+    u = utility_method("x", "all", x, np.column_stack([rng.normal(0, 1, n), rng.normal(0, 1, n)]), ["a", "b"], {"y": y}, QUICK)[0]
+    assert u.events_min_class == 24 and abs(u.epv_train - 0.632 * 24 / 3) < 1e-9 and u.epv_low
+    # check: a warning (not an error) names Peduzzi's rule
+    import pandas as pd, yaml
+    from pathlib import Path
+    from bioms_zaku.check import check
+    ROOT = Path(__file__).resolve().parents[1]
+    df = pd.DataFrame(dict(id=np.arange(n), H=rng.normal(170, 8, n), W=rng.normal(75, 12, n), R=rng.normal(500, 60, n), Xc=rng.normal(55, 8, n), label=y, fat=rng.normal(20, 5, n).clip(5)))
+    p = tmp_path / "d.csv"; df.to_csv(p, index=False)
+    cfg = yaml.safe_load((ROOT / "examples/minimal.yaml").read_text(encoding="utf-8"))
+    cfg["data"]["path"] = str(p); cfg["data"]["sep"] = ","; cfg["data"]["decimal"] = "."; cfg["output"]["dir"] = str(tmp_path); cfg["run_name"] = "epv"
+    cfg["data"]["columns"] = {"variables": {"R": "R", "Xc": "Xc", "H": "H", "W": "W"}, "units": {"H": "cm", "W": "kg"}, "targets": {"label": "label"}, "controls": {"fat": "fat"}, "covariates": ["W", "H"], "id": "id"}
+    cfg["strata"] = None
+    cp = tmp_path / "c.yaml"; cp.write_text(yaml.safe_dump(cfg), encoding="utf-8")
+    rep = check(str(cp), printer=lambda s: None)
+    assert not rep["errors"] and any("Peduzzi" in w for w in rep["warnings"]), rep

@@ -80,6 +80,10 @@ masses, the regression audit on real data. Provenance, exclusions, seed and SHA-
 generator: `tools/make_nhanes_example.py`. Column names are the ones the guided flow recognises (`bioms-zaku start
 examples/nhanes_diabetes_400.csv`). This is the only example with real rows; the others are synthetic.
 
+**How many people do I need?** 30 per stratum for a continuous target; 20 in the smaller class for classification (between 20
+and ~32 the report flags *events per variable < 10* and the verdict is exploratory); about 185 per stratum to ask for designed
+indices; one row per person (aggregate repeated measurements first — repeated ids are refused in this version).
+
 The file also carries `lean_kg`, `alm_kg`, `fat_kg` (index × height², derived, no new draw) so that absolute masses can be
 used as targets: `bioms-zaku run examples/example_kg.yaml`. See *Geometry* below before choosing.
 

@@ -98,3 +98,37 @@ W +0.42`) e digite-o no `propose` como `R**(-0.49) * Xc**(0.11) * H**(1.27) * W*
   cosseno entre alvo e controle foi −0,98. Salto e sprint são a mesma direção no espaço da BIA. Lição: o controle negativo precisa
   ser um construto **diferente** do alvo; outra medida de desempenho não serve. O ângulo de fase foi o que mais acrescentou sobre
   massa e estatura (+0,38), com intervalo largo.
+
+## Quantas pessoas eu preciso?
+
+O Zaku descreve a sua amostra e avisa quando a régua fica curta; não estima população. Os mínimos são operacionais, e o relatório
+diz, em cada caso, o que foi possível calcular.
+
+| o que você quer | mínimo | por quê |
+|---|---|---|
+| rodada padrão, alvo contínuo (ex.: massa magra do DXA) | 30 pessoas por estrato | um ridge com um preditor e reamostras com ≥ 20 pessoas fora da bolsa |
+| classificação (ex.: diabetes sim/não) | 20 pessoas na classe menor, por estrato | abaixo disso o bootstrap não tem reamostra válida; entre 20 e ~32 o relatório marca *eventos por variável < 10* e o veredito é exploratório |
+| sugestões de índices (desenho) | ≈ 185 pessoas por estrato | 70 % vão para o desenho; os 30 % restantes precisam manter ≥ 20 fora da bolsa |
+| estratos (ex.: por sexo) | cada estrato cumpre os mínimos acima | senão o Zaku audita sem estrato ou avisa |
+| medidas repetidas da mesma pessoa (pré/pós) | **uma linha por pessoa** | agregue antes (média, ou uma visita); o Zaku recusa `id` repetido nesta versão |
+
+Com poucos dados, prefira: sem estrato, sem sugestões, alvo contínuo. Os vereditos saem com intervalos largos, e o relatório
+diz isso; é informação, não defeito.
+
+## Classificação com poucos casos e um segundo classificador
+
+O estimador principal da classificação é a regressão logística com penalidade L2: é o mais estável quando há poucos eventos.
+O relatório calcula, para cada modelo, os **eventos por variável** de uma reamostra de treino (`epv_train`) e marca abaixo
+de 10 (Peduzzi 1996): leia esses vereditos como exploratórios. O mínimo por classe continua 20; o Zaku descreve a sua amostra
+e avisa quando a régua fica curta, em vez de recusar.
+
+Se quiser ver se o veredito resiste a um classificador de máquina (boosting), declare-o como **sensibilidade**: roda nas mesmas
+reamostras, sai ao lado do principal e nunca é escolhido pelo resultado:
+
+```yaml
+audit:
+  sensitivity: {estimator: hgb, params: {max_depth: 3, learning_rate: 0.05, max_iter: 300}}
+```
+
+`xgboost` também é aceito se estiver instalado. Boosting precisa de mais dados que a logística, não de menos: com poucas
+dezenas de eventos, espere ganhos instáveis, e é exatamente isso que a comparação lado a lado mostra.

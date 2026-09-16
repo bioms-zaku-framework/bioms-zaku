@@ -1,6 +1,24 @@
 # Changelog
 
 ## 0.1.0.dev0 — 2026-09-10 (unreleased)
+- One row per person (2026-09-16, user decision): repeated ids are refused at input with the instruction to aggregate; the input
+  layer used to promise a "cluster mode" that the bootstrap never implemented. Cluster bootstrap (Field & Welsh 2007) recorded as
+  future work in the contract. Contract also states that D under the L2 penalty is compared between models under the same
+  shrinkage. Guide and README: "how many people do I need?" in plain words.
+- Classification citations 8/8 — Brodersen 2010 read and judged dispensable (2026-09-16): the contract's promise of a balanced
+  accuracy for multiclass (never implemented; dead import) is removed — cut-off metrics are not used. Classification review closed.
+- Classification citations 7/8 — Kohavi 1995 (2026-09-16): stratified cross-validation named and justified (5 × 50 vs 10 folds explained). Record; thresholds row; contract.
+- Classification citations 6/8 — Le Cessie & van Houwelingen 1992 (2026-09-16): the L2 logistic estimator named and justified in the
+  classification sentence (finite, stable coefficients with few events; fixed penalty; no cut-off metrics). Record; contract.
+- Classification citations 5/8 — Peduzzi 1996 (2026-09-16): events per variable of a bootstrap training draw computed per
+  model (`events_min_class`, `epv_train`, `epv_low`), warned by `check` and flagged in the report below 10; the minimum per
+  class stays 20 — the tool describes small samples and says when the ruler is short instead of refusing (user decision).
+  Guide: a second classifier (boosting) as declared sensitivity, never the primary. Rice & Harris 2005 read and judged
+  dispensable (no decision depends on it).
+- Two approved adjustments (2026-09-16): the key-number card "target and control coupled" says *undetermined (poor projection)*
+  when the flag was suppressed by a projection R² below the threshold, instead of "no" (found on the track-and-field report,
+  cos −0.98 with R² 0.48); `n_jobs: auto` (all cores but one) is the default, resolved in `config.resolve`, with a
+  byte-equality test between 1 and 2 workers (contract §3.2: `n_jobs` never changes a number).
 - Classification gains in Tjur's D (2026-09-16, articles 2–3 of the classification review: Pencina 2008, Tjur 2009): S1, S2 and
   the added value are differences of the coefficient of discrimination (mean p̂ cases − mean p̂ non-cases), a fraction of
   variation explained that shares the 0.03 margin by declared analogy; ΔAUROC is no longer a gain (insensitive, Pencina);

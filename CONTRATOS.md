@@ -226,7 +226,7 @@ geometry:                        # v0.6 — diagnóstico alvo↔controle no espa
 seeds: {cv: 42, bootstrap: 42}
 preset: full                     # quick (cv 5x5, B 200) | full
 threads: 1
-n_jobs: 1
+n_jobs: auto                   # auto = núcleos − 1 (v1.2); qualquer inteiro ≥ 1; nunca altera um número
 output: {dir: ./zaku_out, figures: true}
 ```
 
@@ -272,16 +272,30 @@ output: {dir: ./zaku_out, figures: true}
   média nos não casos (Tjur 2009; a grandeza que o IDI de Pencina 2008 compara), assintoticamente fração de variação explicada,
   por isso os ganhos ΔD compartilham a margem 0,03 do R² por analogia declarada; multiclasse: D macro um-contra-todos (extensão
   desta ferramenta, declarada). ΔAUROC NÃO é ganho (insensível mesmo a marcadores fortes, Pencina 2008); a AUROC (Hanley & McNeil
-  1982) é reportada como descritiva (`auroc_cv_target_full`, `auroc_cv_control_full`, `auroc_cv_with`). **Tipos mistos**: alvo de
+  1982) é reportada como descritiva (`auroc_cv_target_full`, `auroc_cv_control_full`, `auroc_cv_with`); no multiclasse, AUROC macro
+  um-contra-todos é a única descritiva (a acurácia balanceada, antes prometida e nunca implementada, foi retirada em 16/09/2026:
+  depende de um corte de probabilidade, como F1; Brodersen 2010 lido e julgado dispensável). **Tipos mistos**: alvo de
   classe com controle contínuo (e vice-versa) é permitido — tarefa e estimador por coluna (logística L2 para classe, ridge para
   contínuo) nas mesmas reamostras; S1 em ΔD e S2 em ΔR², mesma margem; `control_task` e `metric_control` na `audit.csv`.
-  Estimador declarado com parâmetros ou `modulo:Classe` vale para todas as colunas. OOB com uma só classe → reamostra descartada
+  Estimador declarado com parâmetros ou `modulo:Classe` vale para todas as colunas.
+  Com penalidade L2 as probabilidades previstas encolhem para a taxa-base e o D sai menor do que sem penalidade; como os ganhos
+  são diferenças pareadas sob o mesmo encolhimento, a comparação entre modelos é justa (declarado; Tjur 2009, Le Cessie 1992). OOB com uma só classe → reamostra descartada
   (`B_dropped`). `check` recusa rótulo constante ou com classe < `min_per_class` dentro de um estrato (um rótulo usado como
   controle não pode ser também o estrato).
+- **Eventos por variável (Peduzzi 1996), declarados e nunca barreira** (decisão de 16/09/2026): para cada modelo de classificação,
+  `events_min_class` (classe menor nas linhas completas) e `epv_train` = 0,632 × classe menor ÷ preditores (2 na auditoria,
+  covariáveis + 1 na utilidade; 0,632 = fração distinta de uma reamostra bootstrap, Efron 1983); `epv_low` abaixo de 10.
+  `check` avisa; o relatório marca; o veredito sai. O mínimo por classe fica em 20 (operacional). Um segundo classificador
+  (hgb/xgboost) entra só como `sensitivity`, ao lado, nunca escolhido — boosting precisa de mais dados que a logística.
 - **Reamostras compartilhadas por estrato**: `default_rng(seeds.bootstrap)`, `integers(0, n, n)` até
   B reamostras com OOB ≥ `min_oob`; usadas por todos os métodos, alvos, controles, configurações e
   estimadores. CV `RepeatedKFold`/`RepeatedStratifiedKFold(random_state=seeds.cv)`; com `id`, por grupos.
   `n_jobs` não altera nenhum número.
+- **Uma linha por pessoa (v1.2, decisão de 16/09/2026).** `id` repetido é recusado na entrada com a instrução de agregar antes
+  (média por pessoa ou uma visita). Razão: as reamostras bootstrap sorteiam linhas como pessoas independentes; medidas repetidas
+  dariam intervalos estreitos demais e vereditos otimistas. **Trabalho futuro, a repensar**: bootstrap por conglomerado (sortear
+  pessoas e levar todas as suas linhas; fora da bolsa = pessoas não sorteadas), referência Field & Welsh 2007, JRSS B 69(3):369–390,
+  10.1111/j.1467-9868.2007.00593.x — abriria o caso pré/pós, comum em BIA.
 - **O que o bootstrap fora da bolsa é, e o que não é**: as reamostras também são dependentes entre si; o intervalo percentil
   não é um estimador não viesado da variância. É um procedimento sem hipótese distribucional que reamostra o pipeline inteiro
   por pessoa (Efron 1979). Pontuar cada reamostra nas pessoas não sorteadas é o estimador ε₀ de Efron 1983 (JASA 78:316–331):
@@ -398,7 +412,7 @@ sustentação. Os ajustes de pressuposto desta versão (PLANO_v1.1_pressupostos.
 | cos paralelo / acoplado / R² projeção | 0,90 / 0,80 / 0,50 | decisão do framework | bandeiras descritivas; cossenos e R² publicados por inteiro |
 | tolerância da transferência de Σ | 0,05 | decisão do framework | tolerância fixa em r, justa com n |
 | B do bootstrap | 2 000 | convenção | percentis estáveis (Efron 1979) |
-| validação cruzada | 5 × 50 | convenção | CV repetida para a estimativa pontual (Stone 1974); dispersão entre dobras nunca usada para inferência, sem estimador não viesado da variância (Bengio & Grandvalet 2004); intervalos do bootstrap de pessoas (Efron 1979) |
+| validação cruzada | 5 × 50 | convenção | CV repetida para a estimativa pontual (Stone 1974), estratificada por classe na classificação (Kohavi 1995); dispersão entre dobras nunca usada para inferência, sem estimador não viesado da variância (Bengio & Grandvalet 2004); intervalos do bootstrap de pessoas (Efron 1979) |
 | partição de desenho | 70/30 | convenção | opções declaradas 60 e 75 |
 | n mínimo / fora da bolsa / reamostras válidas | 30 / 20 / máx(20, 10 % de B) | decisão do framework | mínimos operacionais (ridge com um preditor; reamostra pontuável; intervalo não degenerado) |
 
@@ -477,7 +491,7 @@ excluídas) · 3 `precedence_tree` · 4 `specificity_quadrant` (escore controle 
   estatísticos e algébricos, lista fixa etiquetada com o bloco a que dá suporte — Kronmal 1993 (índices que compartilham componentes se correlacionam por construção; só no bloco de redundância) e Atchley 1976 (a correlação induzida cresce com a variabilidade da variável compartilhada, a diagonal de Σ; dividir por tamanho não remove o tamanho, razão de a utilidade ser medida sobre as covariáveis; blocos de redundância e utilidade),
   Nevill & Holder 1995 (o ajuste log-linear dos expoentes é o modelo alométrico que fornece o padrão por razão apropriado ao alvo; blocos de desenho e redundância), Heymsfield 2007 (massa magra e gordura escalam com a altura com potências ≈ 2, logo alvos massa/altura² são independentes da estatura; a potência é derivada na população, princípio de Benn; blocos de desenho e utilidade), Spearman 1904 (correlação de postos: invariante a transformações monótonas, insensível a extremos; atenuação por erro de medida como sustentação do 0,95), Lipsitch 2010 (desfecho de controle negativo: compartilha com o alvo as fontes de associação espúria e é analisado pelo mesmo procedimento; por analogia — a forma condicional e recíproca S1/S2 e a regra quantitativa são extensão desta ferramenta), Hoerl &
   Kennard 1970 (ridge sobre preditores padronizados, forma de correlação; α = 1 fixo e igual para todos os índices, não ajustado por desenho — os autores afirmam não haver escolha automática de k; age só quando índice e controle são quase colineares), Stone 1974 (avaliação cruzada, aqui em K partes, de uma prescrição fixa: nada é escolhido pelos dados na auditoria, logo sem validação aninhada; a escolha dos expoentes desenhados é feita em partição nunca usada na avaliação), Bengio & Grandvalet 2004 (erros das K partes são dependentes; sem estimador não viesado da variância; por que a dispersão entre dobras nunca entra na inferência),
-  Efron 1979 (princípio do bootstrap: reamostrar pessoas da distribuição empírica, Monte Carlo com B réplicas; não estabelece o intervalo percentil nem a pontuação fora da bolsa — resumos por percentis são descritivos), Efron 1983 (ε₀: pontuação nas pessoas não sorteadas, fora da bolsa; só em diferenças pareadas, sem .632), Tjur 2009 (coeficiente de discriminação D; ganhos de classificação em ΔD; blocos de especificidade e utilidade), Pencina 2008 (ΔAUROC insensível; IDI = ΔD; bootstrap para testar; mesmos blocos), Hanley & McNeil 1982 (AUROC = probabilidade de um caso sorteado superar um não caso sorteado = Wilcoxon, sem hipótese distribucional; erro padrão depende das duas classes; comparação pareada nas mesmas pessoas; frase só em classificação; blocos de especificidade e utilidade), Cover 1974 (o melhor par não é o par dos dois melhores, mesmo sem redundância: classes da triagem são por índice, combinações nunca inferidas delas, pares julgados só quando auditados como pares); (c) software executado (NumPy, SciPy, pandas, scikit-learn, Matplotlib).
+  Efron 1979 (princípio do bootstrap: reamostrar pessoas da distribuição empírica, Monte Carlo com B réplicas; não estabelece o intervalo percentil nem a pontuação fora da bolsa — resumos por percentis são descritivos), Efron 1983 (ε₀: pontuação nas pessoas não sorteadas, fora da bolsa; só em diferenças pareadas, sem .632), Kohavi 1995 (validação cruzada estratificada por classe: menos viés e variância; 10 dobras é para seleção de modelo, que não há; mesmos blocos), Le Cessie & van Houwelingen 1992 (logística com penalidade L2: coeficientes finitos e estáveis com poucos eventos ou preditores correlacionados; intercepto livre; penalidade fixa; escolha por erro de classificação é instável — sem métricas de corte; blocos de especificidade e utilidade), Peduzzi 1996 (abaixo de 10 eventos por variável a logística é viesada e instável; EPV calculado por modelo e marcado, nunca barreira; blocos de especificidade e utilidade), Tjur 2009 (coeficiente de discriminação D; ganhos de classificação em ΔD; blocos de especificidade e utilidade), Pencina 2008 (ΔAUROC insensível; IDI = ΔD; bootstrap para testar; mesmos blocos), Hanley & McNeil 1982 (AUROC = probabilidade de um caso sorteado superar um não caso sorteado = Wilcoxon, sem hipótese distribucional; erro padrão depende das duas classes; comparação pareada nas mesmas pessoas; frase só em classificação; blocos de especificidade e utilidade), Cover 1974 (o melhor par não é o par dos dois melhores, mesmo sem redundância: classes da triagem são por índice, combinações nunca inferidas delas, pares julgados só quando auditados como pares); (c) software executado (NumPy, SciPy, pandas, scikit-learn, Matplotlib).
   Regra: **nenhum DOI entra sem resolver no Crossref**; os registros (`references.py`) foram gerados dos metadados do Crossref em
   15/09/2026, não digitados; entradas listadas como publicadas, sem tradução. Na verificação, dois candidatos foram recusados: o DOI
   10.1097/ede.0b013e3181e4bfd7 (é a errata de Lipsitch 2010; o artigo é 10.1097/ede.0b013e3181d61eeb) e 10.1111/sms.12780 (artigo de

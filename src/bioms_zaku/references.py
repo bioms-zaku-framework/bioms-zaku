@@ -27,6 +27,8 @@ RECORDS: dict[str, dict] = {
     '10.1214/aos/1176344552': {"authors": "Efron B", "year": 1979, "title": "Bootstrap Methods: Another Look at the Jackknife", "journal": "The Annals of Statistics", "volume": "7", "issue": "1", "pages": "1-26"},
     '10.1002/sim.2929': {"authors": "Pencina MJ, D'Agostino RB Sr, D'Agostino RB Jr, Vasan RS", "year": 2008, "title": "Evaluating the added predictive ability of a new marker: from area under the ROC curve to reclassification and beyond", "journal": "Statistics in Medicine", "volume": "27", "issue": "2", "pages": "157-172"},
     '10.1198/tast.2009.08210': {"authors": "Tjur T", "year": 2009, "title": "Coefficients of Determination in Logistic Regression Models—A New Proposal: The Coefficient of Discrimination", "journal": "The American Statistician", "volume": "63", "issue": "4", "pages": "366-372"},
+    '10.1016/S0895-4356(96)00236-3': {"authors": "Peduzzi P, Concato J, Kemper E, Holford TR, Feinstein AR", "year": 1996, "title": "A simulation study of the number of events per variable in logistic regression analysis", "journal": "Journal of Clinical Epidemiology", "volume": "49", "issue": "12", "pages": "1373-1379"},
+    '10.2307/2347628': {"authors": "Le Cessie S, Van Houwelingen JC", "year": 1992, "title": "Ridge Estimators in Logistic Regression", "journal": "Applied Statistics", "volume": "41", "issue": "1", "pages": "191-201"},
     '10.1148/radiology.143.1.7063747': {"authors": "Hanley JA, McNeil BJ", "year": 1982, "title": "The Meaning and Use of the Area under a Receiver Operating Characteristic (ROC) Curve", "journal": "Radiology", "volume": "143", "issue": "1", "pages": "29-36"},
     '10.1080/01621459.1983.10477973': {"authors": "Efron B", "year": 1983, "title": "Estimating the Error Rate of a Prediction Rule: Improvement on Cross-Validation", "journal": "Journal of the American Statistical Association", "volume": "78", "issue": "382", "pages": "316-331"},
     '10.1109/tsmc.1974.5408535': {"authors": "Cover TM", "year": 1974, "title": "The Best Two Independent Measurements Are Not the Two Best", "journal": "IEEE Transactions on Systems, Man, and Cybernetics", "volume": "SMC-4", "issue": "1", "pages": "116-117"},
@@ -67,6 +69,8 @@ RECORDS: dict[str, dict] = {
 RECORDS_NO_DOI: dict[str, dict] = {
     "bengio2004": {"authors": "Bengio Y, Grandvalet Y", "year": 2004, "title": "No unbiased estimator of the variance of K-fold cross-validation",
                    "journal": "Journal of Machine Learning Research", "volume": "5", "pages": "1089-1105", "url": "https://www.jmlr.org/papers/v5/grandvalet04a.html"},
+    "kohavi1995": {"authors": "Kohavi R", "year": 1995, "title": "A study of cross-validation and bootstrap for accuracy estimation and model selection",
+                   "journal": "Proceedings of the 14th International Joint Conference on Artificial Intelligence (IJCAI)", "volume": "2", "pages": "1137-1143", "url": "https://www.ijcai.org/Proceedings/95-2/Papers/016.pdf"},
     "pedregosa2011": {"authors": "Pedregosa F, Varoquaux G, Gramfort A, et al.", "year": 2011, "title": "Scikit-learn: Machine Learning in Python",
                       "journal": "Journal of Machine Learning Research", "volume": "12", "pages": "2825-2830", "url": "https://jmlr.org/papers/v12/pedregosa11a.html"},
 }
@@ -92,6 +96,9 @@ METHOD_REFS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("10.1080/01621459.1983.10477973", ("m.spec", "m.util")),  # Efron 1983 — ε₀: score each resample on the persons it did not draw (out-of-bag, ≈36.8 % per resample); pessimistic for an absolute score (hence .632), used here only in paired differences of nested models where the pessimism cancels; .632 not applied
     ("10.1198/tast.2009.08210", ("m.spec", "m.util")),     # Tjur 2009 — coefficient of discrimination D = mean p̂ cases − mean p̂ non-cases; exact relations to the quadratic R² analogues (classification gains are ΔD)
     ("10.1002/sim.2929", ("m.spec", "m.util")),            # Pencina 2008 — ΔAUROC is insensitive even to strong markers; the IDI compares D between models; bootstrap for testing
+    ("10.1016/S0895-4356(96)00236-3", ("m.spec", "m.util")),  # Peduzzi 1996 — below 10 events per variable logistic coefficients are biased/unstable; EPV computed per model and flagged, never a barrier
+    ("10.2307/2347628", ("m.spec", "m.util")),              # Le Cessie & van Houwelingen 1992 — L2-penalised logistic: finite, stable coefficients with few events or correlated predictors; intercept unpenalised; penalty chosen by classification error is unstable (why no cut-off metrics)
+    ("kohavi1995", ("m.spec", "m.util")),                   # Kohavi 1995 — stratified cross-validation: less bias and variance than unstratified; 10 folds recommended for model selection (none here)
     ("10.1148/radiology.143.1.7063747", ("m.spec", "m.util")),  # Hanley & McNeil 1982 — AUROC = P(random case scores above random non-case) = Wilcoxon, distribution-free; SE depends on both class sizes; paired comparison on the same subjects (classification)
     ("10.1109/tsmc.1974.5408535", ("m.screen",)),            # Cover 1974 — the best pair is not the pair of the two best, even without redundancy: screening classes are per index, combinations are never inferred from them, pairs are judged only when audited as pairs
 )

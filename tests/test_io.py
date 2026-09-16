@@ -101,3 +101,11 @@ def test_bad_encoding_is_an_error(tmp_path):
     p.write_bytes(p.read_bytes().replace(b"seqn", b"seq\xe7"))
     with pytest.raises(InputError, match="decode"):
         read_table(p, MAP)
+
+
+def test_repeated_ids_are_refused_with_the_instruction_to_aggregate():
+    """EN: v1.2 — the bootstrap resamples rows as independent persons; repeated measurements must be aggregated first."""
+    df = pd.concat([_frame(), _frame()], ignore_index=True)
+    m = dict(MAP); m["id"] = "seqn"
+    with pytest.raises(InputError, match="ONE row per person"):
+        read_table(df, m, min_n=1, min_per_class=1)
