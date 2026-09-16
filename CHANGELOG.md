@@ -1,6 +1,20 @@
 # Changelog
 
 ## 0.1.0.dev0 — 2026-09-10 (unreleased)
+- Citation audit (2026-09-16): every statistical and algebraic reference was read in the original (PDFs in
+  `catalogo/fontes_primarias_indices/`; Efron 1979 by OCR) and each is now cited only for what it supports, with a sentence in
+  the method text of the block it supports, in four languages, and the same wording in the contract. Kronmal 1993 and Atchley
+  1976 leave the geometry block; Atchley also supports utility (dividing by size does not remove size); Nevill & Holder 1995
+  and Heymsfield 2007 support the design block (log-linear fit of the exponents; powers derived in the sample, Benn principle);
+  Spearman 1904 states why ranks and adds attenuation to the 0.95 anchor; the anchor now quotes the observed within-session
+  ICC(2,1) 0.986–1.00 at 50 kHz (Lafontant 2026) and the two-model, three-posture, two-lead agreement with a level offset up
+  to 1° (Yang 2023), so 0.95 is a floor below repeatability; Lipsitch 2010 declared by analogy (the conditional two-way form is
+  this tool's extension) and its U-comparability criterion added to the control help; Hoerl & Kennard 1970 (standardized
+  predictors, fixed α = 1 by design), Stone 1974 (fixed prescription, no nested validation), Bengio & Grandvalet 2004 (fold
+  dispersion never used for inference; tag removed from sensitivity), Efron 1979 (principle only; pages 1–26) and the new
+  Efron 1983 (out-of-bag ε₀; paired differences, .632 not applied); Cohen 1988 Case 1 with A = control and B = index, record
+  year 1988; Cover 1974 as the reason screening classes are per index. Page ranges completed for JSTOR records; author
+  spelling of Yang 2023 fixed. Software references verified unchanged.
 - Declared assumptions and anchored thresholds (2026-09-16, contract §3.6, PLANO_v1.1_pressupostos.md): person-bootstrap
   interval for the observed Pearson of logs (Fisher removed; coverage tested); the audit runs on the logarithmic scale by default
   with the raw scale reported as sensitivity (`audit.scale`, `sensitivity_scale.csv`); the family-level interval 1 − 0.05/k on the

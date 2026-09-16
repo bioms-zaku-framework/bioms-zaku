@@ -16,15 +16,16 @@ VERIFIED_ON = "2026-09-16"
 # EN: DOI -> record, straight from Crossref (see the module docstring). `pages` may be a first page or an article number.
 RECORDS: dict[str, dict] = {
     '10.2478/joeb-2026-0010': {"authors": "Lafontant K, Fukuda DH, Smith S, et al.", "year": 2026, "title": "Examining within-session test-retest reliability of four bioimpedance devices among adults across a wide age range", "journal": "Journal of Electrical Bioimpedance", "volume": "17", "issue": "1", "pages": "67-77"},
-    '10.3390/life13051119': {"authors": "Yang J, Kim J, Chun Bc, Lee Jm", "year": 2023, "title": "Cook with Different Pots, but Similar Taste? Comparison of Phase Angle Using Bioelectrical Impedance Analysis According to Device Type and Examination Posture", "journal": "Life", "volume": "13", "issue": "5", "pages": "1119"},
-    '10.4324/9780203771587': {"authors": "Cohen J", "year": 2013, "title": "Statistical Power Analysis for the Behavioral Sciences", "journal": "Routledge (reissue of the 1988 2nd edition)", "volume": "", "issue": "", "pages": ""},
-    '10.2307/2983064': {"authors": "Kronmal RA", "year": 1993, "title": "Spurious Correlation and the Fallacy of the Ratio Standard Revisited", "journal": "Journal of the Royal Statistical Society. Series A (Statistics in Society)", "volume": "156", "issue": "3", "pages": "379"},
-    '10.2307/2412740': {"authors": "Atchley WR, Gaskins CT, Anderson D", "year": 1976, "title": "Statistical Properties of Ratios. I. Empirical Results", "journal": "Systematic Zoology", "volume": "25", "issue": "2", "pages": "137"},
-    '10.2307/1412159': {"authors": "Spearman C", "year": 1904, "title": "The Proof and Measurement of Association between Two Things", "journal": "The American Journal of Psychology", "volume": "15", "issue": "1", "pages": "72"},
+    '10.3390/life13051119': {"authors": "Yang J, Kim J, Chun BC, Lee JM", "year": 2023, "title": "Cook with Different Pots, but Similar Taste? Comparison of Phase Angle Using Bioelectrical Impedance Analysis According to Device Type and Examination Posture", "journal": "Life", "volume": "13", "issue": "5", "pages": "1119"},
+    '10.4324/9780203771587': {"authors": "Cohen J", "year": 1988, "title": "Statistical Power Analysis for the Behavioral Sciences", "journal": "2nd ed. Lawrence Erlbaum (Routledge reissue 2013)", "volume": "", "issue": "", "pages": ""},
+    '10.2307/2983064': {"authors": "Kronmal RA", "year": 1993, "title": "Spurious Correlation and the Fallacy of the Ratio Standard Revisited", "journal": "Journal of the Royal Statistical Society. Series A (Statistics in Society)", "volume": "156", "issue": "3", "pages": "379-392"},
+    '10.2307/2412740': {"authors": "Atchley WR, Gaskins CT, Anderson D", "year": 1976, "title": "Statistical Properties of Ratios. I. Empirical Results", "journal": "Systematic Zoology", "volume": "25", "issue": "2", "pages": "137-148"},
+    '10.2307/1412159': {"authors": "Spearman C", "year": 1904, "title": "The Proof and Measurement of Association between Two Things", "journal": "The American Journal of Psychology", "volume": "15", "issue": "1", "pages": "72-101"},
     '10.1093/ajcn/86.1.82': {"authors": "Heymsfield SB, Gallagher D, Mayer L, Beetsch J, Pietrobelli A", "year": 2007, "title": "Scaling of human body composition to stature: new insights into body mass index", "journal": "The American Journal of Clinical Nutrition", "volume": "86", "issue": "1", "pages": "82-91"},
     '10.1080/00401706.1970.10488634': {"authors": "Hoerl AE, Kennard RW", "year": 1970, "title": "Ridge Regression: Biased Estimation for Nonorthogonal Problems", "journal": "Technometrics", "volume": "12", "issue": "1", "pages": "55-67"},
     '10.1111/j.2517-6161.1974.tb00994.x': {"authors": "Stone M", "year": 1974, "title": "Cross-Validatory Choice and Assessment of Statistical Predictions", "journal": "Journal of the Royal Statistical Society Series B: Statistical Methodology", "volume": "36", "issue": "2", "pages": "111-133"},
-    '10.1214/aos/1176344552': {"authors": "Efron B", "year": 1979, "title": "Bootstrap Methods: Another Look at the Jackknife", "journal": "The Annals of Statistics", "volume": "7", "issue": "1", "pages": ""},
+    '10.1214/aos/1176344552': {"authors": "Efron B", "year": 1979, "title": "Bootstrap Methods: Another Look at the Jackknife", "journal": "The Annals of Statistics", "volume": "7", "issue": "1", "pages": "1-26"},
+    '10.1080/01621459.1983.10477973': {"authors": "Efron B", "year": 1983, "title": "Estimating the Error Rate of a Prediction Rule: Improvement on Cross-Validation", "journal": "Journal of the American Statistical Association", "volume": "78", "issue": "382", "pages": "316-331"},
     '10.1109/tsmc.1974.5408535': {"authors": "Cover TM", "year": 1974, "title": "The Best Two Independent Measurements Are Not the Two Best", "journal": "IEEE Transactions on Systems, Man, and Cybernetics", "volume": "SMC-4", "issue": "1", "pages": "116-117"},
     '10.1038/s41586-020-2649-2': {"authors": "Harris CR, Millman KJ, van der Walt SJ, et al.", "year": 2020, "title": "Array programming with NumPy", "journal": "Nature", "volume": "585", "issue": "7825", "pages": "357-362"},
     '10.1038/s41592-019-0686-2': {"authors": "Virtanen P, Gommers R, Oliphant TE, et al.", "year": 2020, "title": "SciPy 1.0: fundamental algorithms for scientific computing in Python", "journal": "Nature Methods", "volume": "17", "issue": "3", "pages": "261-272"},
@@ -69,23 +70,24 @@ RECORDS_NO_DOI: dict[str, dict] = {
 
 # EN: which statistical/algebraic reference supports which result block (keys of html.BLOCKS). Order = order of citation.
 #     The three records dated 2026-09-16 anchor the declared thresholds (contract §3.6): the redundancy threshold 0.95 on the
-#     within-session repeatability of R, Xc and PhA (ICC > 0.90, CV 0.78 %) and the cross-device agreement of PhA (ICC 0.993);
+#     within-session repeatability of R, Xc and PhA (ICC(2,1) 0.986–1.00 at 50 kHz, four devices; 0.95 lies below it, a conservative floor) and the cross-device agreement of PhA (ICC 0.993);
 #     the verdict margin 0.03 in R² above Cohen's small effect f² = 0.02 (ΔR² = f²·(1 − R²) ≤ 0.02 for any baseline).
 METHOD_REFS: tuple[tuple[str, tuple[str, ...]], ...] = (
-    ("10.2478/joeb-2026-0010", ("m.redund",)),                # Lafontant 2026 — test-retest of R, Xc, PhA (anchor of the 0.95 threshold)
-    ("10.3390/life13051119", ("m.redund",)),                  # Yang 2023 — phase angle across devices/postures (anchor of the 0.95 threshold)
-    ("10.4324/9780203771587", ("m.spec", "m.util")),          # Cohen 1988/2013 — small effect f² = 0.02 (anchor of the 0.03 margin)
-    ("10.2307/2983064", ("m.redund", "m.geo")),              # Kronmal 1993 — ratios and indices: spurious correlation of ratio standards
-    ("10.2307/2412740", ("m.redund", "m.geo")),              # Atchley 1976 — statistical properties of ratios
-    ("10.1152/jappl.1995.79.3.1027", ("m.redund",)),         # Nevill & Holder 1995 — allometric (power-function) scaling
-    ("10.1093/ajcn/86.1.82", ("m.redund",)),                 # Heymsfield 2007 — scaling of body composition to stature
-    ("10.2307/1412159", ("m.redund",)),                      # Spearman 1904 — rank correlation
-    ("10.1097/ede.0b013e3181d61eeb", ("m.spec",)),           # Lipsitch 2010 — negative controls
-    ("10.1080/00401706.1970.10488634", ("m.spec", "m.util")),  # Hoerl & Kennard 1970 — ridge regression
-    ("10.1111/j.2517-6161.1974.tb00994.x", ("m.spec", "m.util")),  # Stone 1974 — cross-validation
-    ("bengio2004", ("m.spec", "m.util", "m.sens")),          # Bengio & Grandvalet 2004 — no unbiased variance of K-fold CV (why intervals come from the bootstrap)
-    ("10.1214/aos/1176344552", ("m.spec", "m.util", "m.transfer")),  # Efron 1979 — bootstrap
-    ("10.1109/tsmc.1974.5408535", ("m.screen",)),            # Cover 1974 — the best two independent measurements are not the two best (combinations)
+    ("10.2478/joeb-2026-0010", ("m.redund",)),                # Lafontant 2026 — within-session test-retest of R, Xc, PhA, ICC 0.986–1.00 at 50 kHz (anchor of the 0.95 threshold: a floor below repeatability; reliability is per make and model)
+    ("10.3390/life13051119", ("m.redund",)),                  # Yang 2023 — PhA across two models of one maker, three postures, two leads: ICC 0.993 with a level offset up to 1° (anchor of the 0.95 threshold; order preserved, level shifts — why ranks, why devices are never pooled)
+    ("10.4324/9780203771587", ("m.spec", "m.util")),          # Cohen 1988 ch. 9 Case 1 — f² = ΔR²/(1 − R²_full), small f² = 0.02 ⇒ ΔR² ≤ 0.02 for any baseline (anchor of the 0.03 margin; population values, our gain is out-of-sample, hence conservative; Cohen: a convention to reject when unsuited → sensitivity grid)
+    ("10.2307/2983064", ("m.redund",)),                      # Kronmal 1993 — indices sharing measured components correlate by construction (spurious correlation of ratio standards); Σ quantifies that part
+    ("10.2307/2412740", ("m.redund", "m.util")),             # Atchley 1976 — induced correlation grows with the variability of the shared variable (Σ diagonal); dividing by a size variable does not remove its effect (why utility is measured over the covariates)
+    ("10.1152/jappl.1995.79.3.1027", ("m.design", "m.redund")),  # Nevill & Holder 1995 — log-linear fit of the exponents = the allometric model that yields the appropriate per-ratio standard (design); indices as power functions (redundancy)
+    ("10.1093/ajcn/86.1.82", ("m.design", "m.util")),        # Heymsfield 2007 — lean and fat components scale to height with powers ≈ 2 (index-form targets are stature-independent: utility); the power of height must be derived in the population under study, Benn principle (design)
+    ("10.2307/1412159", ("m.redund",)),                      # Spearman 1904 — rank correlation (invariant to monotone transforms, insensitive to extremes); attenuation by measurement error bounds the observable agreement (anchor of the 0.95 threshold)
+    ("10.1097/ede.0b013e3181d61eeb", ("m.spec",)),           # Lipsitch 2010 — negative-control outcome: shares the target's sources of spurious association, analysed by the same procedure (by analogy; the conditional two-way form and the quantitative rule are this tool's extension)
+    ("10.1080/00401706.1970.10488634", ("m.spec", "m.util")),  # Hoerl & Kennard 1970 — ridge on standardized predictors (correlation form); fixed α = 1 for every index, not tuned by design (they state no automatic choice of k exists); acts only when index and control are nearly collinear
+    ("10.1111/j.2517-6161.1974.tb00994.x", ("m.spec", "m.util")),  # Stone 1974 — cross-validatory assessment (K-fold form here) of a fixed prescription: nothing is chosen by the data in the audit, so no nested validation is needed; design exponents are chosen on a partition never used in the assessment
+    ("bengio2004", ("m.spec", "m.util")),                    # Bengio & Grandvalet 2004 — K-fold test errors are dependent; no unbiased estimator of their variance; naive estimators underestimate it by the order of the variance itself (why fold dispersion is never used for inference)
+    ("10.1214/aos/1176344552", ("m.spec", "m.util", "m.transfer")),  # Efron 1979 — bootstrap principle: resample persons from the empirical distribution, Monte Carlo with B replicates; does NOT establish the percentile interval (its §8 warns about the pivot step) nor out-of-bag scoring
+    ("10.1080/01621459.1983.10477973", ("m.spec", "m.util")),  # Efron 1983 — ε₀: score each resample on the persons it did not draw (out-of-bag, ≈36.8 % per resample); pessimistic for an absolute score (hence .632), used here only in paired differences of nested models where the pessimism cancels; .632 not applied
+    ("10.1109/tsmc.1974.5408535", ("m.screen",)),            # Cover 1974 — the best pair is not the pair of the two best, even without redundancy: screening classes are per index, combinations are never inferred from them, pairs are judged only when audited as pairs
 )
 
 # EN: software actually executed in a run (versions are in the manifest).

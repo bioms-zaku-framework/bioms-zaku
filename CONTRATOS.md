@@ -163,6 +163,9 @@ conjuntos disjuntos**.
   `confidence = "low"` e o hash da partição de desenho — nunca vai para o catálogo embutido sem curadoria.
 - Variáveis além da BIA (ex.: frequência cardíaca por estágio) entram como `variables` positivas e ampliam Σ;
   o índice desenhado pode combinar BIA e sinais funcionais.
+- Os expoentes são derivados na amostra, nunca assumidos (princípio de Benn; Heymsfield 2007 mostra β ≈ 2 para a altura
+  quando ela é o único preditor). Com W, R e Xc no mesmo ajuste, o expoente de H sai menor que 2 (ex.: 1,05–1,27 no NHANES),
+  porque parte do tamanho é absorvida pelas outras variáveis; não contradiz Heymsfield, é o mesmo modelo com mais preditores.
 
 **Justificativa.** Auditar no mesmo conjunto em que o índice foi ajustado mede ajuste, não validade. A partição é a
 prática padrão de aprendizado de máquina e é o que permite dizer ao preparador físico "este índice prediz VO2máx em
@@ -262,6 +265,12 @@ output: {dir: ./zaku_out, figures: true}
   B reamostras com OOB ≥ `min_oob`; usadas por todos os métodos, alvos, controles, configurações e
   estimadores. CV `RepeatedKFold`/`RepeatedStratifiedKFold(random_state=seeds.cv)`; com `id`, por grupos.
   `n_jobs` não altera nenhum número.
+- **O que o bootstrap fora da bolsa é, e o que não é**: as reamostras também são dependentes entre si; o intervalo percentil
+  não é um estimador não viesado da variância. É um procedimento sem hipótese distribucional que reamostra o pipeline inteiro
+  por pessoa (Efron 1979). Pontuar cada reamostra nas pessoas não sorteadas é o estimador ε₀ de Efron 1983 (JASA 78:316–331):
+  pessimista para um escore absoluto (daí o .632 dele), aqui usado só em diferenças pareadas de modelos aninhados nas mesmas
+  linhas, onde o pessimismo cancela; a correção .632 não se aplica. A dispersão entre dobras da validação cruzada nunca entra na inferência, porque não existe estimador
+  não viesado da sua variância (Bengio & Grandvalet 2004).
 - `threads: 1` fixa OMP/OpenBLAS/MKL antes de importar numpy.
 - Vereditos são **descritivos**: P do bootstrap não é valor-p; `multiplicity: bh` é sensibilidade.
 
@@ -364,15 +373,15 @@ sustentação. Os ajustes de pressuposto desta versão (PLANO_v1.1_pressupostos.
 
 | limiar | valor | origem | sustentação |
 |---|---|---|---|
-| redundância, \|Spearman\| ≥ | 0,95 | ancorado na literatura | dois índices que ordenam a ≥ 0,95 diferem tanto quanto a BIA se repete: ICC intra-sessão > 0,90 para R, Xc e PhA (Lafontant 2026, 10.2478/joeb-2026-0010) e PhA entre aparelhos ICC 0,993 (Yang 2023, 10.3390/life13051119) — âncora por analogia, declarada como tal; sensibilidade fixa |
-| margem do veredito, ganho em R² | 0,03 | ancorado na literatura | acima do efeito pequeno de Cohen f² = 0,02: ΔR² = f²·(1 − R²) ≤ 0,02 para qualquer base (Cohen 1988, 10.4324/9780203771587) |
+| redundância, \|Spearman\| ≥ | 0,95 | ancorado na literatura | o 0,95 fica abaixo da repetibilidade intra-sessão das variáveis brutas: ICC(2,1) a 50 kHz de 0,986 a 1,00 para R, Xc e PhA em quatro aparelhos, dez segundos de intervalo (Lafontant 2026, 10.2478/joeb-2026-0010), e PhA entre dois modelos da mesma fabricante, três posturas e dois eletrodos ICC 0,993, com deslocamento sistemático de nível de até 1° (Yang 2023, 10.3390/life13051119: a ordem se preserva, o nível se desloca — razão dos postos); dois índices a 0,95 diferem mais do que a medida repetida — piso conservador; confiabilidade vale por marca e modelo (bases de aparelhos diferentes nunca se juntam); a concordância observável entre dois índices da mesma medida é limitada por √(ICC_a·ICC_b) (atenuação, Spearman 1904, 10.2307/1412159) — âncora por analogia, declarada como tal; sensibilidade fixa |
+| margem do veredito, ganho em R² | 0,03 | ancorado na literatura | Caso 1 do cap. 9 de Cohen 1988 (2ª ed.; DOI da reimpressão 10.4324/9780203771587): f² = ΔR²/(1 − R²_total), A = controle (ou W e H), B = índice; pequeno f² = 0,02 ⇒ ΔR² ≤ 0,02 para qualquer base, logo 0,03 fica acima; valores de Cohen são populacionais e o ganho aqui é fora da amostra (margem conservadora); Cohen chama a convenção de compromisso a rejeitar quando não servir — grade de sensibilidade |
 | P(ganho > 0) ≥ | 0,95 | convenção | espelho do 5 % unilateral |
 | nível do intervalo | 95 % | convenção | universal; nível de família 1 − 0,05/k reportado |
 | margem do valor acrescentado | 0,03 | ancorado | mesma âncora da margem do veredito |
 | cos paralelo / acoplado / R² projeção | 0,90 / 0,80 / 0,50 | decisão do framework | bandeiras descritivas; cossenos e R² publicados por inteiro |
 | tolerância da transferência de Σ | 0,05 | decisão do framework | tolerância fixa em r, justa com n |
 | B do bootstrap | 2 000 | convenção | percentis estáveis (Efron 1979) |
-| validação cruzada | 5 × 50 | convenção | CV repetida para a estimativa pontual; intervalos do bootstrap (Bengio & Grandvalet 2004) |
+| validação cruzada | 5 × 50 | convenção | CV repetida para a estimativa pontual (Stone 1974); dispersão entre dobras nunca usada para inferência, sem estimador não viesado da variância (Bengio & Grandvalet 2004); intervalos do bootstrap de pessoas (Efron 1979) |
 | partição de desenho | 70/30 | convenção | opções declaradas 60 e 75 |
 | n mínimo / fora da bolsa / reamostras válidas | 30 / 20 / máx(20, 10 % de B) | decisão do framework | mínimos operacionais (ridge com um preditor; reamostra pontuável; intervalo não degenerado) |
 
@@ -448,10 +457,10 @@ excluídas) · 3 `precedence_tree` · 4 `specificity_quadrant` (escore controle 
   Nenhum recurso externo: CSS, JS e imagens embutidos.
 - **Referências (v0.9).** Seção fixa, em três partes: (a) métodos de bioimpedância avaliados NESTA execução, uma linha por fonte
   (entradas do catálogo agrupadas por DOI; ano e autores do catálogo, título e periódico do registro verificado); (b) métodos
-  estatísticos e algébricos, lista fixa etiquetada com o bloco a que dá suporte — Kronmal 1993 e Atchley 1976 (razões e índices),
-  Nevill & Holder 1995 e Heymsfield 2007 (escalonamento alométrico), Spearman 1904, Lipsitch 2010 (controles negativos), Hoerl &
-  Kennard 1970 (ridge), Stone 1974 (validação cruzada), Bengio & Grandvalet 2004 (por que os intervalos vêm do bootstrap),
-  Efron 1979 (bootstrap), Cover 1974 (combinações); (c) software executado (NumPy, SciPy, pandas, scikit-learn, Matplotlib).
+  estatísticos e algébricos, lista fixa etiquetada com o bloco a que dá suporte — Kronmal 1993 (índices que compartilham componentes se correlacionam por construção; só no bloco de redundância) e Atchley 1976 (a correlação induzida cresce com a variabilidade da variável compartilhada, a diagonal de Σ; dividir por tamanho não remove o tamanho, razão de a utilidade ser medida sobre as covariáveis; blocos de redundância e utilidade),
+  Nevill & Holder 1995 (o ajuste log-linear dos expoentes é o modelo alométrico que fornece o padrão por razão apropriado ao alvo; blocos de desenho e redundância), Heymsfield 2007 (massa magra e gordura escalam com a altura com potências ≈ 2, logo alvos massa/altura² são independentes da estatura; a potência é derivada na população, princípio de Benn; blocos de desenho e utilidade), Spearman 1904 (correlação de postos: invariante a transformações monótonas, insensível a extremos; atenuação por erro de medida como sustentação do 0,95), Lipsitch 2010 (desfecho de controle negativo: compartilha com o alvo as fontes de associação espúria e é analisado pelo mesmo procedimento; por analogia — a forma condicional e recíproca S1/S2 e a regra quantitativa são extensão desta ferramenta), Hoerl &
+  Kennard 1970 (ridge sobre preditores padronizados, forma de correlação; α = 1 fixo e igual para todos os índices, não ajustado por desenho — os autores afirmam não haver escolha automática de k; age só quando índice e controle são quase colineares), Stone 1974 (avaliação cruzada, aqui em K partes, de uma prescrição fixa: nada é escolhido pelos dados na auditoria, logo sem validação aninhada; a escolha dos expoentes desenhados é feita em partição nunca usada na avaliação), Bengio & Grandvalet 2004 (erros das K partes são dependentes; sem estimador não viesado da variância; por que a dispersão entre dobras nunca entra na inferência),
+  Efron 1979 (princípio do bootstrap: reamostrar pessoas da distribuição empírica, Monte Carlo com B réplicas; não estabelece o intervalo percentil nem a pontuação fora da bolsa — resumos por percentis são descritivos), Efron 1983 (ε₀: pontuação nas pessoas não sorteadas, fora da bolsa; só em diferenças pareadas, sem .632), Cover 1974 (o melhor par não é o par dos dois melhores, mesmo sem redundância: classes da triagem são por índice, combinações nunca inferidas delas, pares julgados só quando auditados como pares); (c) software executado (NumPy, SciPy, pandas, scikit-learn, Matplotlib).
   Regra: **nenhum DOI entra sem resolver no Crossref**; os registros (`references.py`) foram gerados dos metadados do Crossref em
   15/09/2026, não digitados; entradas listadas como publicadas, sem tradução. Na verificação, dois candidatos foram recusados: o DOI
   10.1097/ede.0b013e3181e4bfd7 (é a errata de Lipsitch 2010; o artigo é 10.1097/ede.0b013e3181d61eeb) e 10.1111/sms.12780 (artigo de
@@ -500,7 +509,7 @@ rápido é condição para outros pesquisadores usarem e aprimorarem.
 - **v1.1.0-rc1 (16/09/2026)** — §3.6 pressupostos declarados e limiares com origem: intervalo bootstrap nos pares (Fisher removido),
   auditoria na escala logarítmica com a escala bruta em sensibilidade, nível de família 1 − 0,05/k reportado, regra de valores
   faltantes declarada, intervalos bootstrap dos expoentes desenhados, seção "Pressupostos e limiares" no relatório (4 línguas),
-  três registros verificados no Crossref para as âncoras (Lafontant 2026, Yang 2023, Cohen 1988). Testes de propriedade
+  três registros verificados no Crossref para as âncoras (Lafontant 2026, Yang 2023, Cohen 1988). Efron 1983 acrescentado em 16/09/2026 após leitura do original (auditoria de citações). Testes de propriedade
   (cobertura, escala, k = 1, determinismo). Classificação: revisão própria pendente.
 - **v1.0.0-rc1 (15/09/2026)** — §3.5 caminho guiado `start` (PLANO_v1.0_fluxo.md): cinco telas, navegação (`<`, `?`, resumo,
   corrigir linha), sugestões sem veredito antes do aceite, aceitar/editar/não, índice próprio, rodada final nas linhas nunca vistas;
