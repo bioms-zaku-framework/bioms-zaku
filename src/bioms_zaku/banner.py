@@ -1,6 +1,6 @@
 """
 EN: Terminal welcome (v0.9): the BioMS Zaku letters in the brand gradient (violet → green), the name attribution and the three
-    commands. Shown ONLY where a person is looking: `bioms-zaku` with no command, `bioms-zaku --version`, and the start of an
+    commands (v1.2: `start` first — the guided path; `run` repeats; `render` re-writes the report; expert commands in one dim line). Shown ONLY where a person is looking: `bioms-zaku` with no command, `bioms-zaku --version`, and the start of an
     interactive `init`. Never in `run`, `check`, `render` or `init --map` (their output goes to logs and scripts). Colour only
     when stdout is a terminal, NO_COLOR is unset and TERM is not "dumb" (https://no-color.org); otherwise plain text.
 ES: bienvenida en la terminal.  PT: boas-vindas no terminal.  IT: benvenuto nel terminale.
@@ -45,7 +45,7 @@ def _gradient(line: str) -> str:
 
 
 def _steps() -> list[str]:
-    rows = (("bioms-zaku init dados.csv analise.yaml", t("bn.step1")), ("bioms-zaku check analise.yaml", t("bn.step2")), ("bioms-zaku run analise.yaml", t("bn.step3")))
+    rows = (("bioms-zaku start dados.csv", t("bn.step1")), ("bioms-zaku run analise.yaml", t("bn.step2")), ("bioms-zaku render zaku_out/analise", t("bn.step3")))
     cw = max(len(c) for c, _ in rows); dw = max(len(d) for _, d in rows)
     inner = 2 + cw + 5 + dw + 2
     L = []
@@ -66,5 +66,5 @@ def banner(*, full: bool = True, colour: bool | None = None) -> str:
     lines = [""] + art + ["", "  " + b(f"BioMS Zaku {__version__}") + " · " + t("bn.tagline"), "  " + d(t("d.name")), ""]
     if full:
         lines += ["  " + l for l in _steps()]
-        lines += ["  " + d(t("bn.langs")) + "       " + d(t("bn.example", cmd="bioms-zaku run examples/example_quick.yaml")), ""]
+        lines += ["  " + d(t("bn.expert")), "  " + d(t("bn.langs")) + "       " + d(t("bn.example", cmd="bioms-zaku run examples/example_quick.yaml")), ""]
     return "\n".join(lines)

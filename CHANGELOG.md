@@ -1,6 +1,9 @@
 # Changelog
 
 ## 0.1.0.dev0 — 2026-09-10 (unreleased)
+- Banner (2026-09-16): the welcome box now leads with `bioms-zaku start dados.csv` (questions, run, report), then `run`
+  (repeat without questions) and `render` (another language); suggestions and the own index are named as living inside
+  `start`; `init`, `check` and `propose` appear in one dim expert line. Four languages; tests updated.
 - Citation audit (2026-09-16): every statistical and algebraic reference was read in the original (PDFs in
   `catalogo/fontes_primarias_indices/`; Efron 1979 by OCR) and each is now cited only for what it supports, with a sentence in
   the method text of the block it supports, in four languages, and the same wording in the contract. Kronmal 1993 and Atchley

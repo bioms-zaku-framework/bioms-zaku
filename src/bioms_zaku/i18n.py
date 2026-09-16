@@ -456,9 +456,10 @@ MSG: dict[str, dict[str, str]] = {
     # ---------------------------------------------------------------- terminal welcome (v0.9)
     "bn.tagline": {"en": "bioimpedance indices: decompose, predict redundancy, audit out of sample", "es": "índices de bioimpedancia: descomponer, predecir redundancia, auditar fuera de muestra",
                    "pt": "índices de bioimpedância: decompor, prever redundância, auditar fora da amostra", "it": "indici di bioimpedenza: scomporre, prevedere la ridondanza, verificare fuori campione"},
-    "bn.step1": {"en": "maps the columns (questions)", "es": "mapea las columnas (preguntas)", "pt": "mapeia as colunas (perguntas)", "it": "mappa le colonne (domande)"},
-    "bn.step2": {"en": "checks before running", "es": "revisa antes de ejecutar", "pt": "confere antes de rodar", "it": "controlla prima di eseguire"},
-    "bn.step3": {"en": "writes zaku_out/analise/report.html", "es": "genera zaku_out/analise/report.html", "pt": "gera zaku_out/analise/report.html", "it": "genera zaku_out/analise/report.html"},
+    "bn.step1": {"en": "start here: questions, run, report", "es": "empiece aquí: preguntas, ejecución, informe", "pt": "comece aqui: perguntas, execução, relatório", "it": "inizia qui: domande, esecuzione, rapporto"},
+    "bn.step2": {"en": "repeats a session without questions", "es": "repite una sesión sin preguntas", "pt": "repete uma sessão sem perguntas", "it": "ripete una sessione senza domande"},
+    "bn.step3": {"en": "report in another language", "es": "informe en otro idioma", "pt": "relatório em outro idioma", "it": "rapporto in un'altra lingua"},
+    "bn.expert": {"en": "inside start: suggestions and your own index · expert: init · check · propose", "es": "dentro de start: sugerencias e índice propio · experto: init · check · propose", "pt": "dentro do start: sugestões e índice próprio · expert: init · check · propose", "it": "dentro start: suggerimenti e indice proprio · esperto: init · check · propose"},
     "bn.langs": {"en": "languages: --lang en | es | pt | it", "es": "idiomas: --lang en | es | pt | it", "pt": "idiomas: --lang en | es | pt | it", "it": "lingue: --lang en | es | pt | it"},
     "bn.example": {"en": "example: {cmd}", "es": "ejemplo: {cmd}", "pt": "exemplo: {cmd}", "it": "esempio: {cmd}"},
     "cli.next_run": {"en": "  → next, copy and paste:  {cmd}", "es": "  → siguiente, copie y pegue:  {cmd}", "pt": "  → próximo, copie e cole:  {cmd}", "it": "  → prossimo, copia e incolla:  {cmd}"},

@@ -20,7 +20,7 @@ def test_banner_text_four_languages_aligned_and_colour_modes():
         short = B.banner(full=False, colour=False); assert ART0 in short and "┌" not in short
     set_language("en")
     col = B.banner(colour=True); assert "\x1b[38;2;147;51;234m" in col and "\x1b[0m" in col
-    assert "mapeia" not in col and "maps the columns" in B.banner(colour=False)
+    assert "comece aqui" not in col and "start here" in B.banner(colour=False)
 
 
 def test_colour_only_on_a_terminal(monkeypatch):
@@ -40,7 +40,7 @@ def test_cli_shows_the_banner_only_without_a_command_or_with_version_flag(capsys
     assert main([]) == 0; out = capsys.readouterr().out
     assert ART0 in out and "\x1b" not in out and __version__ in out               # capsys is not a tty → plain text
     assert main(["--lang", "pt", "--version"]) == 0; out = capsys.readouterr().out
-    assert ART0 in out and "confere antes de rodar" in out
+    assert ART0 in out and "repete uma sessão sem perguntas" in out
     assert main(["version"]) == 0; assert capsys.readouterr().out.strip() == __version__   # plain, for scripts
     assert main(["--lang", "pt", "check", "examples/minimal.yaml"]) == 0; out = capsys.readouterr().out
     assert ART0 not in out and "check:" in out and out.rstrip().endswith("copie e cole:  bioms-zaku --lang pt run examples/minimal.yaml")
