@@ -1,6 +1,9 @@
 # Changelog
 
 ## 0.1.0.dev0 — 2026-09-10 (unreleased)
+- Real example (2026-09-16): `examples/nhanes_diabetes_400.csv`, 400 NHANES 1999–2004 rows (public domain) with DXA masses and
+  the doctor-diagnosed diabetes answer; case-enriched (139 diabetics: 79 women, 60 men), complete cases, seeded; provenance JSON
+  and generator `tools/make_nhanes_example.py`. First example with real rows (contract §1.4b); the others stay synthetic.
 - Fix (2026-09-16, found by the user on a rerun): the figures folder belongs to the current run — figure files left by an
   earlier run in the same output folder (other strata) were being listed in the report; they are now removed before
   drawing (`make_all`), in `run` and `render` alike. Regression test added.

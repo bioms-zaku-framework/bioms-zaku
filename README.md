@@ -71,6 +71,15 @@ bioms-zaku run examples/minimal.yaml            # 150 rows, the smallest possibl
 ls zaku_out/example_quick                       # algebra sigma pairs redundancy sigma_transfer audit utility combinations screening sensitivity threshold_sensitivity (.csv) manifest.json summary.md report.html figures/
 ```
 
+`examples/nhanes_diabetes_400.csv` — 400 **real** rows from the NHANES 1999–2004 public-use files (CDC, public domain):
+adults 18–49 y with measured DXA and 50 kHz BIA, complete cases, with the diabetes questionnaire answer
+(`diabetes_1Y_0N` = doctor-diagnosed). It is a **case-enriched convenience sample** — every diagnosed diabetic with complete
+data (139: 79 women, 60 men) plus a seeded random draw of non-diabetics — so it is NOT
+representative of prevalence; it exists to demonstrate the classification audit (≥ 20 per class per sex) and, with its DXA
+masses, the regression audit on real data. Provenance, exclusions, seed and SHA-256: `examples/nhanes_diabetes_400_provenance.json`;
+generator: `tools/make_nhanes_example.py`. Column names are the ones the guided flow recognises (`bioms-zaku start
+examples/nhanes_diabetes_400.csv`). This is the only example with real rows; the others are synthetic.
+
 The file also carries `lean_kg`, `alm_kg`, `fat_kg` (index × height², derived, no new draw) so that absolute masses can be
 used as targets: `bioms-zaku run examples/example_kg.yaml`. See *Geometry* below before choosing.
 

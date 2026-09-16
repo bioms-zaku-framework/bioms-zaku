@@ -74,6 +74,15 @@ columns:
 | classe com < `min_per_class` (20) casos no estrato | auditoria daquele alvo não roda no estrato, aviso |
 | `id` repetido | modo cluster, aviso informativo |
 
+### 1.4b Exemplo real embarcado (v1.2, decisão de 16/09/2026)
+`examples/nhanes_diabetes_400.csv`: 400 linhas REAIS dos arquivos públicos do NHANES 1999–2004 (CDC, domínio público; redistribuição
+permitida), adultos 18–49 com DXA medida e BIA 50 kHz, casos completos, mais a resposta do questionário de diabetes
+(`diabetes_1Y_0N`, diagnóstico médico). Amostra **enriquecida em casos** (todos os diabéticos com dados completos e sorteio de não
+diabéticos com semente): não representa prevalência; existe para demonstrar a auditoria de classificação (≥ 20 por classe por
+sexo) e a regressão em dados reais. Procedência, exclusões, semente e SHA-256 em `examples/nhanes_diabetes_400_provenance.json`;
+gerador `tools/make_nhanes_example.py` (determinístico). Até esta versão todos os exemplos eram sintéticos; este é o único com
+linhas reais, e continua valendo: nenhum resultado do framework depende dele (independência do piloto, §5).
+
 ### 1.5 Exemplo mínimo (sintético; `;` e `,`)
 ```
 seqn;sexo;estatura_cm;massa_kg;resistencia_ohm;reatancia_ohm;lmi_dxa;fmi_dxa
