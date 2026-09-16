@@ -1,6 +1,9 @@
 # Changelog
 
 ## 0.1.0.dev0 — 2026-09-10 (unreleased)
+- Fix (2026-09-16, found by the user on a rerun): the figures folder belongs to the current run — figure files left by an
+  earlier run in the same output folder (other strata) were being listed in the report; they are now removed before
+  drawing (`make_all`), in `run` and `render` alike. Regression test added.
 - Banner (2026-09-16): the welcome box now leads with `bioms-zaku start dados.csv` (questions, run, report), then `run`
   (repeat without questions) and `render` (another language); suggestions and the own index are named as living inside
   `start`; `init`, `check` and `propose` appear in one dim expert line. Four languages; tests updated.

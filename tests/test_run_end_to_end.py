@@ -147,3 +147,19 @@ def test_html_report_and_brand_palette(tmp_path):
     cfg2 = _cfg(tmp_path, "badpal"); cfg2["figures"] = {"palette": "rainbow"}
     with pytest.raises(ValueError, match="figures.palette"):
         run(cfg2, printer=lambda s: None)
+
+
+def test_rerun_into_the_same_folder_never_lists_figures_of_an_earlier_run(tmp_path):
+    """EN: found 2026-09-16 — an unstratified rerun listed scorecard_F/M left by a stratified run in the same folder.
+    The figures folder belongs to THIS run: stale figure files are removed before drawing and never reach the report."""
+    from bioms_zaku.run import run
+    cfg = _cfg(tmp_path, "stale")
+    fd = tmp_path / "stale" / "figures"; fd.mkdir(parents=True)
+    for stale in ("scorecard_F.png", "lineage_M.png", "scorecard_F.pdf"):
+        (fd / stale).write_bytes(b"stale")
+    (fd / "supplementary").mkdir(); (fd / "supplementary" / "old.png").write_bytes(b"stale")
+    res = run(cfg, printer=lambda s: None)
+    left = sorted(p.name for p in fd.rglob("*") if p.is_file())
+    assert not any(n.startswith(("scorecard_F", "lineage_M", "old")) for n in left), left
+    html = (res["out_dir"] / "report.html").read_text(encoding="utf-8")
+    assert "scorecard_F" not in html and "lineage_M" not in html and "scorecard_all" in html

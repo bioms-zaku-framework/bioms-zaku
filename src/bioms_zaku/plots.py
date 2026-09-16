@@ -882,6 +882,14 @@ def make_all(out_dir: Path, tables: dict, cfg: dict, *, supplementary: bool | No
     ES/PT: figuras oficiais sempre; suplementares só quando solicitadas.
     """
     fd = Path(out_dir) / "figures"; fd.mkdir(exist_ok=True)
+    # EN: the folder belongs to THIS run: figures of an earlier run in the same folder (e.g. other strata) are removed first,
+    #     because the report lists the folder (found 2026-09-16: stale scorecard_F/M listed in an unstratified rerun).
+    import shutil
+    for old in fd.iterdir():
+        if old.is_file() and old.suffix.lower() in {".png", ".pdf", ".svg"}:
+            old.unlink()
+    if (fd / "supplementary").is_dir():
+        shutil.rmtree(fd / "supplementary")
     apply_style(cfg.get("figures"))
     import datetime
     from . import __version__
