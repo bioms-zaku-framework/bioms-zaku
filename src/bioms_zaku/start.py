@@ -249,7 +249,11 @@ def suggestions(cfg: dict, printer: Callable[[str], None]) -> list[dict]:
         cols["strata"] = rc["strata"]
     ds = read_table(d["path"], cols, sep=d["sep"], decimal=d["decimal"], encoding=d["encoding"], drop_nonpositive=d["drop_nonpositive"], min_n=d["min_n"], min_per_class=d["min_per_class"])
     tgt = ds.targets[0]; ctl = ds.controls[0]
-    rc["design"] = [{"target": tgt, "id": f"designed_{tgt}"}, {"target": ctl, "id": f"designed_{ctl}"}]
+    # EN: v1.2 — a class label cannot be designed (ln of a label); design only the continuous ones, refuse when none.
+    cont = [x for x in (tgt, ctl) if ds.target_types.get(x) != "classification"]
+    if not cont:
+        printer(t("st.sug_class", names=", ".join(dict.fromkeys((tgt, ctl))))); return []
+    rc["design"] = [{"target": x, "id": f"designed_{x}"} for x in cont]
     rc["data"]["columns"]["targets"] = {tgt: tgt, ctl: ctl}; rc["data"]["columns"]["controls"] = {ctl: ctl, tgt: tgt}
     warnings: list = []; manifest: dict = {}
     designed, audit_frame = design_all(rc, ds, ds.frame, warnings, manifest)
@@ -319,6 +323,8 @@ def _too_small_for_design(cfg: dict) -> list[str]:
         cols["strata"] = rc["strata"]
     ds = read_table(d["path"], cols, sep=d["sep"], decimal=d["decimal"], encoding=d["encoding"], drop_nonpositive=d["drop_nonpositive"], min_n=d["min_n"], min_per_class=d["min_per_class"])
     tgt, ctl = ds.targets[0], ds.controls[0]; fr = 0.70
+    if all(ds.target_types.get(x) == "classification" for x in (tgt, ctl)):
+        return [t("st.sug_class", names=", ".join(dict.fromkeys((tgt, ctl))))]
     both = ds.frame[tgt].notna() & ds.frame[ctl].notna()
     counts = ds.frame[both].groupby(ds.strata).size() if ds.strata else pd.Series({"all": int(both.sum())})
     lab = {str(k): str(v) for k, v in (rc.get("strata_labels") or {}).items()}

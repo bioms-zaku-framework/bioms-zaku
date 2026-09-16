@@ -107,7 +107,7 @@ def write_summary(out_dir: Path, cfg: dict, tables: dict[str, pd.DataFrame], man
             au = aud[aud.stratum == s]
             for tg in sorted(set(au.target)):
                 at = au[au.target == tg]; vc = at.verdict.value_counts()
-                L.append(t("s.audit", t=tg, c=at.control.iloc[0], metric=str(at.metric.iloc[0]).replace("R2", "R²"), est=at.estimator.iloc[0],
+                L.append(t("s.audit", t=tg, c=at.control.iloc[0], metric=str(at.metric.iloc[0]).replace("R2", "R²").replace("D_Tjur", "D (Tjur)"), est=at.estimator.iloc[0],
                            sp=vc.get("SPECIFIC", 0), tc=vc.get("TRACKS_CONTROL", 0), bo=vc.get("BOTH", 0), ne=vc.get("NEITHER", 0)))
         if uti is not None and not uti.empty:
             u = uti[uti.stratum == s]

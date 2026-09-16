@@ -55,6 +55,13 @@ def check(config: str | Path | dict, *, printer: Callable[[str], None] = print) 
             rep["info"].append(t("c.classif", name=name, vc=vc))
             if min(vc.values()) < d["min_per_class"]:
                 rep["errors"].append(t("c.class_small", name=name, n=min(vc.values()), m=d["min_per_class"]))
+            # EN: v1.2 (found 2026-09-16: sex as control AND as stratum passed check) — inside every stratum the label must
+            #     vary and each class must reach min_per_class, otherwise the audit there is impossible.
+            if ds.strata:
+                for sv, g in ds.frame.groupby(ds.strata):
+                    vcs = g[name].dropna().astype(int).value_counts().to_dict()
+                    if len(vcs) < 2 or min(vcs.values()) < d["min_per_class"]:
+                        rep["errors"].append(t("c.class_stratum", name=name, s=sv, vc=vcs, m=d["min_per_class"]))
         else:
             rep["info"].append(t("c.regression", name=name, n=int(s.notna().sum()), med=f"{s.median():.3g}", lo=f"{s.min():.3g}", hi=f"{s.max():.3g}"))
     for tg, c in ds.pairing.items():
@@ -66,6 +73,9 @@ def check(config: str | Path | dict, *, printer: Callable[[str], None] = print) 
                 rep["warnings"].append(t("c.collinear", t=tg, c=c, rho=f"{rho:.2f}"))
     # circularity declaration (contract v0.4.3): required whenever an index is designed; recommended always
     decl = (cfg.get("declarations") or {}).get("targets_independent_of_variables")
+    for dg in ([cfg["design"]] if isinstance(cfg.get("design"), dict) else list(cfg.get("design") or [])):
+        if ds.target_types.get(dg.get("target")) == "classification":
+            rep["errors"].append(t("c.design_class", name=dg.get("target")))
     if cfg.get("design") and decl is not True:
         rep["errors"].append(t("c.design_decl"))
     elif decl is not True:

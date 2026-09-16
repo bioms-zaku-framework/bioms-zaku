@@ -165,8 +165,8 @@ def read_table(source: str | os.PathLike | pd.DataFrame, mapping: Mapping | dict
     for t, c in pairing.items():
         if t not in m.targets or c not in m.controls:
             raise InputError(f"pairing {t!r} -> {c!r}: unknown target or control")
-        if ttypes[t] != ttypes[c]:
-            raise InputError(f"pairing {t!r} ({ttypes[t]}) -> {c!r} ({ttypes[c]}): types must match")
+        # EN: v1.2 — a class target may be paired with a continuous control (and vice versa): gains in Tjur's D and in R² live
+        #     on the same explained-variation scale (Tjur 2009), so no type restriction (decision of 2026-09-16).
     for name in list(m.targets) + list(m.controls):
         info["rows_dropped"][f"missing_{name}"] = int(out[name].isna().sum())
     # EN: rows with a missing value in a mapped column are excluded and counted per reason (above); results describe the

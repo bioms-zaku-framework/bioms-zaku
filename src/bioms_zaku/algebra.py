@@ -103,7 +103,8 @@ def fit_log_linear(y: np.ndarray, frame: pd.DataFrame, variables: Sequence[str])
     ly = np.log(y[pos])
     beta, *_ = np.linalg.lstsq(A, ly, rcond=None)
     resid = ly - A @ beta
-    r2 = 1.0 - float((resid ** 2).sum()) / float(((ly - ly.mean()) ** 2).sum())
+    sst = float(((ly - ly.mean()) ** 2).sum())
+    r2 = 1.0 - float((resid ** 2).sum()) / sst if sst > 0 else float("nan")   # EN: constant y (e.g. a label): R² undefined, never a crash
     return beta[1:], r2, int(pos.sum()), n_nonpos
 
 

@@ -1,6 +1,14 @@
 # Changelog
 
 ## 0.1.0.dev0 — 2026-09-10 (unreleased)
+- Classification gains in Tjur's D (2026-09-16, articles 2–3 of the classification review: Pencina 2008, Tjur 2009): S1, S2 and
+  the added value are differences of the coefficient of discrimination (mean p̂ cases − mean p̂ non-cases), a fraction of
+  variation explained that shares the 0.03 margin by declared analogy; ΔAUROC is no longer a gain (insensitive, Pencina);
+  AUROC kept as descriptive columns. Mixed target/control types allowed (task and estimator per column, same resamples):
+  a class target can be audited against a continuous control. `check` refuses a label constant or too small inside a
+  stratum (found: sex as control and stratum passed). Contract §3.2/§3.6; tests.
+  A class label is never designed (design fits ln(target)): `start` says so and designs only the continuous side, `check`
+  refuses `design` on a label, `run` raises a clear error (found: the guided flow crashed on ln(0) with a diabetes target).
 - Classification citation review, one article at a time (2026-09-16): Hanley & McNeil 1982 — the report's specificity and
   utility texts say, only when the task is classification, what the area under the ROC curve is (P(case > non-case) = Wilcoxon,
   distribution-free) and that gains are paired differences of areas; a thresholds row for the minimum per class with the

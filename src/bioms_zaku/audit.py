@@ -98,20 +98,59 @@ def resamples(n: int, seed: int, B: int, min_oob: int, max_attempts_factor: int 
 
 
 def _score(task: str, y_true: np.ndarray, model, X: np.ndarray) -> float:
+    """
+    EN: out-of-sample score of a fitted pipeline. Regression: R². Classification (v1.2, citation review of 2026-09-16):
+        Tjur's coefficient of discrimination D = mean p̂ among cases − mean p̂ among non-cases (Tjur 2009), the quantity the
+        IDI compares between two models (Pencina 2008); asymptotically a fraction of variation explained, so gains in D
+        share the R² margin by declared analogy. Multiclass: one-vs-rest macro average of D over the classes present in
+        y_true (this tool's extension, declared). ΔAUROC is NOT used as a gain: it is insensitive even to strong markers
+        (Pencina 2008); the AUROC is reported alongside by `_auroc` (Hanley & McNeil 1982).
+    ES/PT: R² em regressão; D de Tjur em classificação (macro um-contra-todos se multiclasse).
+    """
     if task == "regression":
         return float(r2_score(y_true, model.predict(X)))
     classes = np.unique(y_true)
     if len(classes) < 2:
         return float("nan")                      # EN: single-class OOB -> dropped by the caller (B_dropped)
+    proba = model.predict_proba(X); mc = list(model.classes_)
+    if len(mc) == 2:
+        p = proba[:, 1]; pos = mc[1]
+        return float(p[y_true == pos].mean() - p[y_true != pos].mean())
+    ds = []
+    for c in classes:
+        if c in mc:
+            p = proba[:, mc.index(c)]; ds.append(p[y_true == c].mean() - p[y_true != c].mean())
+    return float(np.mean(ds))
+
+
+def _auroc(y_true: np.ndarray, model, X: np.ndarray) -> float:
+    """EN: descriptive AUROC (Hanley & McNeil 1982): binary, or one-vs-rest macro over the classes present in y_true."""
+    classes = np.unique(y_true)
+    if len(classes) < 2:
+        return float("nan")
     proba = model.predict_proba(X)
     if len(model.classes_) == 2:
         return float(roc_auc_score(y_true, proba[:, 1]))
-    # EN: multiclass — AUROC one-vs-rest macro over the classes present in y_true; balanced accuracy reported separately.
     cols = [list(model.classes_).index(c) for c in classes]
     return float(roc_auc_score(y_true, proba[:, cols] / proba[:, cols].sum(axis=1, keepdims=True), multi_class="ovr", average="macro", labels=classes))
 
 
-def cv_score(X: np.ndarray, y: np.ndarray, task: str, estimator, cfg: AuditConfig, groups: np.ndarray | None = None) -> float:
+def _resolve_estimator(estimator, task: str):
+    """EN: v1.2 — `estimator` may be None (default per task), a fitted-able object (used for every column) or a factory
+        `f(task) -> estimator` (one per column task; what `run` passes so a class target can meet a continuous control)."""
+    if estimator is None:
+        return default_estimator(task)
+    if callable(estimator) and not hasattr(estimator, "fit"):
+        return estimator(task)
+    return estimator
+
+
+def metric_name(task: str) -> str:
+    """EN: the name written in the tables: 'R2' for regression, 'D_Tjur' for classification."""
+    return "R2" if task == "regression" else "D_Tjur"
+
+
+def cv_score(X: np.ndarray, y: np.ndarray, task: str, estimator, cfg: AuditConfig, groups: np.ndarray | None = None, metric: str = "default") -> float:
     """
     EN: repeated K-fold out-of-sample score (mean over folds). Stratified for classification; grouped when `groups` given.
     ES/PT: escore fora da amostra em K-fold repetido; estratificado em classificação; por grupos se houver `groups`.
@@ -131,11 +170,11 @@ def cv_score(X: np.ndarray, y: np.ndarray, task: str, estimator, cfg: AuditConfi
     scores = []
     for a, b in splits:
         m = clone(pipe).fit(X[a], y[a])
-        scores.append(_score(task, y[b], m, X[b]))
+        scores.append(_auroc(y[b], m, X[b]) if metric == "auroc" else _score(task, y[b], m, X[b]))
     return float(np.nanmean(scores))
 
 
-def oob_scores(configs: dict[str, np.ndarray], Y: np.ndarray, task: str, estimator, cfg: AuditConfig,
+def oob_scores(configs: dict[str, np.ndarray], Y: np.ndarray, task: str | Sequence[str], estimator, cfg: AuditConfig,
                progress: Callable[[int, int], None] | None = None, plan: dict[str, list[int]] | None = None) -> tuple[dict[str, np.ndarray], int, int]:
     """
     EN: paired OOB bootstrap. `configs` maps a name to a design matrix (same rows); `Y` is (n, k) targets. Returns
@@ -149,19 +188,23 @@ def oob_scores(configs: dict[str, np.ndarray], Y: np.ndarray, task: str, estimat
     if not tr:
         raise AuditError(f"bootstrap impossible: no resample of n={n} rows leaves >= min_oob={cfg.min_oob} out-of-bag "
                          f"(expected OOB ≈ {0.368 * n:.0f}); lower min_oob or provide more rows")
-    pipe = make_pipeline(estimator, cfg.impute)
-    store = {k: np.full((len(tr), Y.shape[1]), np.nan) for k in configs}
+    # EN: v1.2 — task and estimator may differ per column of Y (a class target paired with a continuous control): a list per column.
+    k = Y.shape[1]
+    tasks = list(task) if not isinstance(task, str) else [task] * k
+    ests = list(estimator) if isinstance(estimator, (list, tuple)) else [estimator] * k
+    pipes = [make_pipeline(e, cfg.impute) for e in ests]
+    store = {k2: np.full((len(tr), Y.shape[1]), np.nan) for k2 in configs}
     dropped = 0
     for b, (ii, oo) in enumerate(zip(tr, oob)):
         for k, X in configs.items():
             for t in (plan.get(k, range(Y.shape[1])) if plan else range(Y.shape[1])):
-                if task == "classification" and len(np.unique(Y[oo, t])) < 2:
+                if tasks[t] == "classification" and len(np.unique(Y[oo, t])) < 2:
                     continue
-                m = clone(pipe).fit(X[ii], Y[ii, t])
-                store[k][b, t] = _score(task, Y[oo, t], m, X[oo])
+                m = clone(pipes[t]).fit(X[ii], Y[ii, t])
+                store[k][b, t] = _score(tasks[t], Y[oo, t], m, X[oo])
         if progress and (b + 1) % max(1, len(tr) // 20) == 0:
             progress(b + 1, len(tr))
-    if task == "classification":
+    if "classification" in tasks:
         # EN: a resample is dropped when any PLANNED cell is NaN (single-class OOB); unplanned cells are ignored.
         planned = np.stack([np.isnan(store[k][:, list(plan.get(k, range(Y.shape[1])) if plan else range(Y.shape[1]))]).any(axis=1) for k in configs], axis=0)
         keep = ~planned.any(axis=0)
@@ -274,6 +317,10 @@ class AuditRow:
     score_oob_idx_control_to_target: float = float("nan")  # EN: score(target | control + index)
     score_oob_target_to_control: float = float("nan")      # EN: score(control | target)
     score_oob_idx_target_to_control: float = float("nan")  # EN: score(control | target + index)
+    control_task: str = ""                                 # EN: v1.2 — task of the control column (may differ from the target's)
+    metric_control: str = ""                               # EN: 'R2' or 'D_Tjur' for the S2 side
+    auroc_cv_target_full: float = float("nan")             # EN: descriptive AUROC of target | control + index (classification targets)
+    auroc_cv_control_full: float = float("nan")            # EN: descriptive AUROC of control | target + index (classification controls)
     s1_mean: float = float("nan")
     s1_lo: float = float("nan")
     s1_hi: float = float("nan")
@@ -307,11 +354,11 @@ def audit_method(method_id: str, stratum: str, x: np.ndarray, targets: dict[str,
     if ok.sum() < cfg.min_n:
         raise AuditError(f"only {int(ok.sum())} complete rows (index, targets, controls) < min_n={cfg.min_n}")   # EN: never skipped silently (v1.0)
     X = x[ok].reshape(-1, 1); Y = Yall[ok]; g = groups[ok] if groups is not None else None
-    task = cfg.task
-    if task == "auto":
-        task = infer_task(Y[:, 0])
-    est = estimator if estimator is not None else default_estimator(task)
-    cv = {k: cv_score(X, Y[:, i], task, est, cfg, g) for i, k in enumerate(names)}
+    # EN: v1.2 — task per column (a class target may be paired with a continuous control); estimator per column unless one
+    #     was given explicitly (then it is used for every column, the caller's responsibility).
+    tasks = [cfg.task if cfg.task != "auto" else infer_task(Y[:, i]) for i in range(len(names))]
+    ests = [_resolve_estimator(estimator, tk) for tk in tasks]
+    cv = {k: cv_score(X, Y[:, i], tasks[i], ests[i], cfg, g) for i, k in enumerate(names)}
     # EN: v0.5 — besides the index alone, fit the control as predictor of the target (and with the index), and the target as
     #     predictor of the control (and with the index), on the SAME resamples. `plan` avoids degenerate fits (y from y).
     configs: dict[str, np.ndarray] = {"idx": X}; plan: dict[str, list[int]] = {"idx": list(range(len(names)))}
@@ -324,13 +371,13 @@ def audit_method(method_id: str, stratum: str, x: np.ndarray, targets: dict[str,
         configs[f"tgt:{t}"] = Y[:, [it]]; plan.setdefault(f"tgt:{t}", []).append(ic)
         configs[f"idx+tgt:{t}"] = np.column_stack([X, Y[:, it]]); plan.setdefault(f"idx+tgt:{t}", []).append(ic)
     plan = {k: sorted(set(v)) for k, v in plan.items()}
-    st, b_eff, b_drop = oob_scores(configs, Y, task, est, cfg, progress, plan=plan)
+    st, b_eff, b_drop = oob_scores(configs, Y, tasks, ests, cfg, progress, plan=plan)
     S = st["idx"]
     for t, c in pairing.items():
         it, ic = names.index(t), names.index(c)
         d = S[:, it] - S[:, ic]
         cs = contrast(d, cfg)
-        row = AuditRow(method_id, stratum, t, c, task, "R2" if task == "regression" else "AUROC", type(est).__name__,
+        row = AuditRow(method_id, stratum, t, c, tasks[it], metric_name(tasks[it]), type(ests[it]).__name__,
                        int(ok.sum()), cfg.B, b_eff, b_drop, cv[t], cv[c], float(np.nanmean(S[:, it])), float(np.nanmean(S[:, ic])),
                        cs["mean"], cs["lo"], cs["hi"], cs["p"], "INCONCLUSIVE", verdict_marginal=verdict(cs, cfg))
         if t != c:
@@ -343,6 +390,11 @@ def audit_method(method_id: str, stratum: str, x: np.ndarray, targets: dict[str,
             row.s2_mean, row.s2_lo, row.s2_hi, row.p_s2 = s2["mean"], s2["lo"], s2["hi"], s2["p"]
             row.verdict = verdict_conditional(s1, s2, cfg)
             row.ci_level, row.k_methods = cfg.ci, int(cfg.k_methods)
+            row.control_task, row.metric_control = tasks[ic], metric_name(tasks[ic])
+            if tasks[it] == "classification":
+                row.auroc_cv_target_full = cv_score(configs[f"idx+ctrl:{c}"], Y[:, it], "classification", ests[it], cfg, g, metric="auroc")
+            if tasks[ic] == "classification":
+                row.auroc_cv_control_full = cv_score(configs[f"idx+tgt:{t}"], Y[:, ic], "classification", ests[ic], cfg, g, metric="auroc")
             if cfg.ci_family is not None:
                 fam = replace(cfg, ci=cfg.ci_family)
                 s1f, s2f = contrast(ict - ct, fam), contrast(itc - tc, fam)
@@ -371,6 +423,7 @@ class UtilityRow:
     p_delta: float
     margin: float
     useful: bool
+    auroc_cv_with: float = float("nan")   # EN: v1.2 — descriptive AUROC of target | covariates + index (classification)
 
 
 def utility_method(method_id: str, stratum: str, x: np.ndarray, covariates: np.ndarray, cov_names: Sequence[str],
@@ -386,16 +439,19 @@ def utility_method(method_id: str, stratum: str, x: np.ndarray, covariates: np.n
     if ok.sum() < cfg.min_n:
         raise AuditError(f"only {int(ok.sum())} complete rows (index, covariates, targets) < min_n={cfg.min_n}")
     FA = covariates[ok]; FB = np.column_stack([FA, x[ok]]); Y = Yall[ok]; g = groups[ok] if groups is not None else None
-    task = cfg.task if cfg.task != "auto" else infer_task(Y[:, 0])
-    est = estimator if estimator is not None else default_estimator(task)
-    st, b_eff, _ = oob_scores({"A": FA, "B": FB}, Y, task, est, cfg)
+    tasks = [cfg.task if cfg.task != "auto" else infer_task(Y[:, i]) for i in range(len(names))]
+    ests = [_resolve_estimator(estimator, tk) for tk in tasks]
+    st, b_eff, _ = oob_scores({"A": FA, "B": FB}, Y, tasks, ests, cfg)
     out = []
     for i, t in enumerate(names):
         d = st["B"][:, i] - st["A"][:, i]
         cs = contrast(d, cfg)
-        out.append(UtilityRow(method_id, stratum, t, task, "R2" if task == "regression" else "AUROC", "+".join(cov_names), int(ok.sum()), b_eff,
-                              cv_score(FA, Y[:, i], task, est, cfg, g), cv_score(FB, Y[:, i], task, est, cfg, g),
-                              cs["mean"], cs["lo"], cs["hi"], cs["p"], cfg.utility_margin, bool(cs["lo"] > cfg.utility_margin)))
+        row = UtilityRow(method_id, stratum, t, tasks[i], metric_name(tasks[i]), "+".join(cov_names), int(ok.sum()), b_eff,
+                         cv_score(FA, Y[:, i], tasks[i], ests[i], cfg, g), cv_score(FB, Y[:, i], tasks[i], ests[i], cfg, g),
+                         cs["mean"], cs["lo"], cs["hi"], cs["p"], cfg.utility_margin, bool(cs["lo"] > cfg.utility_margin))
+        if tasks[i] == "classification":
+            row.auroc_cv_with = cv_score(FB, Y[:, i], "classification", ests[i], cfg, g, metric="auroc")
+        out.append(row)
     return out
 
 
@@ -410,8 +466,9 @@ def combination_gain(host_id: str, added_id: str, stratum: str, xh: np.ndarray, 
     if ok.sum() < cfg.min_n:
         return []
     A = xh[ok].reshape(-1, 1); Bm = np.column_stack([xh[ok], xa[ok]]); Y = Yall[ok]
-    task = cfg.task if cfg.task != "auto" else infer_task(Y[:, 0])
-    st, b_eff, _ = oob_scores({"A": A, "B": Bm}, Y, task, estimator, cfg)
+    tasks = [cfg.task if cfg.task != "auto" else infer_task(Y[:, i]) for i in range(Y.shape[1])]
+    ests = [_resolve_estimator(estimator, tk) for tk in tasks]
+    st, b_eff, _ = oob_scores({"A": A, "B": Bm}, Y, tasks, ests, cfg)
     out = []
     for i, t in enumerate(names):
         cs = contrast(st["B"][:, i] - st["A"][:, i], cfg)

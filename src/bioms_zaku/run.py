@@ -90,7 +90,9 @@ def _values(cat: Catalog, ds: Dataset, frame: pd.DataFrame, stats: dict | None =
 def _audit_one(args):
     """EN: worker for one method (picklable). ES/PT: trabalhador por método."""
     mid, stratum, x, targets, controls, pairing, acfg, est_spec, task, groups, cov, cov_names, utility_targets = args
-    est = _estimator(est_spec, task if task != "auto" else ("classification" if len(np.unique(next(iter(targets.values()))[np.isfinite(next(iter(targets.values())))])) <= 10 else "regression"))
+    # EN: v1.2 — the estimator is built PER COLUMN task (ridge params apply to continuous columns, logistic params to class
+    #     columns; module:Class applies to every column), so a class target can be paired with a continuous control.
+    est = (lambda tk, _spec=est_spec: _estimator(_spec, tk))   # EN: factory: the audit builds one estimator per column task
     try:
         rows = [asdict(r) for r in audit_method(mid, stratum, x, targets, controls, pairing, acfg, est, groups)]
     except AuditError as e:
@@ -229,6 +231,8 @@ def design_all(cfg: dict, ds, frame: pd.DataFrame, warnings: list, manifest: dic
             raise ValueError("design requires declarations.targets_independent_of_variables: true (contract v0.4.3: the target must not be computed from any mapped variable)")
         specs = [cfg["design"]] if isinstance(cfg["design"], dict) else list(cfg["design"])
         for dg in specs:
+            if ds.target_types.get(dg["target"]) == "classification":
+                raise ValueError(f"design: target {dg['target']!r} is a class label; design fits ln(target) and needs a continuous positive target")
             if dg.get("orthogonal_to") is not None and dg["orthogonal_to"] not in frame:
                 raise ValueError(f"design.orthogonal_to {dg['orthogonal_to']!r} is not a mapped column")
         # EN: ONE partition for every designed index (same rows held out), made over rows where every design target and control is
@@ -393,7 +397,7 @@ def _run(cfg: dict, *, printer: Callable[[str], None]) -> dict:
         gcfg = cfg["geometry"]
         if gcfg["enabled"]:
             cont_t = {t: fr[t].to_numpy(float) for t in ds.targets if ds.target_types.get(t) != "classification"}
-            cont_c = {c: fr[c].to_numpy(float) for c in ds.controls}
+            cont_c = {c: fr[c].to_numpy(float) for c in ds.controls if ds.target_types.get(c) != "classification"}   # EN: v1.2 — labels are never projected
             imp_df, geo_df = A.geometry_tables(vecs, vals, fr, design_vars, cont_t, cont_c, ds.pairing, stratum,
                                                parallel_to_control=gcfg["parallel_to_control"], coupled_target_control=gcfg["coupled_target_control"],
                                                min_fit_r2=gcfg["min_fit_r2"])
@@ -470,8 +474,7 @@ def _run(cfg: dict, *, printer: Callable[[str], None]) -> dict:
         # ---- combinations (pairs of methods), boosting estimator, same resamples
         if cfg["audit"]["combinations"]:
             ids = list(vecs)
-            task_c = task if task != "auto" else ("classification" if ds.target_types[ds.targets[0]] == "classification" else "regression")
-            est_c = _estimator(cfg["audit"]["combination"], task_c)
+            est_c = (lambda tk, _spec=cfg["audit"]["combination"]: _estimator(_spec, tk))   # EN: v1.2 — factory, one estimator per column task
             for hi in ids:
                 for ad in ids:
                     if hi == ad:

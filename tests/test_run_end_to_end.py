@@ -65,7 +65,7 @@ def test_strata_transfer_classification_and_design(tmp_path):
     cfg2 = _cfg(tmp_path, "cls"); cfg2["data"]["path"] = str(p); cfg2["data"]["columns"]["targets"] = {"DIAB": "diab"}
     cfg2["data"]["columns"]["controls"] = {"DIAB_PERM": "diab_perm"}; cfg2["data"]["min_n"] = 30
     a = run(cfg2, printer=lambda s: None)["tables"]["audit"]
-    assert set(a.metric) == {"AUROC"} and (a.score_cv_control.between(0.3, 0.7)).all()
+    assert set(a.metric) == {"D_Tjur"} and (a.score_cv_control.abs() < 0.1).all()      # permuted null: D ≈ 0
 
 
 def test_target_kind_orientation_warning(tmp_path):

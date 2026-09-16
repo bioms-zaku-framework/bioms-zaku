@@ -73,11 +73,12 @@ def test_missing_mapped_column_is_named():
         read_table(_frame().drop(columns=["fmi_dxa"]), MAP, min_n=1)
 
 
-def test_pairing_types_must_match():
+def test_pairing_may_mix_a_class_target_with_a_continuous_control():
+    """EN: v1.2 — gains in Tjur's D and in R² share the explained-variation scale, so mixed pairs are allowed."""
     df = _frame(); df["diab"] = [0, 1, 0, 1]
     m = dict(MAP); m["targets"] = {"DIAB": "diab"}; m["controls"] = {"FMI_DXA": "fmi_dxa"}
-    with pytest.raises(InputError, match="types must match"):
-        read_table(df, m, min_n=1, min_per_class=1)
+    ds = read_table(df, m, min_n=1, min_per_class=1)
+    assert ds.target_types["DIAB"] == "classification" and ds.target_types["FMI_DXA"] == "regression" and ds.pairing == {"DIAB": "FMI_DXA"}
 
 
 def test_frequency_suffix_and_multiple_frequencies():

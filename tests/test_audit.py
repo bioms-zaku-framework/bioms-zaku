@@ -89,10 +89,10 @@ def test_classification_binary_and_multiclass():
     z = rng.normal(0, 1, n); x = z + rng.normal(0, 0.5, n)
     yb = (z > 0).astype(int); ctrl = rng.integers(0, 2, n)
     rows = audit_method("x", "all", x, {"yb": yb}, {"ctrl": ctrl}, {"yb": "ctrl"}, QUICK)
-    assert rows[0].task == "classification" and rows[0].metric == "AUROC" and rows[0].verdict == "SPECIFIC"
+    assert rows[0].task == "classification" and rows[0].metric == "D_Tjur" and rows[0].verdict == "SPECIFIC" and 0.5 < rows[0].auroc_cv_target_full <= 1.0
     y3 = np.digitize(z, [-0.5, 0.5]); ctrl3 = rng.integers(0, 3, n)
     rows3 = audit_method("x", "all", x, {"y3": y3}, {"ctrl3": ctrl3}, {"y3": "ctrl3"}, QUICK)
-    assert rows3[0].score_cv_target > 0.8 and rows3[0].verdict == "SPECIFIC"
+    assert rows3[0].score_cv_target > 0.3 and rows3[0].verdict == "SPECIFIC"      # D (macro one-vs-rest), not AUROC
 
 
 def test_conditional_verdict_rules():
