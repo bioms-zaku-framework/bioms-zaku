@@ -383,7 +383,9 @@ def _assumptions_section(cfg: dict, manifest: dict, tables: dict) -> str:
            (t("a.t.B"), f"{B}", t("a.o.convention"), t("a.t.B.s")),
            (t("a.t.cv"), f"{au['cv']['folds']} × {au['cv']['repeats']}", t("a.o.convention"), t("a.t.cv.s")),
            (t("a.t.frac"), f"{(dz.get('fraction') or 0.70):.0%}", t("a.o.convention"), t("a.t.frac.s")),
-           (t("a.t.minn"), f"{cfg['data']['min_n']} / {au['bootstrap']['min_oob']} / {min(B, max(20, int(0.10 * B)))}", t("a.o.tool"), t("a.t.minn.s"))]
+           (t("a.t.minn"), f"{cfg['data']['min_n']} / {au['bootstrap']['min_oob']} / {min(B, max(20, int(0.10 * B)))}", t("a.o.tool"), t("a.t.minn.s")),
+           *([(t("a.t.minclass"), f"{cfg['data']['min_per_class']}", t("a.o.tool"), t("a.t.minclass.s"))]
+             if tables.get("audit") is not None and not tables["audit"].empty and "task" in tables["audit"] and (tables["audit"]["task"].astype(str) == "classification").any() else [])]
     body = "".join(f"<tr><td>{html.escape(a)}</td><td>{html.escape(b)}</td><td><b>{html.escape(c)}</b> · {html.escape(d)}</td></tr>" for a, b, c, d in rows)
     tb = "".join(f"<tr><td>{html.escape(a)}</td><td class='num'>{html.escape(b)}</td><td>{html.escape(c)}</td><td>{html.escape(d)}</td></tr>" for a, b, c, d in thr)
     return (f"<section id='assump'>{_h2(7, 'assump', t('h.assump_title'))}<p class='hint'>{html.escape(t('h.assump_intro'))}</p>"
@@ -478,6 +480,9 @@ def write_report(out_dir: Path, cfg: dict, tables: dict[str, pd.DataFrame], mani
             a = tables["audit"]; fam = a[a.verdict_family.astype(str) != ""]
             if len(fam):
                 extra = t("m.sens.family", k=int(a.k_methods.max()), lvl=f"{float(a.ci_family.max()):.4f}", kf=int((fam.verdict_family != fam.verdict).sum()), n=len(fam))
+        if key in ("m.spec", "m.util") and tables.get("audit") is not None and not tables["audit"].empty and "task" in tables["audit"] \
+                and (tables["audit"]["task"].astype(str) == "classification").any():
+            extra = (extra + " " if extra else "") + t("m.spec.auroc")       # EN: classification only (Hanley & McNeil 1982)
         parts.append(_method_block(key, extra, **kw[key]))
         parts.append(_tables_block(present, tables, out_dir, key.split(".")[1]) + "</div></details>"); shown.update(present)
     rest = [n for n, df in tables.items() if n not in shown and df is not None and not df.empty]

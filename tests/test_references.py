@@ -59,3 +59,13 @@ def test_threshold_anchors_are_verified_records_tied_to_their_blocks():
     for doi, blocks in (("10.2478/joeb-2026-0010", ("m.redund",)), ("10.3390/life13051119", ("m.redund",)), ("10.4324/9780203771587", ("m.spec", "m.util"))):
         assert doi in R.RECORDS and dict(R.METHOD_REFS)[doi] == blocks
     txt, url = R.cite("10.4324/9780203771587"); assert txt.startswith("Cohen J. Statistical Power Analysis") and url.endswith("9780203771587")
+
+
+def test_hanley_mcneil_supports_classification_blocks_and_the_sentence_appears_only_for_classification(tmp_path):
+    """EN: citation review of the classification audit (2026-09-16): AUROC = P(case > non-case) = Wilcoxon (Hanley & McNeil 1982)."""
+    import bioms_zaku.references as R
+    assert "10.1148/radiology.143.1.7063747" in R.RECORDS and dict(R.METHOD_REFS)["10.1148/radiology.143.1.7063747"] == ("m.spec", "m.util")
+    txt, url = R.cite("10.1148/radiology.143.1.7063747"); assert txt.startswith("Hanley JA, McNeil BJ.") and "1982;143(1):29-36" in txt
+    from bioms_zaku.i18n import LANGS, t, set_language
+    for lang in LANGS:
+        set_language(lang); assert "Hanley & McNeil 1982" in t("m.spec.auroc") and "Hanley & McNeil 1982" in t("a.t.minclass.s")

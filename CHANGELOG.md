@@ -1,6 +1,10 @@
 # Changelog
 
 ## 0.1.0.dev0 — 2026-09-10 (unreleased)
+- Classification citation review, one article at a time (2026-09-16): Hanley & McNeil 1982 — the report's specificity and
+  utility texts say, only when the task is classification, what the area under the ROC curve is (P(case > non-case) = Wilcoxon,
+  distribution-free) and that gains are paired differences of areas; a thresholds row for the minimum per class with the
+  standard-error ruler. Four languages; test.
 - Real example (2026-09-16): `examples/nhanes_diabetes_400.csv`, 400 NHANES 1999–2004 rows (public domain) with DXA masses and
   the doctor-diagnosed diabetes answer; case-enriched (139 diabetics: 79 women, 60 men), complete cases, seeded; provenance JSON
   and generator `tools/make_nhanes_example.py`. First example with real rows (contract §1.4b); the others stay synthetic.
