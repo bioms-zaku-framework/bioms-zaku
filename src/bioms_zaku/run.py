@@ -181,6 +181,32 @@ def _show_inline(report: Path) -> None:
         return
 
 
+def scaled_inputs(vals: dict, targets: dict, controls: dict, cov, target_types: dict, scale: str, stratum: str, warnings: list) -> dict:
+    """
+    EN: the inputs of the audit on the requested scale (v1.1). "log": natural logarithm of the index values (positive by
+        construction; non-positive → NaN, excluded from that audit), of every REGRESSION target/control and of the covariates.
+        A regression target/control or a covariate with a non-positive value cannot be logged: the whole stratum falls back
+        to "raw" with a warning (recorded as the scale used). Classification labels are never transformed.
+    ES/PT: entradas da auditoria na escala pedida; sem valores positivos, volta à escala bruta com aviso.
+    """
+    if scale == "raw":
+        return {"scale": "raw", "vals": vals, "targets": targets, "controls": controls, "cov": cov}
+    def _bad(arr):
+        a = np.asarray(arr, float); return bool((a[np.isfinite(a)] <= 0).any())
+    cont = {k: v for k, v in {**targets, **controls}.items() if target_types.get(k) != "classification"}
+    culprit = next((k for k, v in cont.items() if _bad(v)), None)
+    if culprit is None and cov is not None and _bad(cov):
+        culprit = "covariates"
+    if culprit is not None:
+        warnings.append(f"{stratum}: audit on the raw scale — {culprit} has non-positive values, so the logarithmic scale is not possible here")
+        return {"scale": "raw", "vals": vals, "targets": targets, "controls": controls, "cov": cov}
+    def _log(a):
+        a = np.asarray(a, float); out = np.full(a.shape, np.nan); ok = np.isfinite(a) & (a > 0); out[ok] = np.log(a[ok]); return out
+    return {"scale": "log", "vals": {k: _log(v) for k, v in vals.items()},
+            "targets": {k: (_log(v) if k in cont else v) for k, v in targets.items()}, "controls": {k: (_log(v) if k in cont else v) for k, v in controls.items()},
+            "cov": None if cov is None else _log(cov)}
+
+
 def low_resample_warnings(audit_rows: list, stratum: str) -> list[str]:
     """EN: one warning per stratum when any method kept fewer than half of the requested bootstrap resamples (v1.0)."""
     low = sorted({(r["method_id"], int(r["B_eff"]), int(r["B"])) for r in audit_rows if r["stratum"] == stratum and r["B_eff"] < 0.5 * r["B"]})
@@ -234,14 +260,15 @@ def design_all(cfg: dict, ds, frame: pd.DataFrame, warnings: list, manifest: dic
             for g in groups_d:
                 mask = np.ones(len(sub), dtype=bool) if g is None else (sub[ds.strata] == g).to_numpy()
                 sp = Split(split.design & mask, split.audit & mask, split.mode, split.fraction, split.seed, split.stratify_on, split.design_hash)
-                di = design_index(sub, tgt, dvars, sp, index_id=did, orthogonal_to=orth)
+                di = design_index(sub, tgt, dvars, sp, index_id=did, orthogonal_to=orth, B=int(cfg["algebra"]["transfer_B"]), seed=int(cfg["seeds"]["bootstrap"]))
                 key = "all" if g is None else str(g)
                 designed.setdefault(key, {})[did] = di
                 lab = {str(k): str(v) for k, v in (cfg.get("strata_labels") or {}).items()}.get(key, key)   # EN: manifest keyed by the stratum LABEL (as the tables)
                 entry["per_stratum"][lab] = {"n_design": sp.n_design, "n_audit": sp.n_audit, "vector_design": di.vector_design.tolist(), "r2_design": di.r2_design,
                                              "vector_refit_full": None if di.vector_refit_full is None else di.vector_refit_full.tolist(), "r2_refit_full": di.r2_refit_full,
                                              "control_vector": None if di.control_vector is None else di.control_vector.tolist(),
-                                             "cos_control_design": di.cos_control_design, "r2_unconstrained": di.r2_unconstrained}
+                                             "cos_control_design": di.cos_control_design, "r2_unconstrained": di.r2_unconstrained,
+                                             "vector_lo": None if di.vector_lo is None else [float(x) for x in di.vector_lo], "vector_hi": None if di.vector_hi is None else [float(x) for x in di.vector_hi], "B_vector": di.B_vector}
                 if sp.n_audit < 100 and did == next(iter(man_d["indices"]), did):
                     warnings.append(f"design/{lab}: audit partition has n={sp.n_audit} < 100; intervals will be wide")
             man_d["indices"][did] = entry
@@ -288,7 +315,7 @@ def _run(cfg: dict, *, printer: Callable[[str], None]) -> dict:
     # ---- per stratum
     lab_map = {str(k): str(v) for k, v in (cfg.get("strata_labels") or {}).items()}
     strata = [(lab_map.get(str(s), str(s)), frame[frame[ds.strata] == s].reset_index(drop=True)) for s in sorted(frame[ds.strata].dropna().unique())] if ds.strata else [("all", frame)]
-    T = {k: [] for k in ("algebra", "sigma", "pairs", "redundancy", "audit", "utility", "combinations", "sensitivity", "implicit_vectors", "geometry")}
+    T = {k: [] for k in ("algebra", "sigma", "pairs", "redundancy", "audit", "utility", "combinations", "sensitivity", "sensitivity_scale", "implicit_vectors", "geometry")}
     vecs_by, sig_by, pairs_by, vals_by, design_by, skipped_all = {}, {}, {}, {}, {}, {}
     # EN: target-kind orientation (§2.1 / §3.2): a method whose author-declared kind equals the kind of the CONTROL and
     #     differs from the kind of the TARGET is expected to "track the control" by design; say so before the verdicts.
@@ -353,7 +380,8 @@ def _run(cfg: dict, *, printer: Callable[[str], None]) -> dict:
             for j, vj in enumerate(design_vars):
                 T["sigma"].append(dict(stratum=stratum, n=n_sig, var_i=vi, var_j=vj, cov_log=float(S[i, j])))
         pcat = Catalog(cat.version, cat.conventions, list(cat.entries) + [_designed_entry(di) for di in dis], cat.source_path)
-        pairs = A.pairs_table(pcat, vecs, vals, S, stratum, min_pair_n=cfg["algebra"]["min_pair_n"], alpha=cfg["algebra"]["fisher_alpha"])
+        pairs = A.pairs_table(pcat, vecs, vals, S, stratum, min_pair_n=cfg["algebra"]["min_pair_n"], ci_level=cfg["algebra"]["pair_ci_level"],
+                              B=cfg["algebra"]["transfer_B"], seed=cfg["seeds"]["bootstrap"])
         # EN: with a single evaluable method there are no pairs; the empty table still carries its columns (a one-method run must
         #     not crash downstream — found by a test on 14/09)
         red = (A.redundancy_table(pcat, pairs, stratum, threshold=cfg["algebra"]["redundancy_threshold"]) if not pairs.empty
@@ -377,7 +405,12 @@ def _run(cfg: dict, *, printer: Callable[[str], None]) -> dict:
         groups = fr[ds.id].to_numpy() if ds.id and fr[ds.id].duplicated().any() else None
         cov = fr[ds.covariates].to_numpy(float) if ds.covariates else None
         task = cfg["audit"]["task"]
-        jobs = [(mid, stratum, vals[mid], targets, controls, ds.pairing, acfg, cfg["audit"]["single"], task, groups, cov, ds.covariates, targets)
+        scale = cfg["audit"]["scale"]
+        sc = scaled_inputs(vals, targets, controls, cov, ds.target_types, scale, stratum, warnings)
+        from dataclasses import replace as _replace
+        k_methods = len(vecs)
+        acfg_s = _replace(acfg, ci_family=(1 - (1 - acfg.ci) / max(k_methods, 1)), k_methods=k_methods)   # EN: v1.1 — Bonferroni level for k methods audited together
+        jobs = [(mid, stratum, sc["vals"][mid], sc["targets"], sc["controls"], ds.pairing, acfg_s, cfg["audit"]["single"], task, groups, sc["cov"], ds.covariates, sc["targets"])
                 for mid in vecs]
         t_s = time.time()
         if cfg["n_jobs"] > 1:
@@ -390,10 +423,28 @@ def _run(cfg: dict, *, printer: Callable[[str], None]) -> dict:
                 el = time.time() - t_s
                 printer(_t("r.progress", s=stratum, k=k + 1, n=len(jobs), m=jb[0], el=f"{el:.0f}", eta=f"{el / (k + 1) * (len(jobs) - k - 1) / 60:.1f}"))
         for rows, urows, warn in results:
+            for r in rows + urows:
+                r["scale"] = sc["scale"]                       # EN: the scale actually used (log, or raw after a documented fallback)
             T["audit"] += rows; T["utility"] += urows
             if warn:
                 warnings.append(warn)
         warnings += low_resample_warnings(T["audit"], stratum)
+        # ---- sensitivity to the scale (v1.1): the same audit on the other scale, primary estimator, reported next to the primary, never selected
+        if (cfg["audit"].get("sensitivity") or {}).get("scale") and task != "classification":
+            other = "raw" if sc["scale"] == "log" else "log"
+            sc2 = scaled_inputs(vals, targets, controls, cov, ds.target_types, other, stratum, [])
+            if sc2["scale"] == other:
+                jobs_sc = [(mid, stratum, sc2["vals"][mid], sc2["targets"], sc2["controls"], ds.pairing, acfg, cfg["audit"]["single"], task, groups, None, [], sc2["targets"]) for mid in vecs]
+                results_sc = [_audit_one(jb) for jb in jobs_sc]
+                prim = {(r["method_id"], r["stratum"], r["target"]): r for r in T["audit"] if r["stratum"] == stratum}
+                for rows_sc, _, warn in results_sc:
+                    if warn:
+                        warnings.append("sensitivity(scale) " + warn); continue
+                    for r in rows_sc:
+                        pr = prim.get((r["method_id"], r["stratum"], r["target"]))
+                        if pr is not None:
+                            T["sensitivity_scale"].append({**r, "scale": other, "scale_primary": sc["scale"], "verdict_primary": pr["verdict"], "verdict_changed": r["verdict"] != pr["verdict"],
+                                                           "s1_primary": pr["s1_mean"], "s1_delta": r["s1_mean"] - pr["s1_mean"], "s2_primary": pr["s2_mean"], "s2_delta": r["s2_mean"] - pr["s2_mean"]})
         # ---- sensitivity to the estimator (§3.2): same resamples, second estimator, reported next to the primary, never selected
         sens = cfg["audit"].get("sensitivity") or {}
         if sens.get("estimator"):
@@ -436,7 +487,8 @@ def _run(cfg: dict, *, printer: Callable[[str], None]) -> dict:
 
     # ---- sensitivity to the verdict thresholds (§3.2, v0.5.1): reclassification of stored S1/S2 under a grid, no refit
     T["threshold_sensitivity"] = verdict_sensitivity(T["audit"], margins=tuple(cfg["audit"]["verdict"].get("sensitivity_margins", (0.02, 0.03, 0.05))),
-                                                     p_levels=tuple(cfg["audit"]["verdict"].get("sensitivity_p", (0.90, 0.95, 0.99))))
+                                                     p_levels=tuple(cfg["audit"]["verdict"].get("sensitivity_p", (0.90, 0.95, 0.99))),
+                                                     default_margin=cfg["audit"]["verdict"]["margin"], default_p=cfg["audit"]["verdict"]["p_specific"])
     tables = {k: (pd.concat(v, ignore_index=True) if v and isinstance(v[0], pd.DataFrame) else pd.DataFrame(v)) for k, v in T.items()}
     if cfg["algebra"]["transfer"] and len(strata) > 1:
         tables["sigma_transfer"] = A.sigma_transfer_table(vecs_by, sig_by, vals_by, design_by_stratum=design_by, identity_ids={e.id for e in cat.entries if e.identity_of},
@@ -449,6 +501,7 @@ def _run(cfg: dict, *, printer: Callable[[str], None]) -> dict:
     sort_keys = {"algebra": ["stratum", "method_id"], "sigma": ["stratum", "var_i", "var_j"], "pairs": ["stratum", "a_id", "b_id"],
                  "redundancy": ["stratum", "method_id"], "audit": ["stratum", "method_id", "target"], "utility": ["stratum", "method_id", "target"],
                  "combinations": ["stratum", "host_id", "added_id", "target"], "sigma_transfer": ["sigma_from", "observed_in"], "screening": ["stratum", "method_id"],
+                 "sensitivity_scale": ["stratum", "method_id", "target"],
                  "sensitivity": ["stratum", "method_id", "target"], "threshold_sensitivity": ["stratum", "method_id", "target", "margin", "p_specific"],
                  "implicit_vectors": ["stratum", "role", "name"], "geometry": ["stratum", "method_id", "target"]}
     for name, df in tables.items():

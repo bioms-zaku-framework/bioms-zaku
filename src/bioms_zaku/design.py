@@ -88,6 +88,9 @@ class DesignedIndex:
     control_vector: np.ndarray | None = None  # EN: implicit vector of the control on the design partition
     cos_control_design: float | None = None   # EN: cos_Σ(vector_design, control_vector) on the design partition (0 by construction)
     r2_unconstrained: float | None = None     # EN: R² of the plain fit, for comparison with r2_design
+    vector_lo: np.ndarray | None = None       # EN: v1.1 — percentile 2.5 of each exponent over person-bootstrap resamples of the design rows
+    vector_hi: np.ndarray | None = None       # EN: percentile 97.5
+    B_vector: int = 0
 
     def expr(self, use_refit: bool = False) -> str:
         v = self.vector_refit_full if (use_refit and self.vector_refit_full is not None) else self.vector_design
@@ -138,8 +141,33 @@ def orthogonal_fit(ly: np.ndarray, lc: np.ndarray, LX: np.ndarray) -> tuple[np.n
     return a, c_hat, _r2_of(ly, LX, a), r2_u, cos
 
 
+def exponent_intervals(frame: pd.DataFrame, target: str, variables: Sequence[str], mask: np.ndarray, *, orthogonal_to: str | None = None,
+                       B: int = 200, seed: int = 42, level: float = 0.95) -> tuple[np.ndarray, np.ndarray]:
+    """EN: v1.1 — percentile intervals of the designed exponents by resampling PEOPLE among the design rows (`mask`). Deterministic.
+    Tells whether the vector is stable or drifts between resamples; the vector itself stays the fit of the whole partition."""
+    d = frame[mask].reset_index(drop=True); n = len(d); rng = np.random.default_rng(seed); vs = []
+    cols = [target] + ([orthogonal_to] if orthogonal_to else [])
+    for _ in range(B):
+        i = rng.integers(0, n, n); db = d.iloc[i]
+        try:
+            ok, ls, LX = _log_design(db, cols, variables)
+            if ok.sum() < len(variables) + 2:
+                continue
+            if orthogonal_to:
+                a, *_ = orthogonal_fit(ls[target], ls[orthogonal_to], LX)
+            else:
+                a, _ = _ols(ls[target], LX)
+            vs.append(a)
+        except (ValueError, DesignError, np.linalg.LinAlgError):
+            continue
+    if len(vs) < max(20, B // 10):
+        nan = np.full(len(variables), np.nan); return nan, nan
+    V = np.array(vs); q = (1 - level) / 2 * 100
+    return np.percentile(V, q, axis=0), np.percentile(V, 100 - q, axis=0)
+
+
 def design_index(frame: pd.DataFrame, target: str, variables: Sequence[str], split: Split, *, index_id: str,
-                 refit_full: bool = True, orthogonal_to: str | None = None) -> DesignedIndex:
+                 refit_full: bool = True, orthogonal_to: str | None = None, B: int = 200, seed: int = 42) -> DesignedIndex:
     """
     EN: fit ln(target) ~ ln(variables) on the design partition (target must be > 0); optionally refit on all rows for the
         deployable vector. With `orthogonal_to` (a control column), the vector is constrained to cos_Σ = 0 with the control's
@@ -155,7 +183,8 @@ def design_index(frame: pd.DataFrame, target: str, variables: Sequence[str], spl
         vr, r2r = (None, None)
         if refit_full:
             vr, r2r, _, _ = fit_log_linear(y, frame, variables)
-        return DesignedIndex(index_id, target, tuple(variables), beta, r2, n_used, vr, r2r, split)
+        lo, hi = exponent_intervals(frame, target, variables, split.design, B=B, seed=seed)
+        return DesignedIndex(index_id, target, tuple(variables), beta, r2, n_used, vr, r2r, split, vector_lo=lo, vector_hi=hi, B_vector=B)
     if orthogonal_to == target:
         raise DesignError("orthogonal_to must differ from the target")
     d = frame[split.design]
@@ -167,5 +196,6 @@ def design_index(frame: pd.DataFrame, target: str, variables: Sequence[str], spl
     if refit_full:
         ok_f, ls_f, LX_f = _log_design(frame, [target, orthogonal_to], variables)
         vr, _, r2r, _, _ = orthogonal_fit(ls_f[target], ls_f[orthogonal_to], LX_f)
+    lo, hi = exponent_intervals(frame, target, variables, split.design, orthogonal_to=orthogonal_to, B=B, seed=seed)
     return DesignedIndex(index_id, target, tuple(variables), a, r2, int(ok.sum()), vr, r2r, split,
-                         orthogonal_to=orthogonal_to, control_vector=c_hat, cos_control_design=cos, r2_unconstrained=r2_u)
+                         orthogonal_to=orthogonal_to, control_vector=c_hat, cos_control_design=cos, r2_unconstrained=r2_u, vector_lo=lo, vector_hi=hi, B_vector=B)

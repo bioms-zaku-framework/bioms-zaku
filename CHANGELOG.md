@@ -1,6 +1,14 @@
 # Changelog
 
 ## 0.1.0.dev0 — 2026-09-10 (unreleased)
+- Declared assumptions and anchored thresholds (2026-09-16, contract §3.6, PLANO_v1.1_pressupostos.md): person-bootstrap
+  interval for the observed Pearson of logs (Fisher removed; coverage tested); the audit runs on the logarithmic scale by default
+  with the raw scale reported as sensitivity (`audit.scale`, `sensitivity_scale.csv`); the family-level interval 1 − 0.05/k on the
+  same resamples (`verdict_family`, `ci_level` in the threshold sensitivity), identical to the primary when k = 1; missing values
+  excluded and counted, results describe the people who remain, no imputation and no inference about the excluded; bootstrap
+  intervals for the designed exponents (manifest, summary, suggestions); a report section "Assumptions and thresholds" in four
+  languages, every state read from the run and every threshold with value, origin and support; three verified records anchor
+  the redundancy threshold (Lafontant 2026; Yang 2023) and the verdict margin (Cohen 1988).
 - Bootstrap validity (2026-09-15, found on a 33-row audit partition): the audit refuses a method when fewer than max(20, 10 % of B)
   resamples are valid (never a zero-width interval); `check`/`start` apply min_n and the out-of-bag rule to the AUDIT partition per
   stratum when indices are designed, with labels and the way out; warning when more than half of the resamples were dropped.

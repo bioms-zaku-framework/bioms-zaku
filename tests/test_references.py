@@ -53,3 +53,9 @@ def test_bia_references_group_by_source_and_follow_the_catalogue_year():
     assert [o[2] for o in out] == ["II", "R/H, Xc/H", "X"]                       # one line per source, ids joined, sorted by year
     assert out[1][0].startswith("Piccoli A, Rossi B, Pillon L, Bucciante G. A new method") and out[1][1] == "https://doi.org/10.1038/ki.1994.305"
     assert out[2] == ("Someone. 2001.", "", "X")
+
+
+def test_threshold_anchors_are_verified_records_tied_to_their_blocks():
+    for doi, blocks in (("10.2478/joeb-2026-0010", ("m.redund",)), ("10.3390/life13051119", ("m.redund",)), ("10.4324/9780203771587", ("m.spec", "m.util"))):
+        assert doi in R.RECORDS and dict(R.METHOD_REFS)[doi] == blocks
+    txt, url = R.cite("10.4324/9780203771587"); assert txt.startswith("Cohen J. Statistical Power Analysis") and url.endswith("9780203771587")

@@ -14,7 +14,7 @@ the same complete-case rows); within one contrast the rows are the same by const
 from __future__ import annotations
 
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from functools import lru_cache
 from typing import Callable, Sequence
 
@@ -43,6 +43,8 @@ class AuditConfig:
     min_oob: int = 20
     max_attempts_factor: int = 6
     min_B_eff: int | None = None          # EN: minimum VALID resamples (None → 10 % of B, at least 20, never more than B); below it the audit is refused (v1.0)
+    ci_family: float | None = None        # EN: v1.1 — interval level adjusted to the number of methods audited together (1 − 0.05/k); reported, never selected
+    k_methods: int = 1
     seed_cv: int = 42
     seed_bootstrap: int = 42
     ci: float = 0.95
@@ -217,7 +219,7 @@ def verdict_conditional(s1: dict, s2: dict, cfg: AuditConfig) -> str:
     return "SPECIFIC" if a and not b else "TRACKS_CONTROL" if b and not a else "BOTH" if a and b else "NEITHER"
 
 
-def verdict_sensitivity(rows, margins=(0.02, 0.03, 0.05), p_levels=(0.90, 0.95, 0.99)) -> list[dict]:
+def verdict_sensitivity(rows, margins=(0.02, 0.03, 0.05), p_levels=(0.90, 0.95, 0.99), default_margin: float = 0.03, default_p: float = 0.95) -> list[dict]:
     """
     EN: §3.2 (v0.5.1) threshold sensitivity — re-apply the conditional rule to the stored S1/S2 summaries under a grid of
         margins and P levels. Pure reclassification (no refit): the CI is fixed (95 %), only the margin and the P
@@ -231,11 +233,17 @@ def verdict_sensitivity(rows, margins=(0.02, 0.03, 0.05), p_levels=(0.90, 0.95, 
             continue
         s1 = dict(mean=d["s1_mean"], lo=d["s1_lo"], hi=d["s1_hi"], p=d["p_s1"], n=1)
         s2 = dict(mean=d["s2_mean"], lo=d["s2_lo"], hi=d["s2_hi"], p=d["p_s2"], n=1)
+        lvl = d.get("ci_level", float("nan"))
         for mg in margins:
             for pl in p_levels:
                 v = verdict_conditional(s1, s2, AuditConfig(specificity_margin=mg, p_specific=pl))
-                out.append(dict(method_id=d["method_id"], stratum=d["stratum"], target=d["target"], control=d["control"], margin=mg, p_specific=pl,
+                out.append(dict(method_id=d["method_id"], stratum=d["stratum"], target=d["target"], control=d["control"], margin=mg, p_specific=pl, ci_level=lvl,
                                 verdict=v, verdict_default=d["verdict"], changed=(v != d["verdict"])))
+        # EN: v1.1 — the family-level interval (1 − 0.05/k, k methods audited together): declared margin and P, wider interval
+        if d.get("verdict_family") and np.isfinite(d.get("ci_family", float("nan"))):
+            v = d["verdict_family"]
+            out.append(dict(method_id=d["method_id"], stratum=d["stratum"], target=d["target"], control=d["control"], margin=default_margin, p_specific=default_p, ci_level=d["ci_family"],
+                            verdict=v, verdict_default=d["verdict"], changed=(v != d["verdict"])))
     return out
 
 
@@ -274,6 +282,14 @@ class AuditRow:
     s2_lo: float = float("nan")
     s2_hi: float = float("nan")
     p_s2: float = float("nan")
+    ci_level: float = float("nan")         # EN: level of s1_lo/s1_hi/s2_lo/s2_hi (the declared CI)
+    k_methods: int = 1                     # EN: methods audited together in this stratum (v1.1)
+    ci_family: float = float("nan")        # EN: 1 − 0.05/k — the same resamples read at the family level (v1.1)
+    s1_lo_fam: float = float("nan")
+    s1_hi_fam: float = float("nan")
+    s2_lo_fam: float = float("nan")
+    s2_hi_fam: float = float("nan")
+    verdict_family: str = ""               # EN: the same rule with the family-level interval; reported next to `verdict`, never selected
 
 
 def audit_method(method_id: str, stratum: str, x: np.ndarray, targets: dict[str, np.ndarray], controls: dict[str, np.ndarray],
@@ -326,6 +342,13 @@ def audit_method(method_id: str, stratum: str, x: np.ndarray, targets: dict[str,
             row.s1_mean, row.s1_lo, row.s1_hi, row.p_s1 = s1["mean"], s1["lo"], s1["hi"], s1["p"]
             row.s2_mean, row.s2_lo, row.s2_hi, row.p_s2 = s2["mean"], s2["lo"], s2["hi"], s2["p"]
             row.verdict = verdict_conditional(s1, s2, cfg)
+            row.ci_level, row.k_methods = cfg.ci, int(cfg.k_methods)
+            if cfg.ci_family is not None:
+                fam = replace(cfg, ci=cfg.ci_family)
+                s1f, s2f = contrast(ict - ct, fam), contrast(itc - tc, fam)
+                row.ci_family = cfg.ci_family
+                row.s1_lo_fam, row.s1_hi_fam, row.s2_lo_fam, row.s2_hi_fam = s1f["lo"], s1f["hi"], s2f["lo"], s2f["hi"]
+                row.verdict_family = verdict_conditional(s1f, s2f, cfg)
         rows.append(row)
     return rows
 

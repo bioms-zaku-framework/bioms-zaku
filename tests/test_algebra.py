@@ -6,7 +6,7 @@ PT: lições à mão como testes + propriedades de exatidão/invariância.
 import numpy as np
 import pandas as pd
 import pytest
-from bioms_zaku.algebra import (fisher_ci, fit_log_linear, log_covariance, pearson_to_spearman, predicted_pearson_log)
+from bioms_zaku.algebra import (bootstrap_pearson_log_ci, fit_log_linear, log_covariance, pearson_to_spearman, predicted_pearson_log)
 
 # Lição 3: desvios dos logs de 4 pessoas (r, h). Variância/covariância com divisor 4 no caderno; aqui usamos as fórmulas exatas.
 R_DEV = np.array([-0.20, 0.10, 0.20, -0.10]); H_DEV = np.array([0.02, 0.01, -0.03, 0.00])
@@ -78,9 +78,20 @@ def test_fit_log_linear_recovers_exponents_and_counts_nonpositive():
     assert np.allclose(beta, [-1, 0, 2, 0.5], atol=1e-9) and r2 > 1 - 1e-12 and n_used == n - 5 and n_nonpos == 5
 
 
-def test_fisher_ci_narrows_with_n():
-    lo1, hi1 = fisher_ci(0.5, 30); lo2, hi2 = fisher_ci(0.5, 3000)
-    assert lo1 < lo2 < 0.5 < hi2 < hi1
+def test_bootstrap_interval_for_the_pearson_of_logs_covers_the_truth_and_narrows_with_n():
+    # EN: v1.1 — no distributional assumption: rows drawn from a lognormal pair with known Σ; the interval must cover the true
+    #     correlation about 95 % of the time (200 repetitions) and narrow with n. Deterministic by seed.
+    import numpy as np
+    S = np.array([[0.04, 0.02], [0.02, 0.05]]); r_true = S[0, 1] / np.sqrt(S[0, 0] * S[1, 1])
+    rng = np.random.default_rng(123); hits = 0; widths = []
+    for k in range(200):
+        z = rng.multivariate_normal([5.0, 4.0], S, size=120); x, y = np.exp(z[:, 0]), np.exp(z[:, 1])
+        lo, hi = bootstrap_pearson_log_ci(x, y, B=200, seed=k, level=0.95); hits += lo <= r_true <= hi; widths.append(hi - lo)
+    assert 0.90 <= hits / 200 <= 0.99, hits
+    z = rng.multivariate_normal([5.0, 4.0], S, size=3000); lo2, hi2 = bootstrap_pearson_log_ci(np.exp(z[:, 0]), np.exp(z[:, 1]), B=200, seed=1)
+    assert (hi2 - lo2) < np.median(widths) / 3
+    assert bootstrap_pearson_log_ci(x, y, B=200, seed=7) == bootstrap_pearson_log_ci(x, y, B=200, seed=7)   # deterministic
+
 
 
 # ---- Lição 12 (contrato v0.6): vetores implícitos do alvo/controle, cosseno sob Σ, identidade r = cos·√R²

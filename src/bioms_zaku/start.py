@@ -278,6 +278,7 @@ def suggestions(cfg: dict, printer: Callable[[str], None]) -> list[dict]:
                         best, best_id = rho, mid
             ps = manifest["design"]["indices"][did]["per_stratum"][st]
             out.append({"id": did, "target": di.target, "stratum": st, "raw_stratum": raw_key, "variables": list(di.variables), "vector": [float(x) for x in di.vector_design],
+                        "vector_lo": None if di.vector_lo is None else [float(x) for x in di.vector_lo], "vector_hi": None if di.vector_hi is None else [float(x) for x in di.vector_hi],
                         "r2": float(di.r2_design), "n_design": ps["n_design"], "n_audit": ps["n_audit"], "neighbour": best_id, "rho": best,
                         "name": _suggest_name(di.target, st, tgt, ctl)})
     order = {tgt: 0, ctl: 1}
@@ -302,6 +303,8 @@ def _print_suggestion(k: int, sg: dict, printer) -> None:
     printer(t("st.sug_head", k=k, t=sg["target"], s=sg["stratum"], n=sg["n_design"]))
     printer("  " + t("st.sug_formula", f=_compact(sg["variables"], sg["vector"]), r2=f"{sg['r2']:.2f}"))
     printer("  " + _reading(sg["variables"], sg["vector"]))
+    if sg.get("vector_lo") and all(np.isfinite(sg["vector_lo"])):
+        printer("  " + t("st.sug_ci", ci=" · ".join(f"{v} [{l:+.2f}; {h:+.2f}]" for v, l, h in zip(sg["variables"], sg["vector_lo"], sg["vector_hi"]))))
     if sg["neighbour"]:
         printer("  " + t("st.sug_neighbour", m=sg["neighbour"], rho=f"{sg['rho']:.2f}", note=(t("st.sug_repeats") if sg["rho"] >= 0.95 else t("st.sug_original"))))
     printer("  " + t("st.sug_name", name=sg["name"]))

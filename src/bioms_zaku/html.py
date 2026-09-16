@@ -175,10 +175,10 @@ def _table_html(df: pd.DataFrame) -> str:
     return f"<div class='tw'><table><thead><tr>{head}</tr></thead><tbody>{''.join(rows)}</tbody></table></div>{cap}"
 
 
-def _method_block(key: str, **kw) -> str:
+def _method_block(key: str, extra: str = "", **kw) -> str:
     from .i18n import t
     return ("<div class='method'>" + "".join(f"<p><b>{html.escape(t(h))}.</b> {html.escape(t(f'{key}.{k}', **kw))}</p>"
-                                              for h, k in (("h.how", "how"), ("h.read", "read"), ("h.rig", "rigor"))) + "</div>")
+                                              for h, k in (("h.how", "how"), ("h.read", "read"), ("h.rig", "rigor"))) + (f"<p>{html.escape(extra)}</p>" if extra else "") + "</div>")
 
 
 def _tables_block(names: list[str], tables: dict, out_dir: Path, group: str) -> str:
@@ -216,7 +216,7 @@ def _block_kwargs(cfg: dict, manifest: dict, tables: dict) -> dict[str, dict]:
 
 
 BLOCKS = (("m.input", ["sigma"]), ("m.design", []), ("m.redund", ["algebra", "pairs", "redundancy"]), ("m.spec", ["audit"]), ("m.util", ["utility"]),
-          ("m.geo", ["implicit_vectors", "geometry"]), ("m.transfer", ["sigma_transfer"]), ("m.sens", ["threshold_sensitivity", "sensitivity"]),
+          ("m.geo", ["implicit_vectors", "geometry"]), ("m.transfer", ["sigma_transfer"]), ("m.sens", ["threshold_sensitivity", "sensitivity", "sensitivity_scale"]),
           ("m.screen", ["screening", "combinations"]))
 
 
@@ -329,9 +329,66 @@ def _references(cfg: dict, tables: dict, cat, manifest: dict | None = None) -> s
     for did, dz in ((manifest.get("design") or {}).get("indices") or {}).items():
         bia += li(t("h.ref_designed", t=dz.get("target"), orth=(t("h.ref_designed_orth", c=dz.get("orthogonal_to")) if dz.get("orthogonal_to") else "")), "", did)
     soft = "".join(li(*R.cite(k)) for k in R.SOFTWARE_REFS)
-    return (f"<section class='refs' id='refs'>{_h2(7, 'refs', t('h.refs_title'))}<p class='hint'>{html.escape(t('h.refs_note', date=R.VERIFIED_ON))}</p>"
+    return (f"<section class='refs' id='refs'>{_h2(8, 'refs', t('h.refs_title'))}<p class='hint'>{html.escape(t('h.refs_note', date=R.VERIFIED_ON))}</p>"
             f"<h3>{html.escape(t('h.refs_bia'))}</h3><ol>{bia}</ol><h3>{html.escape(t('h.refs_methods'))}</h3><ol>{meth}</ol>"
             f"<h3>{html.escape(t('h.refs_software'))}</h3><ol>{soft}</ol></section>")
+
+
+def _assumptions_section(cfg: dict, manifest: dict, tables: dict) -> str:
+    """EN: v1.1 — every procedure with its assumption and its state IN THIS RUN (by construction / verified with a number /
+    declared limitation), then every threshold with value, origin and support. Numbers are read from the tables and manifest."""
+    from .i18n import t
+    import numpy as np
+    alg = tables.get("algebra"); aud = tables.get("audit"); geo = tables.get("geometry"); pairs = tables.get("pairs"); ss = tables.get("sensitivity_scale")
+    C, V, D = t("a.state.construction"), t("a.state.verified"), t("a.state.declared")
+    rows = []
+    dropped = manifest.get("rows_dropped") or {}
+    rows.append((t("a.positivity"), t("a.positivity.a"), C, t("a.positivity.s", n=int(dropped.get("nonpositive", 0) or 0))))
+    if alg is not None and not alg.empty and pairs is not None and not pairs.empty:
+        exact = set(alg[alg.vector_source.astype(str) == "catalog"].method_id); pp = pairs[~pairs.identity.astype(bool)]
+        both = pp[pp.a_id.isin(exact) & pp.b_id.isin(exact)]; comp = pp[~(pp.a_id.isin(exact) & pp.b_id.isin(exact))]
+        gm = f"{both.abs_err_log.max():.1e}" if len(both) else "—"; gc = f"{comp.abs_err_log.max():.3f}" if len(comp) else "—"
+        rows.append((t("a.identity"), t("a.identity.a"), V, t("a.identity.s", gm=gm, gc=gc)))
+    rows.append((t("a.spearman", thr=cfg["algebra"]["redundancy_threshold"]), t("a.spearman.a"), C, t("a.spearman.s")))
+    if alg is not None and not alg.empty:
+        fitted = alg[alg.vector_source.astype(str) != "catalog"]
+        r2 = f"{fitted.fit_r2.min():.3f}" if len(fitted) else "—"
+        rows.append((t("a.fit"), t("a.fit.a"), V, t("a.fit.s", r2=r2, poor=int(alg.poor_monomial.astype(bool).sum()), min=cfg["algebra"]["min_fit_r2"])))
+    dz = manifest.get("design") or {}
+    if dz.get("n_design"):
+        rows.append((t("a.design"), t("a.design.a"), C, t("a.design.s", nd=dz["n_design"], na=dz["n_audit"], h=dz.get("design_hash", ""))))
+    if aud is not None and not aud.empty:
+        scale = ", ".join(sorted(set(aud.scale.astype(str)))) if "scale" in aud else cfg["audit"].get("scale", "raw")
+        sens = ("yes" if ss is not None and not ss.empty else "no")
+        rows.append((t("a.scale"), t("a.scale.a"), V, t("a.scale.s", scale=scale, sens=sens)))
+        rows.append((t("a.exch"), t("a.exch.a"), D, t("a.exch.s", id=(cfg["data"]["columns"].get("id") or "—"))))
+        b_min = int(aud.B_eff.min()); B = int(aud.B.max()); m = min(B, max(20, int(0.10 * B)))
+        rows.append((t("a.boot"), t("a.boot.a"), V, t("a.boot.s", b=b_min, B=B, m=m)))
+        if "ci_family" in aud:
+            fam = aud[aud.verdict_family.astype(str) != ""]
+            rows.append((t("a.verdict"), t("a.verdict.a"), D, t("a.verdict.s", k=int(aud.k_methods.max()), lvl=f"{float(aud.ci_family.max()):.4f}", kf=int((fam.verdict_family != fam.verdict).sum()), n=len(fam))))
+    if geo is not None and not geo.empty:
+        rows.append((t("a.geo"), t("a.geo.a"), V, t("a.geo.s", r2=f"{min(geo.fit_r2_target.min(), geo.fit_r2_control.min()):.3f}", n=int(geo.poor_projection.astype(bool).sum()))))
+    rows.append((t("a.missing"), t("a.missing.a"), D, t("a.missing.s", list=", ".join(f"{k}: {v}" for k, v in dropped.items() if v) or "—")))
+    if manifest.get("sample_statistics"):
+        rows.append((t("a.stats"), t("a.stats.a"), D, t("a.stats.s")))
+    au = cfg["audit"]; al = cfg["algebra"]; g = cfg.get("geometry") or {}; B = au["bootstrap"]["B"]
+    thr = [(t("a.t.redund"), f"{al['redundancy_threshold']}", t("a.o.anchored"), t("a.t.redund.s")),
+           (t("a.t.margin"), f"{au['verdict']['margin']}", t("a.o.anchored"), t("a.t.margin.s")),
+           (t("a.t.p"), f"{au['verdict']['p_specific']}", t("a.o.convention"), t("a.t.p.s")),
+           (t("a.t.ci"), f"{au['verdict']['ci']:.0%}", t("a.o.convention"), t("a.t.ci.s")),
+           (t("a.t.util"), f"{au['utility_margin']}", t("a.o.anchored"), t("a.t.util.s")),
+           (t("a.t.geo"), f"{g.get('parallel_to_control')} / {g.get('coupled_target_control')} / R² {g.get('min_fit_r2')}", t("a.o.tool"), t("a.t.geo.s")),
+           (t("a.t.tol"), f"{al['transfer_tol']}", t("a.o.tool"), t("a.t.tol.s")),
+           (t("a.t.B"), f"{B}", t("a.o.convention"), t("a.t.B.s")),
+           (t("a.t.cv"), f"{au['cv']['folds']} × {au['cv']['repeats']}", t("a.o.convention"), t("a.t.cv.s")),
+           (t("a.t.frac"), f"{(dz.get('fraction') or 0.70):.0%}", t("a.o.convention"), t("a.t.frac.s")),
+           (t("a.t.minn"), f"{cfg['data']['min_n']} / {au['bootstrap']['min_oob']} / {min(B, max(20, int(0.10 * B)))}", t("a.o.tool"), t("a.t.minn.s"))]
+    body = "".join(f"<tr><td>{html.escape(a)}</td><td>{html.escape(b)}</td><td><b>{html.escape(c)}</b> · {html.escape(d)}</td></tr>" for a, b, c, d in rows)
+    tb = "".join(f"<tr><td>{html.escape(a)}</td><td class='num'>{html.escape(b)}</td><td>{html.escape(c)}</td><td>{html.escape(d)}</td></tr>" for a, b, c, d in thr)
+    return (f"<section id='assump'>{_h2(7, 'assump', t('h.assump_title'))}<p class='hint'>{html.escape(t('h.assump_intro'))}</p>"
+            f"<div class='tw'><table><thead><tr><th>{t('a.h.procedure')}</th><th>{t('a.h.assumption')}</th><th>{t('a.h.state')}</th></tr></thead><tbody>{body}</tbody></table></div>"
+            f"<div class='tw'><table><thead><tr><th>{t('a.h.threshold')}</th><th class='num'>{t('a.h.value')}</th><th>{t('a.h.origin')}</th><th>{t('a.h.support')}</th></tr></thead><tbody>{tb}</tbody></table></div></section>")
 
 
 def _rigor_section(cfg: dict, manifest: dict, out_dir: Path | None = None, tables: dict | None = None) -> str:
@@ -390,7 +447,7 @@ def write_report(out_dir: Path, cfg: dict, tables: dict[str, pd.DataFrame], mani
     parts.append(f"<header>{'<img src=' + chr(34) + logo + chr(34) + ' alt=BioMS-Zaku>' if logo else ''}<span class='brand'>BioMS Zaku</span>"
                  f"<h1><span>{html.escape(_t('h.data'))}:</span> {html.escape(data_name)}</h1>{who}{extra}<div class='chips'>{chips}</div></header>")
     nav = (("about", t("n.about")), ("key", t("n.key")), ("summary", t("n.summary")), ("figures", t("h.figures")), ("results", t("h.results")),
-           ("rigor", t("h.rigor_title")), ("refs", t("h.refs_title")), ("manifest", t("h.manifest")))
+           ("rigor", t("h.rigor_title")), ("assump", t("h.assump_title")), ("refs", t("h.refs_title")), ("manifest", t("h.manifest")))
     parts.append("<nav class='toc'>" + "".join(f"<a href='#{a}'>{html.escape(l)}</a>" for a, l in nav) + "</nav><main>")
     parts.append(_about(cfg, manifest))
     parts.append(_kpi(cfg, manifest, tables, cat))
@@ -413,7 +470,15 @@ def write_report(out_dir: Path, cfg: dict, tables: dict[str, pd.DataFrame], mani
         i += 1
         parts.append(f"<details class='block' name='results'{' open' if i == 1 else ''}><summary><span class='n'>5.{i}</span>{html.escape(t('b.' + key.split('.')[1]))}"
                      f"<span class='hint'>{html.escape(', '.join(present))}</span></summary><div class='body'>")
-        parts.append(_method_block(key, **kw[key]))
+        extra = ""
+        if key == "m.spec" and tables.get("audit") is not None and not tables["audit"].empty and "scale" in tables["audit"]:
+            used = sorted(set(tables["audit"]["scale"].astype(str)))
+            extra = t("m.spec.scale", scale=", ".join(used)) if used == ["log"] else t("m.spec.scale_raw", scale=", ".join(used))
+        if key == "m.sens" and tables.get("audit") is not None and not tables["audit"].empty and "ci_family" in tables["audit"]:
+            a = tables["audit"]; fam = a[a.verdict_family.astype(str) != ""]
+            if len(fam):
+                extra = t("m.sens.family", k=int(a.k_methods.max()), lvl=f"{float(a.ci_family.max()):.4f}", kf=int((fam.verdict_family != fam.verdict).sum()), n=len(fam))
+        parts.append(_method_block(key, extra, **kw[key]))
         parts.append(_tables_block(present, tables, out_dir, key.split(".")[1]) + "</div></details>"); shown.update(present)
     rest = [n for n, df in tables.items() if n not in shown and df is not None and not df.empty]
     if rest:
@@ -423,8 +488,9 @@ def write_report(out_dir: Path, cfg: dict, tables: dict[str, pd.DataFrame], mani
     parts.append("</section>")
     # ---- rigour + references + manifest
     parts.append(_rigor_section(cfg, manifest, out_dir, tables))
+    parts.append(_assumptions_section(cfg, manifest, tables))
     parts.append(_references(cfg, tables, cat, manifest))
-    parts.append(f"{_h2(8, 'manifest', t('h.manifest'))}<details class='block'><summary><span class='n'>8.1</span>manifest.json</summary><div class='body'><pre>" + html.escape(json.dumps(manifest, indent=1, ensure_ascii=False, default=str)) + "</pre></div></details>")
+    parts.append(f"{_h2(9, 'manifest', t('h.manifest'))}<details class='block'><summary><span class='n'>9.1</span>manifest.json</summary><div class='body'><pre>" + html.escape(json.dumps(manifest, indent=1, ensure_ascii=False, default=str)) + "</pre></div></details>")
     parts.append(f"</main><div class='lb' id='lb' hidden><img alt=''></div><footer>BioMS Zaku {manifest.get('package_version', '')} · {html.escape(data_name)}{(' · ' + html.escape(researcher)) if researcher else ''} · preset {manifest.get('preset', '')} · {manifest.get('finished_at', '')} · "
                  f"seeds cv={cfg['seeds']['cv']} bootstrap={cfg['seeds']['bootstrap']} · input sha256 {str(manifest.get('input_sha256', ''))[:12]}… · aggregates only, no row-level data</footer><script>{JS}</script></body></html>")
     p = out_dir / "report.html"

@@ -57,6 +57,8 @@ Abra o `report.html` no navegador (o comando está na última linha do terminal)
   estão acoplados nos seus dados.
 - **Ficha de vereditos** (uma por estrato): cada método em três colunas — original ou repete um método anterior; específico,
   acompanha o controle, mede os dois ou sem sinal; acrescenta valor além de massa e estatura ou não. ◇ = seu; △ = desenhado.
+- **Pressupostos e limiares**: cada procedimento com o pressuposto que carrega e o estado nesta execução; cada limiar com valor,
+  origem e sustentação. É onde um revisor confere que nada foi improvisado.
 - **Referências**: as fontes dos métodos avaliados e dos métodos estatísticos, com DOI.
 
 Regras de leitura que valem sempre: cada número descreve **esta** amostra; um índice "repete" outro só nesta amostra e para este

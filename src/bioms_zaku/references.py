@@ -11,10 +11,13 @@ IT: record bibliografici verificati su Crossref (2026-09-15); non tradotti.
 """
 from __future__ import annotations
 
-VERIFIED_ON = "2026-09-15"
+VERIFIED_ON = "2026-09-16"
 
 # EN: DOI -> record, straight from Crossref (see the module docstring). `pages` may be a first page or an article number.
 RECORDS: dict[str, dict] = {
+    '10.2478/joeb-2026-0010': {"authors": "Lafontant K, Fukuda DH, Smith S, et al.", "year": 2026, "title": "Examining within-session test-retest reliability of four bioimpedance devices among adults across a wide age range", "journal": "Journal of Electrical Bioimpedance", "volume": "17", "issue": "1", "pages": "67-77"},
+    '10.3390/life13051119': {"authors": "Yang J, Kim J, Chun Bc, Lee Jm", "year": 2023, "title": "Cook with Different Pots, but Similar Taste? Comparison of Phase Angle Using Bioelectrical Impedance Analysis According to Device Type and Examination Posture", "journal": "Life", "volume": "13", "issue": "5", "pages": "1119"},
+    '10.4324/9780203771587': {"authors": "Cohen J", "year": 2013, "title": "Statistical Power Analysis for the Behavioral Sciences", "journal": "Routledge (reissue of the 1988 2nd edition)", "volume": "", "issue": "", "pages": ""},
     '10.2307/2983064': {"authors": "Kronmal RA", "year": 1993, "title": "Spurious Correlation and the Fallacy of the Ratio Standard Revisited", "journal": "Journal of the Royal Statistical Society. Series A (Statistics in Society)", "volume": "156", "issue": "3", "pages": "379"},
     '10.2307/2412740': {"authors": "Atchley WR, Gaskins CT, Anderson D", "year": 1976, "title": "Statistical Properties of Ratios. I. Empirical Results", "journal": "Systematic Zoology", "volume": "25", "issue": "2", "pages": "137"},
     '10.2307/1412159': {"authors": "Spearman C", "year": 1904, "title": "The Proof and Measurement of Association between Two Things", "journal": "The American Journal of Psychology", "volume": "15", "issue": "1", "pages": "72"},
@@ -65,7 +68,13 @@ RECORDS_NO_DOI: dict[str, dict] = {
 }
 
 # EN: which statistical/algebraic reference supports which result block (keys of html.BLOCKS). Order = order of citation.
+#     The three records dated 2026-09-16 anchor the declared thresholds (contract §3.6): the redundancy threshold 0.95 on the
+#     within-session repeatability of R, Xc and PhA (ICC > 0.90, CV 0.78 %) and the cross-device agreement of PhA (ICC 0.993);
+#     the verdict margin 0.03 in R² above Cohen's small effect f² = 0.02 (ΔR² = f²·(1 − R²) ≤ 0.02 for any baseline).
 METHOD_REFS: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("10.2478/joeb-2026-0010", ("m.redund",)),                # Lafontant 2026 — test-retest of R, Xc, PhA (anchor of the 0.95 threshold)
+    ("10.3390/life13051119", ("m.redund",)),                  # Yang 2023 — phase angle across devices/postures (anchor of the 0.95 threshold)
+    ("10.4324/9780203771587", ("m.spec", "m.util")),          # Cohen 1988/2013 — small effect f² = 0.02 (anchor of the 0.03 margin)
     ("10.2307/2983064", ("m.redund", "m.geo")),              # Kronmal 1993 — ratios and indices: spurious correlation of ratio standards
     ("10.2307/2412740", ("m.redund", "m.geo")),              # Atchley 1976 — statistical properties of ratios
     ("10.1152/jappl.1995.79.3.1027", ("m.redund",)),         # Nevill & Holder 1995 — allometric (power-function) scaling

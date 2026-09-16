@@ -169,7 +169,9 @@ def read_table(source: str | os.PathLike | pd.DataFrame, mapping: Mapping | dict
             raise InputError(f"pairing {t!r} ({ttypes[t]}) -> {c!r} ({ttypes[c]}): types must match")
     for name in list(m.targets) + list(m.controls):
         info["rows_dropped"][f"missing_{name}"] = int(out[name].isna().sum())
-
+    # EN: rows with a missing value in a mapped column are excluded and counted per reason (above); results describe the
+    #     people who remain. No imputation, no comparison with the excluded rows: the framework describes the analysed
+    #     sample, it does not estimate a population (decision of 2026-09-16).
     # EN: strata / class minimums. ES: mínimos por estrato/clase. PT: mínimos por estrato/classe.
     if m.strata:
         counts = out[m.strata].value_counts(dropna=False)

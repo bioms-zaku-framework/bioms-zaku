@@ -119,11 +119,24 @@ def pearson_to_spearman(r: float) -> float:
     return float((6.0 / np.pi) * np.arcsin(np.clip(r, -1.0, 1.0) / 2.0))
 
 
-def fisher_ci(r: float, n: int, alpha: float = 0.05) -> tuple[float, float]:
-    """EN: Fisher z interval for a correlation. ES/PT: intervalo de Fisher."""
-    from scipy.stats import norm
-    z = np.arctanh(np.clip(r, -0.999999, 0.999999)); se = 1.0 / np.sqrt(n - 3); q = norm.ppf(1 - alpha / 2)
-    return float(np.tanh(z - q * se)), float(np.tanh(z + q * se))
+def bootstrap_pearson_log_ci(x: np.ndarray, y: np.ndarray, *, B: int = 200, seed: int = 42, level: float = 0.95) -> tuple[float, float]:
+    """
+    EN: percentile interval for the Pearson correlation of ln x and ln y by resampling PEOPLE (rows) — no distributional
+        assumption (the Fisher z interval assumed bivariate normality of the logs, rejected on NHANES; v1.1). Deterministic.
+    ES/PT: intervalo por percentis do bootstrap de pessoas para a correlação de Pearson dos logs; sem pressuposto de distribuição.
+    """
+    lx, ly = np.log(np.asarray(x, float)), np.log(np.asarray(y, float)); n = len(lx)
+    rng = np.random.default_rng(seed); rs = np.empty(B)
+    for b in range(B):
+        i = rng.integers(0, n, n)
+        a, c = lx[i], ly[i]
+        sa, sc = a.std(), c.std()
+        rs[b] = float(np.corrcoef(a, c)[0, 1]) if sa > 0 and sc > 0 else np.nan
+    rs = rs[np.isfinite(rs)]
+    if len(rs) < max(20, B // 10):
+        return float("nan"), float("nan")
+    q = (1 - level) / 2 * 100
+    return float(np.percentile(rs, q)), float(np.percentile(rs, 100 - q))
 
 
 # ----------------------------------------------------------------------------------------------
@@ -159,12 +172,12 @@ def compute_vectors(cat: Catalog, values: dict[str, np.ndarray], frame: pd.DataF
 
 
 def pairs_table(cat: Catalog, vecs: dict[str, VectorFit], values: dict[str, np.ndarray], sigma: np.ndarray,
-                stratum: str, *, min_pair_n: int = 30, alpha: float = 0.05) -> pd.DataFrame:
+                stratum: str, *, min_pair_n: int = 30, ci_level: float = 0.95, B: int = 200, seed: int = 42) -> pd.DataFrame:
     """
-    EN: all method pairs in a stratum: predicted Pearson-on-logs (exact identity), observed Pearson-on-logs, observed
-        Spearman with its Fisher interval (descriptive), identity flag. No Spearman conversion (v0.5: the identity is stated
-        and checked on the Pearson-of-logs scale only).
-    ES/PT: todos os pares no estrato com previsto/observado e flag de identidade.
+    EN: all method pairs in a stratum: predicted Pearson-on-logs (exact identity), observed Pearson-on-logs with a person-
+        bootstrap percentile interval (descriptive, distribution-free; v1.1), observed Spearman, identity flag. No Spearman
+        conversion (v0.5: the identity is stated and checked on the Pearson-of-logs scale only).
+    ES/PT: todos os pares no estrato com previsto/observado (intervalo bootstrap) e flag de identidade.
     """
     ids = [e.id for e in cat.entries if e.id in vecs]
     identity = {e.id: e.identity_of for e in cat.entries if e.identity_of}
@@ -178,12 +191,12 @@ def pairs_table(cat: Catalog, vecs: dict[str, VectorFit], values: dict[str, np.n
         r_pred = predicted_pearson_log(vecs[a].vector, vecs[b].vector, sigma)
         r_obs = float(np.corrcoef(np.log(va[ok]), np.log(vb[ok]))[0, 1])
         rho_obs = float(spearmanr(va[ok], vb[ok])[0])
-        lo, hi = fisher_ci(rho_obs, n, alpha)
+        lo, hi = bootstrap_pearson_log_ci(va[ok], vb[ok], B=B, seed=seed, level=ci_level)
         # EN: `identity` = the pair is (method, its exact transformation) OR involves a copy (a method with identity_of),
         #     whose pairs duplicate the original's; such pairs are excluded from prediction statistics and figures.
         is_id = identity.get(a) == b or identity.get(b) == a or a in identity or b in identity
         rows.append(dict(a_id=a, b_id=b, stratum=stratum, n_pair=n, r_log_predicted=r_pred, r_log_observed=r_obs,
-                         rho_sp_observed=rho_obs, ci_lo=lo, ci_hi=hi, abs_err_log=abs(r_pred - r_obs), identity=is_id))
+                         rho_sp_observed=rho_obs, r_log_lo=lo, r_log_hi=hi, abs_err_log=abs(r_pred - r_obs), identity=is_id))
     return pd.DataFrame(rows)
 
 

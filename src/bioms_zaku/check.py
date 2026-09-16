@@ -152,6 +152,7 @@ def check(config: str | Path | dict, *, printer: Callable[[str], None] = print) 
     if est in ("ridge", "logistic"):
         est = "logistic" if task == "classification" else "ridge"      # EN: effective default per task (§3.2)
     rep["info"].append(t("c.preset", p=cfg["preset"], task=(t(f"task.{task}") if task in ("regression", "classification", "auto") else task), f=cfg["audit"]["cv"]["folds"], r=cfg["audit"]["cv"]["repeats"], B=B, est=est))
+    rep["info"].append(t("c.scale", scale=cfg["audit"]["scale"]) if cfg["audit"]["scale"] == "log" else t("c.scale_raw"))
     _emit(rep, printer)
     if rep["errors"]:
         raise CheckError(t("c.blocking", n=len(rep["errors"]), list=" | ".join(rep["errors"])))   # EN: reasons travel with the exception (API users)

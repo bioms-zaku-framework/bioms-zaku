@@ -343,6 +343,39 @@ acende, ortogonal ⇒ apagada; identidade do item 4 no exemplo embarcado (1e-9);
 
 ---
 
+### 3.6 Pressupostos declarados e limiares com origem (v1.1, 16/09/2026)
+Todo relatório traz a seção **Pressupostos e limiares**, gerada da execução: cada procedimento com o pressuposto que carrega e o
+seu estado naquela execução (por construção · verificado, com o número · limitação declarada), e cada limiar com valor, origem e
+sustentação. Os ajustes de pressuposto desta versão (PLANO_v1.1_pressupostos.md):
+- **Pares:** intervalo bootstrap de pessoas para a correlação de Pearson dos logs (`r_log_lo`, `r_log_hi`, nível `pair_ci_level`),
+  sem pressuposto de distribuição; o intervalo de Fisher (normalidade bivariada, rejeitada no NHANES) foi removido. Teste de cobertura.
+- **Escala da auditoria:** `audit.scale: log` por padrão — índice, alvos/controles contínuos e covariáveis entram como logaritmos, a
+  escala da álgebra; rótulos de classificação nunca são transformados; valor não positivo em alvo/controle/covariável faz o estrato
+  cair para a escala bruta com aviso (`audit.scale` registrado por linha). A outra escala é auditada e reportada em
+  `sensitivity_scale.csv` (`audit.sensitivity.scale`, ligado no preset `full`), nunca escolhida.
+- **k métodos, uma regra:** a regra do veredito é por método, sem correção, e o relatório o diz; nas mesmas reamostras calcula-se o
+  intervalo ao nível de família 1 − 0,05/k (`ci_family`, `verdict_family`, colunas `*_fam`) e a sensibilidade de limiares ganha uma
+  linha por método com `ci_level` = nível de família; com k = 1 é idêntico ao padrão. Reportado, nunca escolhido.
+- **Valores faltantes:** linhas com valor faltante nas colunas mapeadas são excluídas e contadas por motivo; os resultados descrevem
+  as pessoas que ficaram; sem imputação e sem comparação com as excluídas (o framework descreve a amostra analisada, não estima
+  população — decisão de 16/09/2026).
+- **Expoentes desenhados:** intervalo bootstrap de pessoas por expoente (`vector_lo`, `vector_hi`, B = `transfer_B`) no manifesto,
+  no resumo e na tela de sugestões; o vetor usado continua sendo o ajuste da partição inteira.
+
+| limiar | valor | origem | sustentação |
+|---|---|---|---|
+| redundância, \|Spearman\| ≥ | 0,95 | ancorado na literatura | dois índices que ordenam a ≥ 0,95 diferem tanto quanto a BIA se repete: ICC intra-sessão > 0,90 para R, Xc e PhA (Lafontant 2026, 10.2478/joeb-2026-0010) e PhA entre aparelhos ICC 0,993 (Yang 2023, 10.3390/life13051119) — âncora por analogia, declarada como tal; sensibilidade fixa |
+| margem do veredito, ganho em R² | 0,03 | ancorado na literatura | acima do efeito pequeno de Cohen f² = 0,02: ΔR² = f²·(1 − R²) ≤ 0,02 para qualquer base (Cohen 1988, 10.4324/9780203771587) |
+| P(ganho > 0) ≥ | 0,95 | convenção | espelho do 5 % unilateral |
+| nível do intervalo | 95 % | convenção | universal; nível de família 1 − 0,05/k reportado |
+| margem do valor acrescentado | 0,03 | ancorado | mesma âncora da margem do veredito |
+| cos paralelo / acoplado / R² projeção | 0,90 / 0,80 / 0,50 | decisão do framework | bandeiras descritivas; cossenos e R² publicados por inteiro |
+| tolerância da transferência de Σ | 0,05 | decisão do framework | tolerância fixa em r, justa com n |
+| B do bootstrap | 2 000 | convenção | percentis estáveis (Efron 1979) |
+| validação cruzada | 5 × 50 | convenção | CV repetida para a estimativa pontual; intervalos do bootstrap (Bengio & Grandvalet 2004) |
+| partição de desenho | 70/30 | convenção | opções declaradas 60 e 75 |
+| n mínimo / fora da bolsa / reamostras válidas | 30 / 20 / máx(20, 10 % de B) | decisão do framework | mínimos operacionais (ridge com um preditor; reamostra pontuável; intervalo não degenerado) |
+
 ## 4. Contrato de SAÍDAS
 
 ### 4.1 Tabelas (CSV UTF-8, `,` e `.`, precisão completa, ordenação determinística; **só agregados**)
@@ -464,6 +497,11 @@ rápido é condição para outros pesquisadores usarem e aprimorarem.
 ---
 
 ## 6. Changelog
+- **v1.1.0-rc1 (16/09/2026)** — §3.6 pressupostos declarados e limiares com origem: intervalo bootstrap nos pares (Fisher removido),
+  auditoria na escala logarítmica com a escala bruta em sensibilidade, nível de família 1 − 0,05/k reportado, regra de valores
+  faltantes declarada, intervalos bootstrap dos expoentes desenhados, seção "Pressupostos e limiares" no relatório (4 línguas),
+  três registros verificados no Crossref para as âncoras (Lafontant 2026, Yang 2023, Cohen 1988). Testes de propriedade
+  (cobertura, escala, k = 1, determinismo). Classificação: revisão própria pendente.
 - **v1.0.0-rc1 (15/09/2026)** — §3.5 caminho guiado `start` (PLANO_v1.0_fluxo.md): cinco telas, navegação (`<`, `?`, resumo,
   corrigir linha), sugestões sem veredito antes do aceite, aceitar/editar/não, índice próprio, rodada final nas linhas nunca vistas;
   YAML gravado por tela e reprodutível com `run`; `--map --yes`; Ctrl+C 130. `init` deixa de perguntar `design`. Rigor acrescentado

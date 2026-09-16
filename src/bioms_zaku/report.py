@@ -87,7 +87,8 @@ def write_summary(out_dir: Path, cfg: dict, tables: dict[str, pd.DataFrame], man
             ps = (spec.get("per_stratum") or {}).get(s)
             if ps is None:
                 continue
-            vec = ", ".join(f"{v} {x:+.2f}" for v, x in zip(manifest["design"].get("variables", []), ps["vector_design"]))
+            lo, hi = ps.get("vector_lo") or [], ps.get("vector_hi") or []
+            vec = ", ".join(f"{v} {x:+.2f}" + (f" [{l:+.2f}; {h:+.2f}]" if lo and np.isfinite(lo[i]) else "") for i, (v, x) in enumerate(zip(manifest["design"].get("variables", []), ps["vector_design"])) for l, h in [(lo[i] if lo else np.nan, hi[i] if hi else np.nan)])
             items.append(t("s.designed_item", id=did, t=spec["target"], orth=(t("s.designed_orth", c=spec["orthogonal_to"]) if spec.get("orthogonal_to") else ""), vec=vec,
                            r2=f"{ps['r2_design']:.3f}", r2u=(t("s.designed_r2u", r2u=f"{ps['r2_unconstrained']:.3f}") if ps.get("r2_unconstrained") is not None else "")))
         if items:
@@ -150,6 +151,12 @@ def write_summary(out_dir: Path, cfg: dict, tables: dict[str, pd.DataFrame], man
         L += [t("s.est_title"), "", t("s.est_intro", est=se.estimator.iloc[0], prim=se.estimator_primary.iloc[0], k=int(se.verdict_changed.sum()), n=len(se),
                                       d1=f"{se.s1_delta.abs().median():.3f}", d2=f"{se.s2_delta.abs().median():.3f}"), "", t("s.est_header"), "|---|---|---|---|---|---|---|---|---|"]
         L += [f"| {x.stratum} | {x.method_id} | {x.target} | {x.s1_primary:+.3f} | {x.s1_mean:+.3f} | {x.s2_primary:+.3f} | {x.s2_mean:+.3f} | {x.verdict_primary} | {x.verdict} |" for x in se.itertuples()]
+        L.append("")
+    ss = tables.get("sensitivity_scale")
+    if ss is not None and not ss.empty:
+        L += [t("s.scale_title"), "", t("s.scale_intro", prim=ss.scale_primary.iloc[0], other=ss.scale.iloc[0], k=int(ss.verdict_changed.sum()), n=len(ss),
+                                        d1=f"{ss.s1_delta.abs().median():.3f}", d2=f"{ss.s2_delta.abs().median():.3f}"), "", t("s.scale_header"), "|---|---|---|---|---|---|---|---|---|"]
+        L += [f"| {x.stratum} | {x.method_id} | {x.target} | {x.s1_primary:+.3f} | {x.s1_mean:+.3f} | {x.s2_primary:+.3f} | {x.s2_mean:+.3f} | {x.verdict_primary} | {x.verdict} |" for x in ss.itertuples()]
         L.append("")
     if "sigma_transfer" in tables and not tables["sigma_transfer"].empty:
         tr = tables["sigma_transfer"].sort_values(["sigma_from", "observed_in"]).reset_index(drop=True)   # EN: same order as the CSV

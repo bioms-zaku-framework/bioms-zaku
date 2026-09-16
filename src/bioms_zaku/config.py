@@ -22,12 +22,14 @@ DEFAULTS: dict[str, Any] = {
     "strata": None,
     "strata_labels": {},   # EN: optional display names for stratum values, e.g. {0: F, 1: M}
     "algebra": {"fit_affine": True, "extra_log_variables": [], "min_fit_r2": 0.90, "redundancy_threshold": 0.95,
-                "min_pair_n": 30, "transfer": True, "fisher_alpha": 0.05,
+                "min_pair_n": 30, "transfer": True, "pair_ci_level": 0.95,   # EN: v1.1 — person-bootstrap interval for the observed Pearson of logs (Fisher removed)
                 "transfer_tol": 0.05, "transfer_B": 200},   # EN: v0.5 Σ-transfer: fixed tolerance and person-bootstrap size
     "audit": {"task": "auto",
+              "scale": "log",              # EN: v1.1 — index, continuous targets/controls and covariates enter the audit as logarithms (the algebra's scale);
+                                           #     "raw" keeps the original scales. The other scale is reported in the sensitivity block, never selected.
               "single": {"estimator": "ridge", "params": {"alpha": 1.0}},
               "combination": {"estimator": "hgb", "params": {"max_depth": 3, "learning_rate": 0.05, "max_iter": 300}},
-              "sensitivity": {"estimator": None, "params": {}, "nested_tuning": False},
+              "sensitivity": {"estimator": None, "params": {}, "nested_tuning": False, "scale": True},   # EN: scale: also audit on the other scale (reported)
               "cv": {"folds": 5, "repeats": 50, "stratified": "auto"},
               "bootstrap": {"B": 2000, "min_oob": 20, "max_attempts_factor": 6},
               "utility_margin": 0.03, "verdict": {"p_specific": 0.95, "p_control": 0.05, "ci": 0.95, "margin": 0.03,
@@ -49,7 +51,7 @@ DEFAULTS: dict[str, Any] = {
                 "font": "DejaVu Sans", "font_size": 8.5, "dpi": 300, "formats": ["png", "pdf"], "footer": True,
                 "captions": False},   # EN: in-figure explanatory legends off by default; the report/documentation text explains each figure
 }
-PRESETS = {"quick": {"audit": {"cv": {"repeats": 5}, "bootstrap": {"B": 200}}}, "full": {}}
+PRESETS = {"quick": {"audit": {"cv": {"repeats": 5}, "bootstrap": {"B": 200}, "sensitivity": {"scale": False}}}, "full": {}}
 
 
 def _merge(base: dict, over: dict) -> dict:
@@ -85,6 +87,8 @@ def resolve(cfg: dict | str | Path) -> dict:
         specs = [dz] if isinstance(dz, dict) else dz
         if not isinstance(specs, list) or not all(isinstance(x, dict) and x.get("target") for x in specs):
             raise ValueError("design must be a block with `target` or a list of such blocks (each may add orthogonal_to, id, fraction, seed)")
+    if r["audit"].get("scale") not in ("log", "raw"):
+        raise ValueError("audit.scale must be 'log' (default) or 'raw'")
     inc = r["catalog"]["include"]
     if not (inc in ("all", "curated") or (isinstance(inc, list) and all(isinstance(x, str) for x in inc))):
         raise ValueError("catalog.include must be 'curated' (default), 'all', or a list of method ids")
