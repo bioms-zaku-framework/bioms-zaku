@@ -80,6 +80,25 @@ masses, the regression audit on real data. Provenance, exclusions, seed and SHA-
 generator: `tools/make_nhanes_example.py`. Column names are the ones the guided flow recognises (`bioms-zaku start
 examples/nhanes_diabetes_400.csv`). This is the only example with real rows; the others are synthetic.
 
+**Getting the example data after `pip install`** (nothing is downloaded; the files ship with the package):
+
+```bash
+bioms-zaku examples                    # list: name, SYNTHETIC or REAL, rows, file
+bioms-zaku examples --copy             # copies into ./zaku_exemplos (an existing folder is never touched: _2, _3 …)
+cd zaku_exemplos && bioms-zaku start example_data_400.csv
+```
+
+```python
+from bioms_zaku.datasets import list_examples, load_example, copy_examples
+df = load_example("synthetic_400")      # 400 synthetic rows (first 200 per sex of example_data.csv)
+```
+
+`example_data_400.csv` is the test-sized cut of the synthetic file, written by the same generator: its `label_synthetic` depends
+only on FMI and age, so a classification audit with FMI as control has a known answer (no index should add beyond FMI).
+
+**Results are never overwritten.** A run whose folder already holds a finished run goes to `name_2`, `name_3`, …; the guided
+flow's standard and final runs therefore land in two folders. `output.overwrite: true` replaces instead, and says so.
+
 **How many people do I need?** 30 per stratum for a continuous target; 20 in the smaller class for classification (between 20
 and ~32 the report flags *events per variable < 10* and the verdict is exploratory); about 185 per stratum to ask for designed
 indices; one row per person (aggregate repeated measurements first — repeated ids are refused in this version).

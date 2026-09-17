@@ -112,7 +112,7 @@ def test_expert_use_shows_suggestions_without_verdicts_then_validates_on_never_s
     cfg = yaml.safe_load(p.read_text(encoding="utf-8"))
     assert [d["id"] for d in cfg["design"]] == ["Zaku_LM", "Zaku_FM"] and cfg["data"]["columns"]["pairing"] == {"lean": "fat", "fat": "lean"}
     ue = cfg["catalog"]["user_entries"]; assert len(ue) == 1 and ue[0]["id"] == "Meu_LM_M" and ue[0]["provenance"]["formula_source"] == "proposed" and ue[0]["form"] == "monomial"
-    out = tmp_path / "out" / p.name.split(".")[0]
+    out = tmp_path / "out" / (p.name.split(".")[0] + "_2")        # v1.2: standard run in <name>, final run in <name>_2
     alg = pd.read_csv(out / "algebra.csv")
     assert {"Zaku_LM", "Zaku_FM", "Meu_LM_M"} <= set(alg.method_id) and alg[alg.method_id == "Meu_LM_M"].proposed.all() and alg[alg.method_id == "Zaku_LM"].designed.all()
     man = yaml.safe_load((out / "manifest.json").read_text(encoding="utf-8"))
@@ -134,7 +134,7 @@ def test_yes_mode_needs_no_questions_and_the_yaml_reproduces_the_tables_byte_for
     p = start(str(_big_csv(tmp_path)), str(tmp_path / "y.yaml"), ask=None, map_flags=dict(FBIG), yes=True, printer=lambda s: None, runner=_quick)
     cfg = yaml.safe_load(p.read_text(encoding="utf-8"))
     assert [d["id"] for d in cfg["design"]] == ["Zaku_LM", "Zaku_FM"] and "user_entries" not in cfg.get("catalog", {})
-    out = tmp_path / "out" / p.name.split(".")[0]
+    out = tmp_path / "out" / (p.name.split(".")[0] + "_2")        # the final run (the one the YAML describes)
     h1 = {f.name: hashlib.sha256(f.read_bytes()).hexdigest() for f in out.glob("*.csv")}
     from bioms_zaku.run import run
     cfg["output"]["dir"] = str(tmp_path / "again"); run(cfg, printer=lambda s: None)      # the written YAML, run again, no questions
@@ -147,7 +147,7 @@ def test_validation_numbers_do_not_depend_on_accepted_names_or_order(tmp_path):
     big = _big_csv(tmp_path)
     a = start(str(big), str(tmp_path / "n1.yaml"), ask=_ask(SBIG + ["yes", "yes", "yes", "yes", "yes", "no"]), printer=lambda s: None, runner=_quick)
     b = start(str(big), str(tmp_path / "n2.yaml"), ask=_ask(SBIG + ["yes", "edit", "Alfa_F", "", "edit", "Alfa_M", "", "edit", "Beta_F", "", "edit", "Beta_M", "", "no"]), printer=lambda s: None, runner=_quick)
-    ra = pd.read_csv(tmp_path / "out" / "n1" / "audit.csv"); rb = pd.read_csv(tmp_path / "out" / "n2" / "audit.csv")
+    ra = pd.read_csv(tmp_path / "out" / "n1_2" / "audit.csv"); rb = pd.read_csv(tmp_path / "out" / "n2_2" / "audit.csv")   # final runs
     pub = lambda df: df[~df.method_id.isin(["Zaku_LM", "Zaku_FM", "Alfa", "Beta"])].sort_values(["stratum", "method_id", "target"]).reset_index(drop=True)
     pd.testing.assert_frame_equal(pub(ra), pub(rb))                                       # published methods: identical numbers
     da = ra[ra.method_id == "Zaku_LM"].sort_values(["stratum", "target"]).drop(columns="method_id").reset_index(drop=True)

@@ -281,10 +281,29 @@ def design_all(cfg: dict, ds, frame: pd.DataFrame, warnings: list, manifest: dic
     return designed, frame
 
 
+def next_free_dir(base: Path) -> Path:
+    """EN: `base` if it holds no finished run (no manifest.json), else the first `base_2`, `base_3`, … that holds none."""
+    base = Path(base)
+    if not (base / "manifest.json").exists():
+        return base
+    k = 2
+    while (base.parent / f"{base.name}_{k}" / "manifest.json").exists():
+        k += 1
+    return base.parent / f"{base.name}_{k}"
+
+
 def _run(cfg: dict, *, printer: Callable[[str], None]) -> dict:
     t0 = time.time()
-    out_dir = Path(cfg["output"]["dir"]) / cfg["run_name"]
-    overwrite_note = _t("r.overwrite", dir=out_dir) if (out_dir / "manifest.json").exists() else None   # EN: never replace a previous run silently
+    base = Path(cfg["output"]["dir"]) / cfg["run_name"]
+    overwrite_note = None
+    if cfg["output"].get("overwrite"):
+        out_dir = base
+        if (out_dir / "manifest.json").exists():
+            overwrite_note = _t("r.overwrite", dir=out_dir)   # EN: explicit choice, still said aloud and recorded
+    else:
+        out_dir = next_free_dir(base)                          # EN: v1.2 — a finished run is never replaced
+        if out_dir != base:
+            overwrite_note = _t("r.numbered", prev=base, dir=out_dir)
     if overwrite_note:
         printer(overwrite_note)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -302,7 +321,7 @@ def _run(cfg: dict, *, printer: Callable[[str], None]) -> dict:
     warnings = list(ds.info["warnings"])
     notes = [overwrite_note.lstrip("⚠ ")] if overwrite_note else []   # EN: operational, not scientific: manifest + rigour section only
     frame = ds.frame
-    manifest = {"run_name": cfg["run_name"], "study": dict(cfg.get("study") or {}), "config_resolved": cfg, "config_sha256": sha256_obj(cfg), "catalog_version": cat.version,
+    manifest = {"run_name": cfg["run_name"], "output_folder": out_dir.name, "study": dict(cfg.get("study") or {}), "config_resolved": cfg, "config_sha256": sha256_obj(cfg), "catalog_version": cat.version,
                 "catalog_sha256": sha256_file(cat.source_path) if cat.source_path and Path(cat.source_path).exists() else None,
                 "input_path": ds.info.get("input_path"), "input_sha256": sha256_file(d["path"]) if isinstance(d["path"], (str, Path)) else None,
                 "input_rows": ds.info["rows_in"], "rows_out": ds.info["rows_out"], "sep_used": ds.info.get("sep_used"),

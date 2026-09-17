@@ -30,6 +30,9 @@ def main(argv=None) -> int:
     st.add_argument("csv"); st.add_argument("-o", "--out", default=None); st.add_argument("--sep", default="auto"); st.add_argument("--decimal", default="auto")
     st.add_argument("--encoding", default="utf-8"); st.add_argument("--map", nargs="*", default=None, help="role=column pairs (no questions)")
     st.add_argument("--yes", action="store_true", help="accept every suggestion (scripts, CI)")
+    ex = sub.add_parser("examples", help="list the bundled example data; --copy FOLDER copies them (never overwriting)")
+    ex.add_argument("--copy", nargs="?", const="zaku_exemplos", default=None, metavar="FOLDER")
+    ex.add_argument("--name", nargs="*", default=None, help="only these examples")
     a = ap.parse_args(argv)
     from .i18n import set_language, t
     if a.lang:
@@ -66,6 +69,18 @@ def main(argv=None) -> int:
             propose(a.config, ask=lambda prompt, default: input(prompt + (f" [{default}]" if default else "") + ": "), lang=a.lang)
         except InputError as e:
             print(t("cli.propose_err", e=e), file=sys.stderr); return 2
+        return 0
+    if a.cmd == "examples":
+        from .datasets import copy_examples, list_examples
+        rows = [r for r in list_examples() if not a.name or r["name"] in a.name]
+        for r in rows:
+            print(t("ex.line", name=r["name"], kind=t("ex.kind." + r["kind"]), n=r["rows"], csv=r["csv"], desc=r["description"]))
+        if a.copy is not None:
+            folder = copy_examples(a.copy, a.name)
+            print(t("ex.copied", dir=folder.resolve()))
+            print(t("ex.next", dir=folder))
+        else:
+            print(t("ex.hint"))
         return 0
     if a.cmd == "render":
         from .run import render

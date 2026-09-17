@@ -43,7 +43,7 @@ DEFAULTS: dict[str, Any] = {
     "preset": "full",
     "threads": 1,
     "n_jobs": "auto",   # EN: v1.2 — "auto" = all cores but one (resolved here); any int accepted; never changes a number (§3.2)
-    "output": {"dir": "./zaku_out", "figures": True, "supplementary_figures": False, "format": "csv"},
+    "output": {"dir": "./zaku_out", "figures": True, "supplementary_figures": False, "format": "csv", "overwrite": False},   # EN: v1.2 — a new run never replaces a finished one: _2, _3, … unless overwrite: true
     # EN: figure customisation (all optional). language: en | es | pt (axis labels, legends, captions).
     # ES/PT: personalização das figuras (tudo opcional).
     "figures": {"title": None, "subtitle": None, "language": None, "labels": "full",   # language None → top-level `language`   # labels: full | short (author year)

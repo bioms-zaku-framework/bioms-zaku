@@ -83,6 +83,14 @@ sexo) e a regressão em dados reais. Procedência, exclusões, semente e SHA-256
 gerador `tools/make_nhanes_example.py` (determinístico). Até esta versão todos os exemplos eram sintéticos; este é o único com
 linhas reais, e continua valendo: nenhum resultado do framework depende dele (independência do piloto, §5).
 
+### 1.4c Exemplos embarcados no pacote e saídas numeradas (v1.2, 16/09/2026)
+`examples/` entra na roda como `bioms_zaku/examples` (nada é baixado). API `bioms_zaku.datasets` (`list_examples`, `example_path`,
+`load_example`, `copy_examples`) e comando `bioms-zaku examples [--copy PASTA] [--name ...]`; cada exemplo é rotulado **sintético**
+ou **real**; a cópia nunca altera uma pasta existente (`_2`, `_3`, …) e reescreve `data.path` dos YAML para a própria pasta.
+`example_data_400.csv` = as 200 primeiras linhas de cada sexo de `example_data.csv`, escrito pelo mesmo gerador (o arquivo de
+8000 linhas continua idêntico byte a byte). **Saídas**: se `output.dir/run_name` já contém `manifest.json`, a execução vai para
+`run_name_2`, `_3`, …; `output.overwrite: true` substitui e o aviso fica no manifesto; `manifest.output_folder` registra a pasta.
+
 ### 1.5 Exemplo mínimo (sintético; `;` e `,`)
 ```
 seqn;sexo;estatura_cm;massa_kg;resistencia_ohm;reatancia_ohm;lmi_dxa;fmi_dxa

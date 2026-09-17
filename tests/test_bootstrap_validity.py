@@ -100,6 +100,6 @@ def test_start_prints_the_check_once_and_the_input_text_reports_the_design_rows(
         cfg["output"] = {"dir": str(tmp_path), "figures": False}; return R.run(cfg, printer=printed.append, preflight=False)
     S.start(str(p), str(tmp_path / "b.yaml"), ask=None, map_flags=flags, yes=True, printer=printed.append, runner=fast)
     assert seen["preflight"] is False and sum(l.startswith("check: OK") for l in printed) == 2     # one per run (standard + final), never doubled
-    txt = (tmp_path / "b" / "report.html").read_text(encoding="utf-8")
+    txt = (tmp_path / "b_2" / "report.html").read_text(encoding="utf-8")      # v1.2: the final run of start goes to a numbered folder
     assert "usadas só para desenhar os índices; todo número de auditoria vem das outras" in txt
     set_language("en")

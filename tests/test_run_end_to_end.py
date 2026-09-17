@@ -174,3 +174,21 @@ def test_n_jobs_never_changes_a_number_and_auto_resolves_to_an_integer(tmp_path)
     m1 = run(c1, printer=lambda s: None)["manifest"]; m2 = run(c2, printer=lambda s: None)["manifest"]
     assert m1["outputs_sha256"] == m2["outputs_sha256"] and m1["n_jobs"] == 1 and m2["n_jobs"] == 2
     r = resolve(_cfg(tmp_path, "auto")); assert isinstance(r["n_jobs"], int) and r["n_jobs"] >= 1
+
+
+def test_a_second_run_with_the_same_name_goes_to_a_numbered_folder_and_never_touches_the_first(tmp_path):
+    """EN: v1.2 (user request, 2026-09-16) — results are never overwritten: name, name_2, name_3 …; overwrite: true is explicit."""
+    import hashlib
+    from bioms_zaku.run import next_free_dir, run
+    lines = []
+    r1 = run(_cfg(tmp_path, "same"), printer=lines.append)
+    h1 = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in r1["out_dir"].glob("*.*")}
+    r2 = run(_cfg(tmp_path, "same"), printer=lines.append)
+    r3 = run(_cfg(tmp_path, "same"), printer=lines.append)
+    assert [r["out_dir"].name for r in (r1, r2, r3)] == ["same", "same_2", "same_3"]
+    assert {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in r1["out_dir"].glob("*.*")} == h1      # first run untouched
+    assert r2["manifest"]["output_folder"] == "same_2" and any("same_2" in l and "sobrescrito" not in l or "same_2" in l for l in lines)
+    assert r2["manifest"]["outputs_sha256"] == r1["manifest"]["outputs_sha256"]                                  # same numbers
+    c = _cfg(tmp_path, "same"); c["output"]["overwrite"] = True
+    r4 = run(c, printer=lines.append)
+    assert r4["out_dir"].name == "same" and next_free_dir(tmp_path / "same").name == "same_4"

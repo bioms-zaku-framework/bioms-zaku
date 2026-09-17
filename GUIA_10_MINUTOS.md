@@ -99,6 +99,25 @@ W +0.42`) e digite-o no `propose` como `R**(-0.49) * Xc**(0.11) * H**(1.27) * W*
   ser um construto **diferente** do alvo; outra medida de desempenho não serve. O ângulo de fase foi o que mais acrescentou sobre
   massa e estatura (+0,38), com intervalo largo.
 
+## Dados de exemplo e resultados que nunca se sobrescrevem
+
+Os dados de exemplo vêm junto com a instalação:
+
+```bash
+bioms-zaku examples            # lista, dizendo o que é SINTÉTICO e o que é REAL
+bioms-zaku examples --copy     # copia para ./zaku_exemplos (se já existir: zaku_exemplos_2, …)
+cd zaku_exemplos
+bioms-zaku start example_data_400.csv
+```
+
+- `example_data_400.csv`: 400 linhas **sintéticas** (200 por sexo), sorteadas a partir de μ e Σ do NHANES; nenhuma pessoa real.
+  O rótulo `label_synthetic` foi gerado só a partir de FMI e idade: com `FMI_DXA` como controle, a resposta esperada é que nenhum
+  índice acrescente além da gordura. Serve para conferir a classificação com gabarito.
+- `nhanes_diabetes_400.csv`: 400 linhas **reais** do NHANES (domínio público), com diabetes diagnosticado.
+
+Cada execução grava em `zaku_out/<nome>`; se a pasta já tem uma execução concluída, a nova vai para `<nome>_2`, `<nome>_3`, …
+No `start`, a rodada padrão e a rodada final (com os índices aceitos) ficam em pastas separadas. Nada é sobrescrito.
+
 ## Quantas pessoas eu preciso?
 
 O Zaku descreve a sua amostra e avisa quando a régua fica curta; não estima população. Os mínimos são operacionais, e o relatório

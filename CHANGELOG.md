@@ -1,6 +1,10 @@
 # Changelog
 
 ## 0.1.0.dev0 — 2026-09-10 (unreleased)
+- Example data after installation and numbered results (2026-09-16, user request): `examples/` ships inside the wheel;
+  `bioms_zaku.datasets` and `bioms-zaku examples [--copy]` list (synthetic or real, rows) and copy them without ever touching an
+  existing folder; new `example_data_400.csv` (first 200 per sex of the synthetic file, same generator; 8000-row file unchanged);
+  a run never replaces a finished one — `name_2`, `name_3`, … (`output.overwrite: true` to replace; `manifest.output_folder`).
 - Found in the scripted user simulation with the installed package (2026-09-16): the logistic estimator named `penalty="l2"`,
   deprecated in scikit-learn 1.8, printed one FutureWarning per fit (248 500 lines in a 400-row session) — removed (L2 is the
   default), with a test that the default estimators fit without user-visible warnings; parallel runs (`n_jobs > 1`) now print

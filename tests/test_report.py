@@ -145,8 +145,12 @@ def test_run_name_follows_the_yaml_and_overwrite_is_announced(tmp_path):
     assert yaml.safe_load(out.read_text(encoding="utf-8"))["run_name"] == "analise_A"          # named after the YAML, not the CSV
     cfg = _cfg(tmp_path, "same", language="en")
     lines = []; run(cfg, printer=lines.append); assert not any("already holds" in l for l in lines)
-    lines = []; res = run(cfg, printer=lines.append)
-    assert any("already holds a previous run" in l for l in lines) and any("already holds" in w for w in res["manifest"]["notes"])
+    lines = []; res = run(cfg, printer=lines.append)                                  # v1.2: numbered, never overwritten
+    assert res["out_dir"].name == "same_2" and any("already holds a finished run" in l and "same_2" in l for l in lines)
+    assert any("already holds" in w for w in res["manifest"]["notes"])
+    cfg_o = dict(cfg); cfg_o["output"] = {**cfg["output"], "overwrite": True}
+    lines_o = []; res_o = run(cfg_o, printer=lines_o.append)                         # explicit overwrite: said aloud
+    assert res_o["out_dir"].name == "same" and any("already holds a previous run" in l for l in lines_o)
     assert not any("already holds" in w for w in res["manifest"]["warnings"])           # operational note, not a scientific warning
     summ = (res["out_dir"] / "summary.md").read_text(encoding="utf-8"); assert "already holds" not in summ
     txt = (res["out_dir"] / "report.html").read_text(encoding="utf-8"); assert "Estimator sensitivity (not requested)" in txt
