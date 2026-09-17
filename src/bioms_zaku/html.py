@@ -323,7 +323,10 @@ def _references(cfg: dict, tables: dict, cat, manifest: dict | None = None) -> s
     def li(txt: str, url: str, tag: str = "") -> str:
         link = f" <a href='{html.escape(url, quote=True)}'>{html.escape(url.replace('https://', ''))}</a>" if url else ""
         return f"<li>{html.escape(txt)}{link}{('<span class=' + chr(39) + 'tag' + chr(39) + '>' + html.escape(tag) + '</span>') if tag else ''}</li>"
-    meth = "".join(li(*R.cite(k), tag=" · ".join(blocks[b] for b in bl if b in blocks)) for k, bl in R.METHOD_REFS)
+    aud = tables.get("audit") if tables else None
+    has_cls = aud is not None and not aud.empty and "task" in aud and (aud["task"].astype(str) == "classification").any()
+    meth = "".join(li(*R.cite(k), tag=" · ".join(blocks[b] for b in bl if b in blocks)) for k, bl in R.METHOD_REFS
+                   if has_cls or k not in R.CLASSIFICATION_ONLY)
     alg = tables.get("algebra")
     if cat is not None and alg is not None and not alg.empty:
         used = set(alg.method_id); ents = [e for e in cat.entries if e.id in used]

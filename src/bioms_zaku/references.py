@@ -103,6 +103,10 @@ METHOD_REFS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("10.1109/tsmc.1974.5408535", ("m.screen",)),            # Cover 1974 — the best pair is not the pair of the two best, even without redundancy: screening classes are per index, combinations are never inferred from them, pairs are judged only when audited as pairs
 )
 
+# EN: cited only in the classification sentence / row of the report: listed only when the run audits a class label (a reference
+#     is never listed without a citation in the text; found 2026-09-16 in a regression report).
+CLASSIFICATION_ONLY: frozenset[str] = frozenset({"10.1148/radiology.143.1.7063747", "10.1016/S0895-4356(96)00236-3", "10.2307/2347628"})
+
 # EN: software actually executed in a run (versions are in the manifest).
 SOFTWARE_REFS: tuple[str, ...] = ("10.1038/s41586-020-2649-2", "10.1038/s41592-019-0686-2", "10.25080/Majora-92bf1922-00a", "pedregosa2011", "10.1109/MCSE.2007.55")
 

@@ -1,6 +1,8 @@
 # Changelog
 
 ## 0.1.0.dev0 — 2026-09-10 (unreleased)
+- References listed only when cited (2026-09-16): Hanley & McNeil 1982, Peduzzi 1996 and Le Cessie & van Houwelingen 1992 are cited
+  only in the classification texts, so regression reports no longer list them. Test.
 - Example data after installation and numbered results (2026-09-16, user request): `examples/` ships inside the wheel;
   `bioms_zaku.datasets` and `bioms-zaku examples [--copy]` list (synthetic or real, rows) and copy them without ever touching an
   existing folder; new `example_data_400.csv` (first 200 per sex of the synthetic file, same generator; 8000-row file unchanged);

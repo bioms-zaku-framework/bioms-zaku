@@ -69,3 +69,26 @@ def test_hanley_mcneil_supports_classification_blocks_and_the_sentence_appears_o
     from bioms_zaku.i18n import LANGS, t, set_language
     for lang in LANGS:
         set_language(lang); assert "Hanley & McNeil 1982" in t("m.spec.auroc") and "Hanley & McNeil 1982" in t("a.t.minclass.s")
+
+
+def test_classification_only_references_are_listed_only_when_a_label_is_audited(tmp_path):
+    """EN: a reference is never listed without a citation in the text (found 2026-09-16 in a regression report)."""
+    import pandas as pd
+    import bioms_zaku.references as R
+    from bioms_zaku.html import _references
+    from bioms_zaku.i18n import set_language
+    set_language("en")
+    cfg = {"catalog": {"include": "curated"}}
+    reg = {"audit": pd.DataFrame(dict(method_id=["a"], task=["regression"]))}
+    cls = {"audit": pd.DataFrame(dict(method_id=["a"], task=["classification"]))}
+    from bioms_zaku.run import _load_catalog
+    from bioms_zaku.config import resolve
+    import yaml
+    from pathlib import Path
+    c = resolve(yaml.safe_load((Path(__file__).resolve().parents[1] / "examples/minimal.yaml").read_text(encoding="utf-8")))
+    cat = _load_catalog(c)
+    h_reg = _references(c, reg, cat, {}); h_cls = _references(c, cls, cat, {})
+    for key in R.CLASSIFICATION_ONLY:
+        first_author = R.record(key)["authors"].split(",")[0]
+        assert first_author not in h_reg and first_author in h_cls, key
+    assert "Tjur T" in h_reg and "Kohavi R" in h_reg          # cited in the thresholds table of every run
