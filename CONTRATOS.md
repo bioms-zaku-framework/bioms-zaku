@@ -87,8 +87,12 @@ linhas reais, e continua valendo: nenhum resultado do framework depende dele (in
 `examples/` entra na roda como `bioms_zaku/examples` (nada é baixado). API `bioms_zaku.datasets` (`list_examples`, `example_path`,
 `load_example`, `copy_examples`) e comando `bioms-zaku examples [--copy PASTA] [--name ...]`; cada exemplo é rotulado **sintético**
 ou **real**; a cópia nunca altera uma pasta existente (`_2`, `_3`, …) e reescreve `data.path` dos YAML para a própria pasta.
-`example_data_400.csv` = as 200 primeiras linhas de cada sexo de `example_data.csv`, escrito pelo mesmo gerador (o arquivo de
-8000 linhas continua idêntico byte a byte). **Saídas**: se `output.dir/run_name` já contém `manifest.json`, a execução vai para
+**Base de exemplo única (decisão de 17/09/2026):** `zaku_exemplo.csv`, sintética, 200 por sexo, sorteada de log-normais cujos μ e Σ
+foram estimados no NHANES 1999–2004 por célula sexo × diabetes (DIQ010 1 vs 2; n de origem 79/2696 mulheres, 60/2960 homens);
+70 com diabetes por sexo (enriquecida, declarado); `label_synthetic` depende só de ln FMI e ln idade (gabarito). Validação: num
+sorteio grande dos mesmos parâmetros, a matriz de correlação 12 × 12 (11 ln variáveis + diabetes) difere da do NHANES reponderado
+a 35 % em no máximo 0,013. Gerador `tools/make_zaku_example.py` e parâmetros publicados (reprodução byte a byte, testada).
+É o único arquivo copiado por padrão; os demais são técnicos (`--all`). **Saídas**: se `output.dir/run_name` já contém `manifest.json`, a execução vai para
 `run_name_2`, `_3`, …; `output.overwrite: true` substitui e o aviso fica no manifesto; `manifest.output_folder` registra a pasta.
 
 ### 1.5 Exemplo mínimo (sintético; `;` e `,`)

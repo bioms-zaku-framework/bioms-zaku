@@ -101,19 +101,25 @@ W +0.42`) e digite-o no `propose` como `R**(-0.49) * Xc**(0.11) * H**(1.27) * W*
 
 ## Dados de exemplo e resultados que nunca se sobrescrevem
 
-Os dados de exemplo vêm junto com a instalação:
+O Zaku traz **uma** base de exemplo, sintética, que serve para tudo:
 
 ```bash
-bioms-zaku examples            # lista, dizendo o que é SINTÉTICO e o que é REAL
 bioms-zaku examples --copy     # copia para ./zaku_exemplos (se já existir: zaku_exemplos_2, …)
 cd zaku_exemplos
-bioms-zaku start example_data_400.csv
 ```
 
-- `example_data_400.csv`: 400 linhas **sintéticas** (200 por sexo), sorteadas a partir de μ e Σ do NHANES; nenhuma pessoa real.
-  O rótulo `label_synthetic` foi gerado só a partir de FMI e idade: com `FMI_DXA` como controle, a resposta esperada é que nenhum
-  índice acrescente além da gordura. Serve para conferir a classificação com gabarito.
-- `nhanes_diabetes_400.csv`: 400 linhas **reais** do NHANES (domínio público), com diabetes diagnosticado.
+`zaku_exemplo.csv`: 400 pessoas (200 por sexo), sorteadas a partir das médias e covariâncias do NHANES estimadas separadamente
+para cada combinação de sexo e diabetes; nenhuma pessoa real. O que dá para testar com ela:
+
+| teste | alvo | controle | resposta esperada |
+|---|---|---|---|
+| regressão | `LMI_DXA` | `FMI_DXA` | índices de massa magra carregam o alvo |
+| classificação com gabarito | `label_synthetic` | `FMI_DXA` | **nenhum** índice específico: o rótulo depende só de FMI e idade |
+| diabetes | `diabetes` | `FMI_DXA` ou `LMI_DXA` | pergunta aberta, como num estudo real |
+
+Use `-o` para dar nome a cada teste (`bioms-zaku start zaku_exemplo.csv -o regressao.yaml`). As massas em kg (`lean_kg`,
+`fat_kg`) são calculadas a partir da altura: não as use como alvo com a altura mapeada. Arquivos técnicos (exemplo antigo de
+8000 linhas, formato planilha, amostra real do NHANES): `bioms-zaku examples --all`.
 
 Cada execução grava em `zaku_out/<nome>`; se a pasta já tem uma execução concluída, a nova vai para `<nome>_2`, `<nome>_3`, …
 No `start`, a rodada padrão e a rodada final (com os índices aceitos) ficam em pastas separadas. Nada é sobrescrito.

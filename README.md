@@ -80,21 +80,25 @@ masses, the regression audit on real data. Provenance, exclusions, seed and SHA-
 generator: `tools/make_nhanes_example.py`. Column names are the ones the guided flow recognises (`bioms-zaku start
 examples/nhanes_diabetes_400.csv`). This is the only example with real rows; the others are synthetic.
 
-**Getting the example data after `pip install`** (nothing is downloaded; the files ship with the package):
+**The example data** (nothing is downloaded; it ships with the package): ONE synthetic base, `zaku_exemplo.csv`, 400 rows
+(200 per sex), drawn from a log-normal whose means and covariances were estimated in NHANES 1999–2004 separately for each
+cell sex × doctor-diagnosed diabetes — so the association of diabetes with every variable is kept. It serves every use:
+regression (`LMI_DXA`, `FMI_DXA`, `ALMI_DXA`), classification with a known answer (`label_synthetic` depends only on FMI and
+age: with `FMI_DXA` as control no index should add), and `diabetes` (70 per sex, case-enriched on purpose). Parameters and
+generator: `examples/zaku_exemplo_params.json`, `tools/make_zaku_example.py` (reproduces the CSV byte for byte).
 
 ```bash
-bioms-zaku examples                    # list: name, SYNTHETIC or REAL, rows, file
-bioms-zaku examples --copy             # copies into ./zaku_exemplos (an existing folder is never touched: _2, _3 …)
-cd zaku_exemplos && bioms-zaku start example_data_400.csv
+bioms-zaku examples --copy             # ./zaku_exemplos (an existing folder is never touched: _2, _3 …)
+cd zaku_exemplos && bioms-zaku start zaku_exemplo.csv -o regression.yaml
+bioms-zaku examples --all              # also the technical files (older 8000-row synthetic example, spreadsheet format, a real NHANES sample)
 ```
 
 ```python
-from bioms_zaku.datasets import list_examples, load_example, copy_examples
-df = load_example("synthetic_400")      # 400 synthetic rows (first 200 per sex of example_data.csv)
+from bioms_zaku.datasets import load_example
+df = load_example("zaku_exemplo")
 ```
 
-`example_data_400.csv` is the test-sized cut of the synthetic file, written by the same generator: its `label_synthetic` depends
-only on FMI and age, so a classification audit with FMI as control has a known answer (no index should add beyond FMI).
+The masses in kg are derived from the indices and height: do not use them as targets while height is mapped (circularity).
 
 **Results are never overwritten.** A run whose folder already holds a finished run goes to `name_2`, `name_3`, …; the guided
 flow's standard and final runs therefore land in two folders. `output.overwrite: true` replaces instead, and says so.

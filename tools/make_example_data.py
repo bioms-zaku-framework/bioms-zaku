@@ -75,9 +75,6 @@ def main() -> None:
         X.insert(0, "sexo", sex); frames.append(X)
     df = pd.concat(frames, ignore_index=True); df.insert(0, "id", np.arange(1, len(df) + 1))
     df.to_csv(out / "example_data.csv", index=False)
-    # EN: v1.2 — a test-sized cut: the first 200 rows of each sex (independent draws, so a random sample of the same file);
-    #     labelled cases per sex stay above the classification minimum (20).
-    df.groupby("sexo", sort=True).head(200).to_csv(out / "example_data_400.csv", index=False)
     if not a.from_params:
         (out / "example_data_params.json").write_text(json.dumps(params, indent=1), encoding="utf-8")
     print(f"{len(df)} rows → {out/'example_data.csv'}; label prevalence F {df[df.sexo==0][LABEL['name']].mean():.3f} M {df[df.sexo==1][LABEL['name']].mean():.3f}")

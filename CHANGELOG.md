@@ -1,6 +1,10 @@
 # Changelog
 
 ## 0.1.0.dev0 — 2026-09-10 (unreleased)
+- ONE example base (2026-09-17, user decision): `zaku_exemplo.csv`, synthetic, drawn per cell sex × diabetes from NHANES means and
+  covariances (correlations within 0.013 of the reweighted source), serving regression, the known-answer classification and
+  diabetes; generator `tools/make_zaku_example.py` with published parameters. `bioms-zaku examples --copy` copies only this base;
+  technical files behind `--all`. The 400-row cut added the day before is removed (superseded).
 - References listed only when cited (2026-09-16): Hanley & McNeil 1982, Peduzzi 1996 and Le Cessie & van Houwelingen 1992 are cited
   only in the classification texts, so regression reports no longer list them. Test.
 - Example data after installation and numbered results (2026-09-16, user request): `examples/` ships inside the wheel;

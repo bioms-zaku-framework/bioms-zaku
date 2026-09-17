@@ -33,6 +33,7 @@ def main(argv=None) -> int:
     ex = sub.add_parser("examples", help="list the bundled example data; --copy FOLDER copies them (never overwriting)")
     ex.add_argument("--copy", nargs="?", const="zaku_exemplos", default=None, metavar="FOLDER")
     ex.add_argument("--name", nargs="*", default=None, help="only these examples")
+    ex.add_argument("--all", action="store_true", help="also list the technical files (older synthetic example, spreadsheet format, real NHANES sample)")
     a = ap.parse_args(argv)
     from .i18n import set_language, t
     if a.lang:
@@ -72,7 +73,7 @@ def main(argv=None) -> int:
         return 0
     if a.cmd == "examples":
         from .datasets import copy_examples, list_examples
-        rows = [r for r in list_examples() if not a.name or r["name"] in a.name]
+        rows = [r for r in list_examples(all=bool(a.all or a.name)) if not a.name or r["name"] in a.name]
         for r in rows:
             print(t("ex.line", name=r["name"], kind=t("ex.kind." + r["kind"]), n=r["rows"], csv=r["csv"], desc=r["description"]))
         if a.copy is not None:
@@ -81,6 +82,8 @@ def main(argv=None) -> int:
             print(t("ex.next", dir=folder))
         else:
             print(t("ex.hint"))
+        if not (a.all or a.name):
+            print(t("ex.more"))
         return 0
     if a.cmd == "render":
         from .run import render
