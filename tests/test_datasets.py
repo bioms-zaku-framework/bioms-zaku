@@ -49,7 +49,7 @@ def test_the_one_example_is_reproduced_byte_for_byte_from_its_published_paramete
 
 def test_copy_never_overwrites_and_technical_yaml_checks_from_its_folder(tmp_path, monkeypatch):
     f1 = copy_examples(tmp_path / "ex"); f2 = copy_examples(tmp_path / "ex", ["minimal"])
-    assert f1.name == "ex" and sorted(p.name for p in f1.iterdir()) == ["zaku_exemplo.csv", "zaku_exemplo_params.json"]
+    assert f1.name == "ex" and sorted(p.name for p in f1.iterdir()) == ["zaku_exemplo.csv", "zaku_exemplo.ipynb", "zaku_exemplo_params.json"]
     assert f2.name == "ex_2" and sorted(p.name for p in f2.iterdir()) == ["minimal.yaml", "minimal_data.csv"]
     assert "path: minimal_data.csv" in (f2 / "minimal.yaml").read_text(encoding="utf-8")
     monkeypatch.chdir(f2)
@@ -65,5 +65,5 @@ def test_examples_command_lists_and_copies_the_one_example(tmp_path, monkeypatch
     assert "zaku_exemplo" in out and "synthetic_8000" not in out and "--all" in out
     assert main(["--lang", "pt", "examples", "--all"]) == 0 and "REAL" in capsys.readouterr().out
     assert main(["--lang", "pt", "examples", "--copy"]) == 0
-    assert sorted(p.name for p in (tmp_path / "zaku_exemplos").iterdir()) == ["zaku_exemplo.csv", "zaku_exemplo_params.json"]
+    assert sorted(p.name for p in (tmp_path / "zaku_exemplos").iterdir()) == ["zaku_exemplo.csv", "zaku_exemplo.ipynb", "zaku_exemplo_params.json"]
     assert "bioms-zaku start zaku_exemplo.csv" in capsys.readouterr().out

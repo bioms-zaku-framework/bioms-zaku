@@ -43,6 +43,11 @@ bioms-zaku --lang pt start dados.csv        # one guided path: columns → stand
 `<` goes back, `?` repeats the help, Enter accepts the suggestion. Everything answered is written to `dados.zaku.yaml`, so
 `bioms-zaku run dados.zaku.yaml` repeats the analysis without questions. Portuguese guide: `GUIA_10_MINUTOS.md`.
 
+**In a notebook (Colab or Jupyter)**, nothing has to be downloaded: `pip install bioms-zaku` brings the example data
+inside the package. `examples/zaku_exemplo.ipynb` installs, loads them and walks the three uses in about a minute —
+redundancy predicted from Σ before any index is computed, the audit against a negative control, and the report.
+`bioms-zaku examples --copy` hands over the notebook together with the data.
+
 ## Install / Instalar
 
 ```bash

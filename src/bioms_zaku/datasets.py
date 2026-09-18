@@ -27,7 +27,7 @@ import pandas as pd
 EXAMPLES: dict[str, dict] = {
     # EN: THE example (decision of 2026-09-17): one synthetic base for every use — copied by default.
     "zaku_exemplo": {"csv": "zaku_exemplo.csv", "sep": ",", "decimal": ".", "kind": "synthetic", "main": True,
-                     "files": ["zaku_exemplo.csv", "zaku_exemplo_params.json"]},
+                     "files": ["zaku_exemplo.csv", "zaku_exemplo_params.json", "zaku_exemplo.ipynb"]},
     # EN: technical files (reproducibility of the older synthetic example, spreadsheet format, the real NHANES sample):
     #     listed and copied only on request (`--all` / `--name`).
     "synthetic_8000": {"csv": "example_data.csv", "sep": ",", "decimal": ".", "kind": "synthetic", "main": False,
