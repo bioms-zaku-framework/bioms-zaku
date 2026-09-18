@@ -60,7 +60,10 @@ def main() -> int:
     py = venv / "bin" / "python"
     wheel = next(dist.glob("*.whl"))
     pkgs = [str(wheel), "matplotlib", "pytest", "openpyxl"] + (["pytest-xdist"] if a.n != "1" else [])
-    run([str(py), "-m", "pip", "install", "--quiet", "--upgrade", *pkgs])
+    # EN: --force-reinstall is not optional: the version does not change between builds, and plain --upgrade
+    #     skips the wheel as "already satisfied" — the gate would then test a stale install (found 2026-09-18).
+    run([str(py), "-m", "pip", "install", "--quiet", "--force-reinstall", "--no-deps", str(wheel)])
+    run([str(py), "-m", "pip", "install", "--quiet", *[p for p in pkgs if p != str(wheel)]])
 
     say(3, STEPS[2])
     run([str(py), "-m", "pytest", "-q"] + ([] if a.n == "1" else ["-n", a.n, "--dist", "loadfile"]), cwd=ROOT)
