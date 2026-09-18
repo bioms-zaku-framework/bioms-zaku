@@ -10,6 +10,62 @@
 (Lima, S. *A estrutura argumental dos verbos na língua Juruna (Yudjá)*, MSc dissertation, USP, 2008, item 290).
 The method looks at an index before accepting it, cares for its validity, and waits for the out-of-sample result.
 
+## What is this? / ¿Qué es esto? / O que é isto? / Che cos'è?
+
+**EN** — You have a spreadsheet: one row per person, with resistance and reactance from a bioimpedance device, stature,
+body mass, and a reference measurement such as DXA. BioMS Zaku looks at the indices you care about and answers three
+questions about each one. *Is it new*, or does it already exist under another name? *Does it measure what it claims*, or
+is it following body size — which almost everything follows? *Does it add anything* over stature and body mass alone?
+
+The second question is the one that matters. "My index correlates with lean mass" proves little: larger people have
+more of everything. So, before any result is seen, you declare a target and a **negative control**, and the tool tests
+whether the index predicts the target *beyond* what the control already predicts. When it does not, it says so plainly.
+
+You do not need to know how to program. In a terminal, `bioms-zaku start dados.csv` asks you the questions and writes
+your answers down; in a notebook, you open it and press run, with the example data already inside. Out comes a single
+file, `report.html`: every number, every figure, and beside each one how it was computed and how to read it.
+
+**ES** — Usted tiene una planilla: una fila por persona, con resistencia y reactancia de un equipo de bioimpedancia,
+estatura, masa corporal y una medida de referencia como DXA. BioMS Zaku mira los índices que le interesan y responde
+tres preguntas sobre cada uno. *¿Es nuevo*, o ya existe con otro nombre? *¿Mide lo que dice medir*, o está siguiendo el
+tamaño corporal — que casi todo sigue? *¿Agrega algo* sobre la estatura y la masa corporal solas?
+
+La segunda pregunta es la que importa. "Mi índice correlaciona con la masa magra" prueba poco: las personas más
+grandes tienen más de todo. Por eso, antes de ver cualquier resultado, usted declara un objetivo y un **control
+negativo**, y la herramienta prueba si el índice predice el objetivo *más allá* de lo que el control ya predice.
+Cuando no lo hace, lo dice con claridad.
+
+No necesita saber programar. En un terminal, `bioms-zaku start datos.csv` le hace las preguntas y anota sus respuestas;
+en un notebook, usted lo abre y presiona ejecutar, con los datos de ejemplo ya dentro. Sale un solo archivo,
+`report.html`: cada número, cada figura y, al lado de cada uno, cómo se calculó y cómo leerlo.
+
+**PT** — Você tem uma planilha: uma linha por pessoa, com resistência e reatância de um aparelho de bioimpedância,
+estatura, massa corporal e uma medida de referência como o DXA. O BioMS Zaku olha os índices que interessam a você e
+responde três perguntas sobre cada um. *Ele é novo*, ou já existe com outro nome? *Ele mede o que diz medir*, ou está
+seguindo o tamanho corporal — que quase tudo segue? *Ele acrescenta algo* sobre a estatura e a massa corporal sozinhas?
+
+A segunda pergunta é a que importa. "Meu índice correlaciona com massa magra" prova pouco: pessoas maiores têm mais de
+tudo. Por isso, antes de ver qualquer resultado, você declara um alvo e um **controle negativo**, e a ferramenta testa
+se o índice prediz o alvo *além* do que o controle já prediz. Quando não prediz, ela diz isso com clareza.
+
+Você não precisa saber programar. No terminal, `bioms-zaku start dados.csv` faz as perguntas e anota as suas respostas;
+no notebook, você abre e clica em rodar, com os dados de exemplo já dentro. Sai um arquivo único, `report.html`: cada
+número, cada figura e, ao lado de cada um, como foi calculado e como ler.
+
+**IT** — Hai un foglio di calcolo: una riga per persona, con resistenza e reattanza da un apparecchio di bioimpedenza,
+statura, massa corporea e una misura di riferimento come la DXA. BioMS Zaku guarda gli indici che ti interessano e
+risponde a tre domande su ciascuno. *È nuovo*, o esiste già con un altro nome? *Misura ciò che dichiara*, o sta
+seguendo la taglia corporea — che quasi tutto segue? *Aggiunge qualcosa* rispetto a statura e massa corporea da sole?
+
+La seconda domanda è quella che conta. "Il mio indice correla con la massa magra" prova poco: le persone più grandi
+hanno più di tutto. Perciò, prima di vedere qualsiasi risultato, dichiari un target e un **controllo negativo**, e lo
+strumento verifica se l'indice predice il target *oltre* ciò che il controllo già predice. Quando non lo fa, lo dice
+chiaramente.
+
+Non devi saper programmare. In un terminale, `bioms-zaku start dati.csv` ti fa le domande e annota le tue risposte; in
+un notebook, lo apri e premi esegui, con i dati di esempio già dentro. Ne esce un unico file, `report.html`: ogni
+numero, ogni figura e, accanto a ciascuno, come è stato calcolato e come leggerlo.
+
 Status: release candidate (1.0.0rc1) · License: MIT · Cite: `CITATION.cff` · **What the tool guarantees, and under which assumptions:** [`CONTRATOS.md`](CONTRATOS.md)
 
 ## What it does / Qué hace / O que faz
