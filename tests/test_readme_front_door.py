@@ -1,32 +1,57 @@
-"""EN: the front door. A researcher who clicks a link and is not a programmer must find, before any formula, what the
-tool is, which problem it solves and how to start — in the four languages of the tool (user decision, 2026-09-18).
-Guards against the drift of editing one language and forgetting the others."""
+"""EN: the front door, in the four languages of the tool. A researcher who clicks a link and is not a programmer must
+find, before any formula, what the tool is, which problem it solves and how to start. One file per language (a reader
+should not scroll past three languages to reach their own), with a bar linking the others; README.md is the reference.
+The user found on 2026-09-18 that the page had been left in three languages while the tool spoke four: these tests
+refuse that drift."""
 import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-LANGS = ("EN", "ES", "PT", "IT")
+FILES = {"en": "README.md", "es": "README.es.md", "pt": "README.pt.md", "it": "README.it.md"}
+JARGON = ("Σ", "aᵀ", "out-of-bag", "bootstrap", "R²", "Spearman")
 
 
-def _front_door() -> str:
-    txt = (ROOT / "README.md").read_text(encoding="utf-8")
-    i, j = txt.index("## What is this?"), txt.index("## What it does")
-    assert i < j, "the plain-language opening must come BEFORE the technical section"
-    return txt[i:j]
+def _text(lang: str) -> str:
+    return (ROOT / FILES[lang]).read_text(encoding="utf-8")
 
 
-def test_the_opening_speaks_the_four_languages_at_a_similar_length():
-    block = _front_door()
-    marks = {l: block.find(f"**{l}**") for l in LANGS}
-    assert all(v > 0 for v in marks.values()), f"a language is missing from the opening: {marks}"
-    bounds = sorted(marks.values()) + [len(block)]
-    sizes = [len(block[a:b].split()) for a, b in zip(bounds, bounds[1:])]
-    assert min(sizes) >= 120, f"too short to answer the four questions: {sizes}"
-    assert max(sizes) <= 1.6 * min(sizes), f"one language got much less than the others: {sizes}"
+def _opening(lang: str) -> str:
+    """EN: the plain-language section, which must come before the technical one."""
+    t = _text(lang)
+    heads = [m.start() for m in re.finditer(r"^## ", t, re.M)]
+    assert len(heads) >= 2, f"{FILES[lang]}: no sections"
+    return t[heads[0]:heads[1]]
 
 
-def test_the_opening_carries_no_formula_and_says_no_programming_is_needed():
-    block = _front_door()
-    for jargon in ("Σ", "aᵀ", "out-of-bag", "bootstrap", "R²", "Spearman"):
-        assert jargon not in block, f"the opening must stay free of {jargon}: it is for someone who just arrived"
-    assert len(re.findall(r"program", block, re.I)) >= 4, "each language must say that programming is not required"
+def test_the_four_files_exist_and_link_to_each_other():
+    for lang, name in FILES.items():
+        t = _text(lang)
+        for other, other_name in FILES.items():
+            if other == lang:
+                continue
+            assert f"({other_name})" in t, f"{name} does not link to {other_name}"
+
+
+def test_the_four_files_have_the_same_sections():
+    counts = {l: len(re.findall(r"^## ", _text(l), re.M)) for l in FILES}
+    assert len(set(counts.values())) == 1, f"a translation lost or gained sections: {counts}"
+    assert min(counts.values()) >= 12, counts
+
+
+def test_each_opening_answers_the_questions_without_a_formula():
+    sizes = {}
+    for lang in FILES:
+        op = _opening(lang)
+        sizes[lang] = len(op.split())
+        assert re.search(r"program", op, re.I), f"{FILES[lang]}: the opening must say programming is not required"
+        for j in JARGON:
+            assert j not in op, f"{FILES[lang]}: the opening must stay free of {j}"
+    assert min(sizes.values()) >= 120, f"too short to answer the four questions: {sizes}"
+    assert max(sizes.values()) <= 1.6 * min(sizes.values()), f"one language got much less than the others: {sizes}"
+
+
+def test_the_technical_section_follows_and_is_not_the_front_door():
+    for lang in FILES:
+        t = _text(lang)
+        first = re.search(r"^## (.+)$", t, re.M).group(1)
+        assert not any(j in first for j in JARGON), f"{FILES[lang]}: the first section is technical: {first!r}"

@@ -2,17 +2,17 @@
 
 # BioMS Zaku
 
-**EN** — Algebraic decomposition and predictive audit of indices and predictive equations. Demonstrated on bioimpedance.
-**ES** — Descomposición algebraica y auditoría predictiva de índices y ecuaciones predictivas. Demostrado en bioimpedancia.
-**PT** — Decomposição algébrica e auditoria preditiva de índices e equações preditivas. Demonstrado em bioimpedância.
+**English** · [Español](README.es.md) · [Português](README.pt.md) · [Italiano](README.it.md)
+
+Algebraic decomposition and predictive audit of indices and predictive equations. Demonstrated on bioimpedance.
 
 *zaku* is a verb of the Juruna (Yudjá) language, Tupi family, Xingu, Mato Grosso, Brazil: "to see / to care for / to wait"
 (Lima, S. *A estrutura argumental dos verbos na língua Juruna (Yudjá)*, MSc dissertation, USP, 2008, item 290).
 The method looks at an index before accepting it, cares for its validity, and waits for the out-of-sample result.
 
-## What is this? / ¿Qué es esto? / O que é isto? / Che cos'è?
+## What is this?
 
-**EN** — You have a spreadsheet: one row per person, with resistance and reactance from a bioimpedance device, stature,
+You have a spreadsheet: one row per person, with resistance and reactance from a bioimpedance device, stature,
 body mass, and a reference measurement such as DXA. BioMS Zaku looks at the indices you care about and answers three
 questions about each one. *Is it new*, or does it already exist under another name? *Does it measure what it claims*, or
 is it following body size — which almost everything follows? *Does it add anything* over stature and body mass alone?
@@ -25,57 +25,16 @@ You do not need to know how to program. In a terminal, `bioms-zaku start dados.c
 your answers down; in a notebook, you open it and press run, with the example data already inside. Out comes a single
 file, `report.html`: every number, every figure, and beside each one how it was computed and how to read it.
 
-**ES** — Usted tiene una planilla: una fila por persona, con resistencia y reactancia de un equipo de bioimpedancia,
-estatura, masa corporal y una medida de referencia como DXA. BioMS Zaku mira los índices que le interesan y responde
-tres preguntas sobre cada uno. *¿Es nuevo*, o ya existe con otro nombre? *¿Mide lo que dice medir*, o está siguiendo el
-tamaño corporal — que casi todo sigue? *¿Agrega algo* sobre la estatura y la masa corporal solas?
-
-La segunda pregunta es la que importa. "Mi índice correlaciona con la masa magra" prueba poco: las personas más
-grandes tienen más de todo. Por eso, antes de ver cualquier resultado, usted declara un objetivo y un **control
-negativo**, y la herramienta prueba si el índice predice el objetivo *más allá* de lo que el control ya predice.
-Cuando no lo hace, lo dice con claridad.
-
-No necesita saber programar. En un terminal, `bioms-zaku start datos.csv` le hace las preguntas y anota sus respuestas;
-en un notebook, usted lo abre y presiona ejecutar, con los datos de ejemplo ya dentro. Sale un solo archivo,
-`report.html`: cada número, cada figura y, al lado de cada uno, cómo se calculó y cómo leerlo.
-
-**PT** — Você tem uma planilha: uma linha por pessoa, com resistência e reatância de um aparelho de bioimpedância,
-estatura, massa corporal e uma medida de referência como o DXA. O BioMS Zaku olha os índices que interessam a você e
-responde três perguntas sobre cada um. *Ele é novo*, ou já existe com outro nome? *Ele mede o que diz medir*, ou está
-seguindo o tamanho corporal — que quase tudo segue? *Ele acrescenta algo* sobre a estatura e a massa corporal sozinhas?
-
-A segunda pergunta é a que importa. "Meu índice correlaciona com massa magra" prova pouco: pessoas maiores têm mais de
-tudo. Por isso, antes de ver qualquer resultado, você declara um alvo e um **controle negativo**, e a ferramenta testa
-se o índice prediz o alvo *além* do que o controle já prediz. Quando não prediz, ela diz isso com clareza.
-
-Você não precisa saber programar. No terminal, `bioms-zaku start dados.csv` faz as perguntas e anota as suas respostas;
-no notebook, você abre e clica em rodar, com os dados de exemplo já dentro. Sai um arquivo único, `report.html`: cada
-número, cada figura e, ao lado de cada um, como foi calculado e como ler.
-
-**IT** — Hai un foglio di calcolo: una riga per persona, con resistenza e reattanza da un apparecchio di bioimpedenza,
-statura, massa corporea e una misura di riferimento come la DXA. BioMS Zaku guarda gli indici che ti interessano e
-risponde a tre domande su ciascuno. *È nuovo*, o esiste già con un altro nome? *Misura ciò che dichiara*, o sta
-seguendo la taglia corporea — che quasi tutto segue? *Aggiunge qualcosa* rispetto a statura e massa corporea da sole?
-
-La seconda domanda è quella che conta. "Il mio indice correla con la massa magra" prova poco: le persone più grandi
-hanno più di tutto. Perciò, prima di vedere qualsiasi risultato, dichiari un target e un **controllo negativo**, e lo
-strumento verifica se l'indice predice il target *oltre* ciò che il controllo già predice. Quando non lo fa, lo dice
-chiaramente.
-
-Non devi saper programmare. In un terminale, `bioms-zaku start dati.csv` ti fa le domande e annota le tue risposte; in
-un notebook, lo apri e premi esegui, con i dati di esempio già dentro. Ne esce un unico file, `report.html`: ogni
-numero, ogni figura e, accanto a ciascuno, come è stato calcolato e come leggerlo.
-
 Status: release candidate (1.0.0rc1) · License: MIT · Cite: `CITATION.cff` · **What the tool guarantees, and under which assumptions:** [`CONTRATOS.md`](CONTRATOS.md)
 
-## What it does / Qué hace / O que faz
+## What it does
 
 1. **Decomposition.** Every index or equation is written as a product of powers of the measured variables and represented
    by its **vector of exponents**. The covariance matrix Σ of the log-variables in a population predicts the Pearson
    correlation of the logs between any two indices *before either is computed*: aᵀΣb / √(aᵀΣa · bᵀΣb), an identity that
    holds for any distribution. Observed redundancy is measured with Spearman's rank correlation (threshold 0.95) and the
    earlier publication keeps precedence. Indices that are not exact products get a fitted vector with its fit R².
-2. **Conditional negative control (contract v0.5).** The researcher declares a target and a negative control. On identical
+2. **Conditional negative control.** The researcher declares a target and a negative control. On identical
    out-of-bag resamples the framework fits the control as a predictor of the target with and without the index (gain S1),
    and the target as a predictor of the control with and without the index (gain S2). Verdicts: *specific* (S1 present,
    S2 absent), *tracks the control* (the reverse), *measures both*, *no signal*; a gain is present when its mean exceeds
@@ -90,21 +49,21 @@ Outputs are aggregate tables (full precision), a manifest (hashes, versions, see
 Row-level data never leave the run. Figures accept `figures: {title, subtitle, language: en|es|pt, palette, captions}`.
 How to read each figure: `docs/index.html`, section 3.
 
-## Start here / Comece aqui
+## Start here
 
 ```
 pip install "bioms-zaku[plots,excel]"
 bioms-zaku --lang pt start dados.csv        # one guided path: columns → standard run → suggestions (accept/edit/no) → your own index → report
 ```
 `<` goes back, `?` repeats the help, Enter accepts the suggestion. Everything answered is written to `dados.zaku.yaml`, so
-`bioms-zaku run dados.zaku.yaml` repeats the analysis without questions. Portuguese guide: `GUIA_10_MINUTOS.md`.
+`bioms-zaku run dados.zaku.yaml` repeats the analysis without questions. Ten-minute guide: `GUIA_10_MINUTOS.md`.
 
 **In a notebook (Colab or Jupyter)**, nothing has to be downloaded: `pip install bioms-zaku` brings the example data
 inside the package. `examples/zaku_exemplo.ipynb` installs, loads them and walks the three uses in about a minute —
 redundancy predicted from Σ before any index is computed, the audit against a negative control, and the report.
 `bioms-zaku examples --copy` hands over the notebook together with the data.
 
-## Install / Instalar
+## Install
 
 ```bash
 pip install bioms-zaku            # after the first release; until then:
@@ -113,7 +72,7 @@ pip install -e ".[plots,dev]"     # from a clone of this repository
 
 Python ≥ 3.10. Dependencies: numpy, pandas, scipy, scikit-learn, pyyaml (+ matplotlib for figures).
 
-## Example data / Datos de ejemplo / Dados de exemplo
+## Example data
 
 `examples/example_data.csv` — 8 000 **synthetic** rows (4 000 per sex). They are draws from a multivariate log-normal
 whose mean vector and log-covariance Σ were estimated, per sex, from a **convenience sample** of NHANES 1999–2004 (adults
@@ -171,10 +130,10 @@ indices; one row per person (aggregate repeated measurements first — repeated 
 The file also carries `lean_kg`, `alm_kg`, `fat_kg` (index × height², derived, no new draw) so that absolute masses can be
 used as targets: `bioms-zaku run examples/example_kg.yaml`. See *Geometry* below before choosing.
 
-Language / Idioma / Lingua: `bioms-zaku --lang pt init …` (or `language: pt` in the YAML; `init` asks it first). en, es, pt, it.
+Language: `bioms-zaku --lang pt init …` (or `language: pt` in the YAML; `init` asks it first). en, es, pt, it.
 Prompts, `check`/`run` messages, `summary.md`, report headings and figures follow it; CSV column names and YAML keys stay in English.
 
-Your own data — three commands / tres comandos / três comandos:
+Your own data — three commands:
 
 ```bash
 bioms-zaku init my_data.csv          # asks which column is R, Xc, H, W, target, control, and optionally sex, age, arm/waist/calf (suggests, never guesses) → my_data.zaku.yaml
@@ -203,7 +162,7 @@ strata: sex
 preset: full             # 5×50 CV, B = 2000 (quick = 5×5, B = 200, for demos only)
 ```
 
-## Rules the code enforces / Reglas / Regras
+## Rules the code enforces
 
 - everything out of sample; every contrast paired on identical resamples; resampling is a deterministic function of
   (rows, seed, B, min_oob) — `n_jobs` never changes a number;
@@ -214,7 +173,7 @@ preset: full             # 5×50 CV, B = 2000 (quick = 5×5, B = 200, for demos 
 - verdicts are descriptive (bootstrap P is not a p-value); thresholds fixed in the contracts;
 - outputs never contain row-level data (safe to run inside a partner's environment).
 
-## Catalog / Catálogo
+## Catalog
 
 Eight public bioimpedance indices, each re-verified on its primary source (`catalogo/fontes_primarias_indices/LEITURAS.md`):
 H²/|Z| at 100 kHz (Hoffer 1969), impedance index H²/R (Lukaski 1985), whole-body phase angle (Baumgartner 1988), the BIVA
@@ -228,7 +187,7 @@ and are therefore `composite`: their exponent vector is fitted per stratum and t
 eight whose primary source was critically read (`curated: true`, with `curation_record`). The predictive equations stay in the
 catalog without curation and are audited only with `catalog.include: all`, marked * in every output.
 
-## Test your own index / Probar su propio índice / Testar o seu próprio índice (v0.9)
+## Test your own index
 
 A formula of yours enters the audit beside the published methods as a **proposed** entry: no DOI, never curated, never
 precedence over a published method, marked ◇ in every table and figure. Any expression in R, Xc, H, W is accepted
@@ -255,10 +214,9 @@ sample statistics used), then written to the YAML and included in the audit.
 
 The report then says whether it repeats a published index (redundancy), whether it is specific to the target against the
 control, whether it adds value over the covariates, and whether it lies parallel to the control. `bioms-zaku check` warns when a
-proposal is declared but not included. ES: un índice propio entra como `proposed` (sin DOI, nunca curado, marcado ◇).
-PT: um índice seu entra como `proposed` (sem DOI, nunca curado, marcado ◇).
+proposal is declared but not included.
 
-## Design your own index from the data / Diseñar / Desenhar (v0.9)
+## Design your own index from the data
 
 `init` asks `design: none | target | control | both`. For each, the exponents of R, Xc, H, W are fitted to ln(target) by least
 squares on 70 % of the rows (per stratum) and the index is audited on the other 30 %, never seen, like any published method
@@ -268,7 +226,7 @@ in the sense of the conditional negative control — and the audit checks whethe
 `design:` is a list; `orthogonal_to: <column>` adds marginal Σ-orthogonality to a nuisance column (body size), which is a
 different goal and usually fails the conditional control (the report says so).
 
-## Geometry of target and control / Geometría / Geometria (v0.6)
+## Geometry of target and control
 
 Target and control often come from the same reference measurement and the same normalisation (lean/H² and fat/H² from one
 DXA scan; lean + fat + bone = body mass, with H and W among the mapped variables). In the space of the mapped variables they
@@ -282,7 +240,7 @@ for LMI vs FMI. Using absolute masses (kg) removes height from both sides and lo
 coupling through body mass, and it makes the target more "size", which favours volume indices (H²/R): a declared choice,
 not a fix. Lesson 12 of the notebook works the whole thing by hand on four people.
 
-## The report / El informe / O relatório (v0.9)
+## The report
 
 `report.html` is the main output: one self-contained file (figures and tables embedded) that opens from disk. In a notebook
 `run()` shows it inline. Each result block carries three fixed paragraphs — *how it was computed · how to read it · rigour
@@ -293,26 +251,27 @@ input hash, the SHA-256 of every output table, wall time and warnings. The repor
 `bioms-zaku --lang en render zaku_out/my_run` re-writes summary, figures and report of a finished run in another language
 in seconds, leaving tables and manifest untouched.
 
-Since v0.9 the report opens with a sticky table of contents and the **Zaku method diagram** (also saved as
+The report opens with a sticky table of contents and the **Zaku method diagram** (also saved as
 `figures/zaku_method.svg`), shows key numbers read from the tables, groups figures by family and result blocks as an accordion
 (one open at a time), and ends with a **References** section: the bioimpedance sources of the methods evaluated in the run, the
 statistical and algebraic antecedents (ratio indices, allometric scaling, negative controls, ridge, cross-validation, bootstrap,
 combinations) tagged by result block, and the software executed. Every record comes from Crossref metadata verified on
 2026-09-15 (`references.py`); nothing is loaded from the network when the report is opened.
 
-## Reproducibility / Reproducibilidad / Reprodutibilidade
+## Reproducibility
 
 `manifest.json` records the resolved configuration, seeds, package/library versions, input hash and the SHA-256 of every
-output. Two identical runs give identical hashes (tested in CI). Every quality check runs from the repository alone:
+output. Two identical runs give identical hashes (checked by `python tools/gate.py`, which runs the steps the CI
+workflow used to run: build, a clean install of the wheel, the suite, a repeated example run and an external user). Every quality check runs from the repository alone:
 hand-calculated lessons, exact algebraic identities, synthetic cases with a constructed answer, and the shipped example,
 which is reproducible byte for byte from its published parameters (`tools/make_example_data.py --from-params`). No test
 depends on data outside the repository.
 
 The contract [`CONTRATOS.md`](CONTRATOS.md) is the normative document behind all of this: what the tool promises for
 input, catalogue, configuration, outputs and reproducibility — five contracts, each closing with its justification.
-Read it to know what a number from this tool does and does not claim. (Written in Portuguese.)
+Read it to know what a number from this tool does and does not claim.
 
-## Development / Desarrollo / Desenvolvimento
+## Development
 
 ```bash
 pytest -q                   # whole suite, ~2 min, self-contained
