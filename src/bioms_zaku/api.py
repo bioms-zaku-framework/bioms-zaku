@@ -4,9 +4,6 @@ EN: the public surface in ONE place: `from bioms_zaku.api import check, run, loa
     with the modules `run.py` and `check.py`: exported on the package, `bioms_zaku.run` would mean the function or the
     module depending on which import happened first. Found on 2026-09-18, writing the example notebook, where
     `from bioms_zaku import run` handed back the module and `run(config)` raised TypeError.
-ES: la superficie pública en UN lugar (los nombres run/check chocan con sus módulos, por eso no van en el paquete).
-PT: a superfície pública em UM lugar (os nomes run/check colidem com seus módulos, por isso não vão no pacote).
-IT: la superficie pubblica in UN posto (i nomi run/check collidono con i loro moduli, quindi non vanno nel pacchetto).
 """
 from . import SCHEMA_VERSION, __version__
 from .check import check

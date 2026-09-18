@@ -1,6 +1,5 @@
 """
 EN: `bioms-zaku run config.yaml` — sets BLAS thread limits BEFORE numpy is imported (determinism), then runs.
-ES: fija los hilos BLAS antes de importar numpy, luego ejecuta.  PT: fixa threads BLAS antes de importar numpy, depois roda.
 """
 from __future__ import annotations
 

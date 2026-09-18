@@ -2,7 +2,6 @@
 EN: user-facing messages in four languages (en, es, pt, it). One catalogue, one key per message, identical placeholders in
     every language (tested). Language comes from `--lang` on the CLI or `language:` in the YAML; default en. Tables, CSV
     column names and YAML keys are NOT translated (machine-readable, reproducible across languages).
-ES: mensajes en cuatro idiomas.  PT: mensagens em quatro línguas.  IT: messaggi in quattro lingue.
 """
 from __future__ import annotations
 

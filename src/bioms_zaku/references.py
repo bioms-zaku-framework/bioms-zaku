@@ -5,9 +5,6 @@ EN: Bibliographic records for the report's References section. Every DOI below w
     10.1097/ede.0b013e3181e4bfd7 (it is the erratum of Lipsitch 2010, not the article) and 10.1111/sms.12780 (a waist-girth
     paper, not a general allometry reference). Statistical references are fixed per result block; bioimpedance references
     are those of the methods actually evaluated in the run (from the catalogue). No network access at run time.
-ES: registros bibliográficos verificados en Crossref (2026-09-15); no se traducen.
-PT: registros bibliográficos verificados no Crossref (2026-09-15); não são traduzidos.
-IT: record bibliografici verificati su Crossref (2026-09-15); non tradotti.
 """
 from __future__ import annotations
 

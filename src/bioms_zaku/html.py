@@ -4,7 +4,6 @@ EN: Single-file HTML report (v0.9): header, sticky table of contents, about + th
     rigour; tables with CSV/Excel download), rigour of the run, references (verified records), manifest. Opens from disk,
     travels by e-mail, contains only aggregates. No external resource: CSS, JS (lightbox, print) and images are inline.
     Brand identity: biomspro.com violet→green; verdict colours identical to the figures.
-ES: Informe HTML en un solo archivo.  PT: Relatório HTML em um único arquivo.  IT: Rapporto HTML in un unico file.
 """
 from __future__ import annotations
 

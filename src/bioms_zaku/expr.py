@@ -1,7 +1,5 @@
 """
 EN: Safe expression evaluator (whitelist AST). No `eval`, no attributes, no subscripts, no strings.
-ES: Evaluador seguro de expresiones (AST con lista blanca). Sin `eval`, sin atributos, sin índices, sin cadenas.
-PT: Avaliador seguro de expressões (AST com lista branca). Sem `eval`, sem atributos, sem colchetes, sem strings.
 
 Grammar / Gramática (CONTRATOS.md §2.4):
   numbers; allowed names; + - * / ** ( ); unary + -; functions log exp sqrt atan atan2 abs min max; sample statistics
@@ -17,8 +15,6 @@ from typing import Callable, Mapping, Sequence
 import numpy as np
 
 # EN: functions allowed; each maps to a numpy ufunc (works on scalars and arrays).
-# ES: funciones permitidas; cada una mapea a una ufunc de numpy (escalares y arreglos).
-# PT: funções permitidas; cada uma mapeia para uma ufunc do numpy (escalares e vetores).
 _FUNCS: dict[str, Callable] = {
     "log": np.log, "exp": np.exp, "sqrt": np.sqrt, "atan": np.arctan, "atan2": np.arctan2,
     "abs": np.abs, "min": np.minimum, "max": np.maximum,
@@ -43,8 +39,6 @@ class ExpressionError(ValueError):
 class CompiledExpr:
     """
     EN: A validated expression: source text, referenced names, and an evaluator.
-    ES: Expresión validada: texto fuente, nombres referenciados y evaluador.
-    PT: Expressão validada: texto-fonte, nomes referenciados e avaliador.
     """
     source: str
     names: frozenset[str]
@@ -59,8 +53,6 @@ class CompiledExpr:
         """
         EN: Evaluate with `env` mapping names to scalars/arrays. Missing name -> ExpressionError. When `record` (a list) is
             given, every sample statistic evaluated is appended to it as (text, value), e.g. ("mean(PhA)", 5.83).
-        ES: Evalúa con `env` (nombre -> escalar/arreglo). Nombre ausente -> ExpressionError.
-        PT: Avalia com `env` (nome -> escalar/vetor). Nome ausente -> ExpressionError.
         """
         missing = self.names - set(env)
         if missing:
@@ -72,8 +64,6 @@ class CompiledExpr:
 def compile_expr(source: str, allowed_names: Sequence[str]) -> CompiledExpr:
     """
     EN: Parse and validate `source` against the whitelist; only `allowed_names` may appear as variables.
-    ES: Analiza y valida `source` contra la lista blanca; solo `allowed_names` pueden aparecer como variables.
-    PT: Analisa e valida `source` contra a lista branca; só `allowed_names` podem aparecer como variáveis.
     """
     if not isinstance(source, str) or not source.strip():
         raise ExpressionError("expression must be a non-empty string")

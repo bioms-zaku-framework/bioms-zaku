@@ -1,7 +1,5 @@
 """
 EN: Input contract (CONTRATOS.md §1): reading, separator/decimal detection, column mapping, validation, derived variables.
-ES: Contrato de entrada (§1): lectura, detección de separador/decimal, mapeo de columnas, validación, variables derivadas.
-PT: Contrato de entrada (§1): leitura, detecção de separador/decimal, mapeamento de colunas, validação, variáveis derivadas.
 """
 from __future__ import annotations
 
@@ -28,8 +26,6 @@ class InputError(ValueError):
 class Mapping:
     """
     EN: user's column mapping (§1.3). Keys are canonical names; values are column names in the file.
-    ES: mapeo de columnas del usuario (§1.3). Claves = nombres canónicos; valores = columnas del archivo.
-    PT: mapeamento de colunas do usuário (§1.3). Chaves = nomes canônicos; valores = colunas do arquivo.
     """
     variables: dict[str, str]
     targets: dict[str, str]
@@ -58,8 +54,6 @@ class Mapping:
 class Dataset:
     """
     EN: validated data in canonical names + bookkeeping for the manifest. Never exposes row-level data in outputs.
-    ES: datos validados con nombres canónicos + registro para el manifiesto.
-    PT: dados validados em nomes canônicos + registro para o manifesto.
     """
     frame: pd.DataFrame                  # canonical columns: variables (+derived), targets, controls, covariates, strata, groups, id
     variables: list[str]
@@ -81,8 +75,6 @@ def read_table(source: str | os.PathLike | pd.DataFrame, mapping: Mapping | dict
                min_n: int = 30, min_per_class: int = 20) -> Dataset:
     """
     EN: Read a CSV/TSV or DataFrame, apply the mapping, validate (§1.4), derive variables. Fails early with named columns/rows.
-    ES: Lee CSV/TSV o DataFrame, aplica el mapeo, valida (§1.4), deriva variables. Falla temprano nombrando columnas/filas.
-    PT: Lê CSV/TSV ou DataFrame, aplica o mapeamento, valida (§1.4), deriva variáveis. Falha cedo nomeando colunas/linhas.
     """
     m = mapping if isinstance(mapping, Mapping) else Mapping.from_dict(mapping)
     info: dict[str, Any] = {"warnings": [], "rows_dropped": {}}
@@ -217,8 +209,6 @@ def _read_text(path: Path, encoding: str) -> str:
 def _parse_with_detection(text: str, needed_cols: list[str], numeric_cols: list[str], sep: str, decimal: str):
     """
     EN: §1.2 — try fixed (sep, decimal) pairs; exactly one valid → use it; else error.
-    ES: §1.2 — prueba pares fijos; exactamente uno válido → se usa; si no, error.
-    PT: §1.2 — testa pares fixos; exatamente um válido → usa; senão, erro.
     """
     text = text.lstrip("﻿")
     if sep != "auto" and decimal != "auto":

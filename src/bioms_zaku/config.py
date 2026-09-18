@@ -1,8 +1,6 @@
 """
 EN: Run configuration (CONTRATOS.md §3): defaults = `full` preset; `quick` preset for examples/tests; resolved config
     is what the manifest records.
-ES: Configuración de ejecución: valores por defecto = preset `full`; `quick` para ejemplos/pruebas.
-PT: Configuração de execução: padrões = preset `full`; `quick` para exemplos/testes.
 """
 from __future__ import annotations
 

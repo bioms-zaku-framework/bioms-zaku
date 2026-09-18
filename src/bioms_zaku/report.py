@@ -1,8 +1,6 @@
 """
 EN: Outputs (CONTRATOS.md §4): CSV tables at full precision, manifest with hashes/versions, Markdown summary.
     Outputs never contain row-level data.
-ES: Salidas: tablas CSV con precisión completa, manifiesto con hashes/versiones, resumen Markdown. Solo agregados.
-PT: Saídas: tabelas CSV com precisão completa, manifesto com hashes/versões, resumo Markdown. Só agregados.
 """
 from __future__ import annotations
 

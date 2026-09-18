@@ -3,8 +3,6 @@ EN: `bioms-zaku propose analise.yaml` (v0.9) — add the researcher's own indice
     one question at a time (id, name, what it measures, formula), each formula validated at once against the grammar and
     evaluated on the data of the YAML (rows, finite, positive, min/median/max), then written to `catalog.user_entries` as a
     proposed entry and listed in `catalog.include`. Nothing is guessed: a rejected formula is asked again; Enter on the id ends.
-ES: añade índices propios a la configuración, pregunta por pregunta.  PT: acrescenta índices próprios à configuração, pergunta a pergunta.
-IT: aggiunge indici propri alla configurazione, una domanda alla volta.
 """
 from __future__ import annotations
 

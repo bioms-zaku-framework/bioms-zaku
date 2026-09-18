@@ -1,12 +1,8 @@
 """
 EN: Predictive audit (CONTRATOS.md §3–4): out-of-sample scores, paired OOB bootstrap, negative control, utility over
     covariates, combination gain, verdicts. Every contrast is paired: both sides see the same resamples of the same rows.
-ES: Auditoría predictiva: puntajes fuera de muestra, bootstrap OOB pareado, control negativo, utilidad, ganancia por
-    combinación, veredictos. Todo contraste es pareado.
-PT: Auditoria preditiva: escores fora da amostra, bootstrap OOB pareado, controle negativo, utilidade, ganho por
-    combinação, vereditos. Todo contraste é pareado.
 
-Resampling / Reamostragem: for a row set of size n and seed s, the B resamples are a deterministic function of (n, s, B,
+Resampling: for a row set of size n and seed s, the B resamples are a deterministic function of (n, s, B,
 min_oob): rng = default_rng(s); repeat ii = rng.integers(0, n, n); oob = rows not drawn; keep if len(oob) ≥ min_oob;
 stop at B or after B·max_attempts_factor attempts. Identical row sets ⇒ identical resamples (pairing across methods with
 the same complete-case rows); within one contrast the rows are the same by construction.
@@ -270,7 +266,6 @@ def verdict_conditional(s1: dict, s2: dict, cfg: AuditConfig) -> str:
         score(control | target): signal about the control that the target does not explain.
         SPECIFIC = s1 present, s2 absent · TRACKS_CONTROL = s2 present, s1 absent · BOTH = both present (the index
         carries information shared by neither, e.g. body size measured better than either) · NEITHER = none.
-    ES: control negativo condicional (v0.5). PT: controle negativo condicional (v0.5).
     """
     a, b = _positive(s1, cfg), _positive(s2, cfg)
     return "SPECIFIC" if a and not b else "TRACKS_CONTROL" if b and not a else "BOTH" if a and b else "NEITHER"

@@ -1,8 +1,6 @@
 """
 EN: Index design for a context (CONTRATOS.md §2.7): fit an exponent vector to a target on a design partition; audit on
     the disjoint partition. Deterministic splits recorded for the manifest.
-ES: Diseño de índices para un contexto: ajusta un vector de exponentes en la partición de diseño; audita en la otra.
-PT: Desenho de índices para um contexto: ajusta um vetor de expoentes na partição de desenho; audita na outra.
 """
 from __future__ import annotations
 

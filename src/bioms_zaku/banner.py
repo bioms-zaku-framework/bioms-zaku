@@ -3,7 +3,6 @@ EN: Terminal welcome (v0.9): the BioMS Zaku letters in the brand gradient (viole
     commands (v1.2: `start` first — the guided path; `run` repeats; `render` re-writes the report; expert commands in one dim line). Shown ONLY where a person is looking: `bioms-zaku` with no command, `bioms-zaku --version`, and the start of an
     interactive `init`. Never in `run`, `check`, `render` or `init --map` (their output goes to logs and scripts). Colour only
     when stdout is a terminal, NO_COLOR is unset and TERM is not "dumb" (https://no-color.org); otherwise plain text.
-ES: bienvenida en la terminal.  PT: boas-vindas no terminal.  IT: benvenuto nel terminale.
 """
 from __future__ import annotations
 

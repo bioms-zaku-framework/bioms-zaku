@@ -1,12 +1,8 @@
 """
 EN: Algebraic part (CONTRATOS.md §2 of the method): exponent vectors, log-covariance Σ, analytic correlation
     between indices, observed correlations, redundancy with precedence, Σ transfer between strata.
-ES: Parte algebraica: vectores de exponentes, Σ de logaritmos, correlación analítica entre índices, correlaciones
-    observadas, redundancia con precedencia, transferencia de Σ entre estratos.
-PT: Parte algébrica: vetores de expoentes, Σ dos logaritmos, correlação analítica entre índices, correlações
-    observadas, redundância com precedência, transferência de Σ entre estratos.
 
-Exactness / Exactitud / Exatidão:
+Exactness:
   ln I = a·z  (z = logs of the variables)  ⇒  Var(ln I) = aᵀΣa,  Cov(ln I, ln J) = aᵀΣb,
   Pearson(ln I, ln J) = aᵀΣb / sqrt(aᵀΣa · bᵀΣb)  — an identity, no distributional assumption.
   Spearman conversion ρ_s = (6/π)·asin(r/2) assumes bivariate normality of the logs (reported as secondary).
@@ -33,8 +29,6 @@ _DERIVED_TO_BASE = {"H_m": {"H": 1.0}, "II": {"H": 2.0, "R": -1.0}}
 class VectorFit:
     """
     EN: exponent vector of one method in one stratum. `source` = 'catalog' (monomial) or 'fitted' (log-linear OLS).
-    ES: vector de exponentes de un método en un estrato. `source` = 'catalog' o 'fitted'.
-    PT: vetor de expoentes de um método em um estrato. `source` = 'catalog' ou 'fitted'.
     """
     method_id: str
     stratum: str
@@ -50,8 +44,6 @@ class VectorFit:
 def log_covariance(frame: pd.DataFrame, variables: Sequence[str]) -> tuple[np.ndarray, int]:
     """
     EN: Σ = sample covariance (ddof=1) of ln(variables) over complete rows. Returns (Σ, n).
-    ES: Σ = covarianza muestral (ddof=1) de ln(variables) sobre filas completas. Devuelve (Σ, n).
-    PT: Σ = covariância amostral (ddof=1) de ln(variáveis) nas linhas completas. Retorna (Σ, n).
     """
     X = frame.loc[:, list(variables)].to_numpy(dtype=float)
     ok = np.isfinite(X).all(axis=1)
@@ -64,8 +56,6 @@ def log_covariance(frame: pd.DataFrame, variables: Sequence[str]) -> tuple[np.nd
 def vector_from_catalog(entry: Entry, variables: Sequence[str]) -> np.ndarray:
     """
     EN: express a catalog monomial vector on the ordered `variables` (derived names re-expressed on base ones).
-    ES: expresa el vector monomial del catálogo sobre `variables` (derivados re-expresados en base).
-    PT: expressa o vetor monomial do catálogo sobre `variables` (derivados re-expressos nas base).
     """
     if entry.form != "monomial" or not entry.vector:
         raise ValueError(f"{entry.id}: not a catalog monomial")
@@ -89,8 +79,6 @@ def fit_log_linear(y: np.ndarray, frame: pd.DataFrame, variables: Sequence[str])
     """
     EN: OLS of ln(y) on ln(variables) with intercept, over rows with finite inputs and y > 0.
         Returns (coefficients, R², n_used, n_nonpositive). R² is the fraction of variance of ln(y) explained.
-    ES: MCO de ln(y) sobre ln(variables) con intercepto, en filas con entradas finitas e y > 0.
-    PT: MQO de ln(y) sobre ln(variáveis) com intercepto, nas linhas com entradas finitas e y > 0.
     """
     X = frame.loc[:, list(variables)].to_numpy(dtype=float)
     y = np.asarray(y, dtype=float)
@@ -147,8 +135,6 @@ def compute_vectors(cat: Catalog, values: dict[str, np.ndarray], frame: pd.DataF
     EN: one VectorFit per evaluable method. Monomials use the catalog vector (source 'catalog'); composites are fitted.
         `values[method_id]` are the method values on `frame` rows (NaN allowed). `extra_log_variables` (e.g. age)
         are appended to the log-linear design when declared.
-    ES: un VectorFit por método evaluable. Monomios usan el vector del catálogo; compuestos se ajustan.
-    PT: um VectorFit por método avaliável. Monômios usam o vetor do catálogo; compostos são ajustados.
     """
     out: dict[str, VectorFit] = {}
     design = tuple(variables) + tuple(extra_log_variables)
@@ -243,7 +229,6 @@ def sigma_transfer_table(vecs_by_stratum: dict[str, dict[str, VectorFit]], sigma
         `design_by_stratum[t]` (log-variables aligned with the values), so the own prediction keeps its identity property
         inside the resample; Σ_s (the transferred one) and all vectors stay fixed. Without `design_by_stratum` the own Σ
         is kept fixed (then the own error carries sampling noise; documented). No Spearman conversion, no Fisher interval.
-    ES: transferencia de Σ en métrica justa respecto a n (v0.5). PT: transferência de Σ em métrica justa quanto a n (v0.5).
     """
     rows = []
     rng_master = np.random.default_rng(seed)
@@ -324,8 +309,6 @@ def geometry_tables(vecs: dict[str, "VectorFit"], vals: dict[str, np.ndarray], f
         (vector_source 'catalog'); for fitted vectors the gap is reported. Everything for one index is computed on the
         complete-case rows of (index > 0, target > 0, control > 0, finite variables), so the identity is exact by
         construction; the implicit-vector table uses the rows of (target, control, variables). Flags never touch verdicts.
-    ES: vectores implícitos y cosenos bajo Σ; identidad exacta para monomios. PT: vetores implícitos e cossenos sob Σ;
-        identidade exata para monômios; bandeiras nunca alteram vereditos.
     """
     V = list(variables)
     X = frame.loc[:, V].to_numpy(dtype=float)

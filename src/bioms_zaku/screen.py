@@ -1,8 +1,6 @@
 """
 EN: Screening matrix (CONTRATOS.md §4.1): redundant × specific × useful per method and stratum, with identity and
     validity flags. Classes are enumerated and fixed.
-ES: Matriz de cribado: redundante × específico × útil por método y estrato.
-PT: Matriz de triagem: redundante × específico × útil por método e estrato.
 """
 from __future__ import annotations
 

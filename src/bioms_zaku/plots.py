@@ -4,8 +4,6 @@ EN: Figures (CONTRATOS.md §4.4, revised after inspection on 2026-09-10). Genera
     specific, orange #eb6834 = measures control); grey = de-emphasis (inconclusive); identity = marker shape + label,
     never a colour; NOT CURATED (§2.1) = hollow marker / *; one hue light→dark for magnitude; blue/orange + grey midpoint
     for polarity; hairline grid; direct labels selectively; no randomness.
-ES: Figuras generadas solo desde las tablas de salida; reglas de diseño arriba.
-PT: Figuras geradas só a partir das tabelas de saída; regras de desenho acima.
 
 Set / Conjunto:
   board              — the signature: one row per method (ordered by precedence), three aligned panels
@@ -139,10 +137,7 @@ def apply_style(figcfg: dict | None) -> None:
 
 
 def _margins(meta: dict | None, caption: bool) -> tuple[float, float]:
-    """EN: vertical space (inches) reserved above the axes for title/subtitle and below them for caption/footer.
-    ES: espacio vertical (pulgadas) reservado sobre los ejes (título/subtítulo) y debajo (leyenda/pie).
-    PT: espaço vertical (polegadas) reservado acima dos eixos (título/subtítulo) e abaixo (legenda/rodapé).
-    Computed before the figure exists so the figure height can include it; drawn afterwards by `_frame`."""
+    """EN: vertical space (inches) reserved above the axes for title/subtitle and below them for caption/footer."""
     caption = bool(caption) and bool(STYLE["captions"])
     head = 0.12 + 0.26 + (0.22 if STYLE["subtitle"] else 0.0) + 0.10
     foot = 0.08 + (0.22 if (STYLE["footer"] and meta) else 0.0) + (0.22 if caption else 0.0)
@@ -151,7 +146,7 @@ def _margins(meta: dict | None, caption: bool) -> tuple[float, float]:
 
 def _frame(fig, default_title: str, meta: dict | None, caption: str | None = None) -> None:
     """EN: draw title, subtitle, caption and footer at fixed inch offsets from the figure edges (never over the axes).
-    PT: desenha título, subtítulo, legenda e rodapé a distâncias fixas em polegadas das bordas (nunca sobre os eixos)."""
+"""
     H = fig.get_size_inches()[1]
     y = 0.12
     fig.text(0.01, 1 - y / H, STYLE["title"] or default_title, fontsize=10.5, color=C["ink"], ha="left", va="top"); y += 0.26
@@ -293,8 +288,6 @@ def target_control(aud: pd.DataFrame, alg: pd.DataFrame, out_dir: Path, primary_
         prediction of the CONTROL beyond the target. Whiskers = 95 % paired-bootstrap interval; dashed line = margin;
         verdict pill at the end of the row. One panel per stratum. Reads without a legend: long green + short violet =
         specific; the reverse = tracks the control; both long = measures both; both short = no signal.
-    PT: controle negativo condicional em barras pareadas — verde = acrescenta ao alvo além do controle; violeta =
-        acrescenta ao controle além do alvo.
     """
     if aud.empty or alg.empty or "s1_mean" not in aud:
         return
@@ -360,7 +353,6 @@ def lineage_tree(red: pd.DataFrame, alg: pd.DataFrame, aud: pd.DataFrame, out_di
     EN: the family tree — one row per original index (filled node at its year); redundant indices hang from it with the
         Spearman correlation on the branch. Node colour = specificity verdict; hollow edge = not curated (primary source not critically read);
         † = outside declared validity; ◆ = identity. One figure per stratum.
-    PT: árvore genealógica — uma linha por índice original; redundantes pendem dele com o ρ no ramo; cor = veredito.
     """
     if red.empty or alg.empty:
         return
@@ -421,7 +413,6 @@ def exponents_sigma(alg: pd.DataFrame, red: pd.DataFrame, sigma: pd.DataFrame | 
     """
     EN: exponent heat-map with rows grouped by lineage, a right-hand column (declared kind · exact / fit R²), and the
         stratum's log-correlation matrix Σ beside it. One panel pair per stratum.
-    PT: mapa de expoentes agrupado por linhagem, coluna com tipo declarado e R², e a Σ do estrato ao lado.
     """
     if alg.empty:
         return

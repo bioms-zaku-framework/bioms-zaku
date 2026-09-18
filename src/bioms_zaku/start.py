@@ -12,7 +12,6 @@ EN: `bioms-zaku start dados.csv` (v1.0, CONTRATOS.md §3.5) — ONE guided path 
     `none` refuses a suggested column. At the end of a screen: numbered summary and "correct a line?". The YAML is written after
     each screen, so the whole session is reproducible without questions: `bioms-zaku run analise.yaml` gives the same tables.
     `--map role=column ... --yes`: no questions at all (scripts, CI).
-ES: un solo camino guiado.  PT: um só caminho guiado.  IT: un solo percorso guidato.
 """
 from __future__ import annotations
 

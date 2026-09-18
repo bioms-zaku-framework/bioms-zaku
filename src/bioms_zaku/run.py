@@ -2,8 +2,6 @@
 EN: Orchestrator: config → data → catalog (+designed index) → per stratum: values, Σ, vectors, pairs, redundancy →
     Σ transfer → audit (specificity), utility, combinations → screening → tables, manifest, summary (, figures).
     Progress with ETA from the first method. Row-level data never leave this module.
-ES: Orquestador: de la configuración a las salidas. Progreso con ETA desde el primer método.
-PT: Orquestrador: da configuração às saídas. Progresso com ETA desde o primeiro método.
 """
 from __future__ import annotations
 
@@ -342,7 +340,6 @@ def _run(cfg: dict, *, printer: Callable[[str], None]) -> dict:
     vecs_by, sig_by, pairs_by, vals_by, design_by, skipped_all = {}, {}, {}, {}, {}, {}
     # EN: target-kind orientation (§2.1 / §3.2): a method whose author-declared kind equals the kind of the CONTROL and
     #     differs from the kind of the TARGET is expected to "track the control" by design; say so before the verdicts.
-    # PT: orientação por tipo de alvo: índice de gordura auditado contra alvo de massa magra "acompanha o controle" por desenho.
     kinds = {k: v for k, v in ((cfg.get("declarations") or {}).get("target_kinds") or {}).items()}
     for t, c in ds.pairing.items():
         kt, kc = kinds.get(t), kinds.get(c)

@@ -3,8 +3,6 @@ EN: The Zaku method diagram (v0.9): one fixed SVG, in the current language, draw
     the `[plots]` extra is absent. Content is schematic and fixed — the three example vectors are exact catalogue vectors
     (H²/R, Xc/H, R/H); the Σ cells are illustrative shading, not data. Written to figures/zaku_method.svg and embedded
     inline in the report. Texts come from the i18n catalogue (keys d.*, v.*).
-ES: diagrama del método Zaku (SVG fijo, idioma actual).  PT: diagrama do método Zaku (SVG fixo, idioma atual).
-IT: diagramma del metodo Zaku (SVG fisso, lingua corrente).
 """
 from __future__ import annotations
 

@@ -1,7 +1,5 @@
 """
 EN: Catalog of indices and predictive equations (CONTRATOS.md §2): loading, validation, precedence.
-ES: Catálogo de índices y ecuaciones predictivas (§2): carga, validación, precedencia.
-PT: Catálogo de índices e equações preditivas (§2): carga, validação, precedência.
 """
 from __future__ import annotations
 
@@ -18,8 +16,6 @@ import numpy as np
 from .expr import CompiledExpr, ExpressionError, compile_expr
 
 # EN: canonical variable names always available when the four BIA variables are mapped (50 kHz).
-# ES: nombres canónicos disponibles cuando las cuatro variables BIA están mapeadas (50 kHz).
-# PT: nomes canônicos disponíveis quando as quatro variáveis BIA estão mapeadas (50 kHz).
 CANONICAL_BASE = ("R", "Xc", "H", "W")
 DERIVED = ("H_m", "PhA", "II", "Z")
 NON_MONOMIAL_DERIVED = ("PhA", "Z")   # EN: usable in expressions, never in a monomial `vector` (§2.3)
@@ -48,8 +44,6 @@ class CatalogError(ValueError):
 class Entry:
     """
     EN: One method. `exprs` maps a branch key to a compiled expression; `None` key = single expression.
-    ES: Un método. `exprs` mapea clave de rama -> expresión compilada; clave `None` = expresión única.
-    PT: Um método. `exprs` mapeia chave de ramo -> expressão compilada; chave `None` = expressão única.
     """
     id: str
     label: str
@@ -81,8 +75,6 @@ class Entry:
     reference_method: str | None = None
     # EN: who the method was fitted on (descriptive only; never produces a flag). `validity` is the applicability the
     #     author states or tested; outside it the framework flags † and never blocks (§2.1).
-    # ES: muestra de derivación (solo descriptiva). `validity` = aplicabilidad declarada o probada; fuera → marca †, nunca bloquea.
-    # PT: amostra de derivação (só descritiva). `validity` = aplicabilidade declarada ou testada; fora → marca †, nunca bloqueia.
     derivation_sample: dict | None = None
     target_kind: str | None = None           # EN: one of TARGET_KINDS or None (not declared)
     notes: str | None = None
@@ -119,8 +111,6 @@ class Entry:
     def evaluate(self, env: Mapping[str, np.ndarray], branch: np.ndarray | None = None, record: list | None = None) -> np.ndarray:
         """
         EN: Evaluate the method on `env` (arrays). With branches, `branch` gives each row's group value.
-        ES: Evalúa el método en `env`. Con ramas, `branch` da el valor de grupo por fila.
-        PT: Avalia o método em `env`. Com ramos, `branch` dá o valor de grupo por linha.
         """
         if self.form == "closed" or not self.exprs:
             raise CatalogError(f"{self.id}: closed method cannot be evaluated")
@@ -160,8 +150,6 @@ class Catalog:
     def sorted_by_precedence(self) -> list[Entry]:
         """
         EN: precedence order: year, then date (if any), then DOI (lexicographic). Fixed rule (§2.2).
-        ES: orden de precedencia: año, fecha (si hay), DOI. Regla fija.
-        PT: ordem de precedência: ano, data (se houver), DOI. Regra fixa.
         """
         # EN: proposed (unpublished) indices come after every published method whatever their year (v0.9)
         return sorted(self.entries, key=lambda e: (e.proposed or e.designed, e.year, e.date or "9999-99-99", e.doi or f"pmid:{e.pmid}" if e.doi or e.pmid else e.id))
@@ -172,8 +160,6 @@ def load_catalog(path: str | os.PathLike | None = None, *, resolve_doi: bool = F
                  cache_path: str | os.PathLike | None = None, rng_seed: int = 0) -> Catalog:
     """
     EN: Load and validate a catalog JSON (default: built-in). Validation is strict and happens here, not at run time.
-    ES: Carga y valida un catálogo JSON (por defecto: el incorporado). La validación es estricta y ocurre aquí.
-    PT: Carrega e valida um catálogo JSON (padrão: o embutido). A validação é estrita e acontece aqui.
     """
     p = Path(path) if path is not None else BUILTIN_PATH
     raw = json.loads(Path(p).read_text(encoding="utf-8"))
@@ -248,8 +234,6 @@ def _parse_entry(e: dict, i: int, canon: tuple[str, ...], rng_seed: int) -> Entr
     if prov["confidence"] not in CONFIDENCE:
         raise CatalogError(f"{where}: provenance.confidence must be one of {CONFIDENCE}")
     # EN: confidence may be lowered by the curator, never raised above the source default.
-    # ES: la confianza puede bajarse, nunca subirse por encima del valor por defecto de la fuente.
-    # PT: a confiança pode ser rebaixada, nunca elevada acima do padrão da fonte.
     if CONFIDENCE.index(prov["confidence"]) < CONFIDENCE.index(DEFAULT_CONFIDENCE[prov["formula_source"]]):
         raise CatalogError(f"{where}: confidence {prov['confidence']!r} exceeds what source {prov['formula_source']!r} allows")
     if e.get("target_kind") is not None and e["target_kind"] not in TARGET_KINDS:
@@ -304,8 +288,6 @@ def _parse_entry(e: dict, i: int, canon: tuple[str, ...], rng_seed: int) -> Entr
             raise CatalogError(f"{where}: monomial cannot have branches")
         # EN: §2.3 exactness — a catalog vector is exact or it is not a vector. Non-monomial derived names (PhA = atan,
         #     Z = sqrt of a sum) cannot appear in `vector`; such methods are `composite` and get a fitted vector with R².
-        # ES: §2.3 exactitud — el vector del catálogo es exacto o no es vector; PhA y Z no pueden aparecer en `vector`.
-        # PT: §2.3 exatidão — o vetor do catálogo é exato ou não é vetor; PhA e Z não podem aparecer em `vector`.
         bad = sorted(k for k in vector if k in NON_MONOMIAL_DERIVED)
         if bad:
             raise CatalogError(f"{where}: {bad} are not monomials in the base variables; declare form 'composite' (fitted vector, fit R² reported)")
@@ -333,8 +315,6 @@ def _parse_entry(e: dict, i: int, canon: tuple[str, ...], rng_seed: int) -> Entr
 def _check_vector(where: str, ce: CompiledExpr, vector: dict, tol: float, seed: int) -> None:
     """
     EN: §2.3 — evaluate expr on 1000 random positive inputs, fit log-linear, require coefficients == vector.
-    ES: §2.3 — evalúa expr en 1000 entradas positivas aleatorias, ajusta log-lineal, exige coeficientes == vector.
-    PT: §2.3 — avalia expr em 1000 entradas positivas aleatórias, ajusta log-linear, exige coeficientes == vector.
     """
     rng = np.random.default_rng(seed)
     n = 1000
@@ -376,8 +356,6 @@ def _check_vector(where: str, ce: CompiledExpr, vector: dict, tol: float, seed: 
 def _check_example(where: str, ent: Entry) -> None:
     """
     EN: §2.3 — published numeric example must be reproduced within `tol`.
-    ES: §2.3 — el ejemplo numérico publicado debe reproducirse dentro de `tol`.
-    PT: §2.3 — o exemplo numérico publicado deve ser reproduzido dentro de `tol`.
     """
     ex = ent.check_example
     for k in ("inputs", "expected", "tol"):
@@ -406,8 +384,6 @@ def _check_example(where: str, ent: Entry) -> None:
 def _resolve_dois(dois: list[str], cache_path) -> dict[str, str]:
     """
     EN: resolve each DOI at doi.org handle API (responseCode 1 = exists); cached with date; no network -> 'unknown'.
-    ES: resuelve cada DOI en la API de doi.org; con caché; sin red -> 'unknown'.
-    PT: resolve cada DOI na API do doi.org; com cache; sem rede -> 'unknown'.
     """
     cache_path = Path(cache_path) if cache_path else Path.home() / ".cache" / "bioms_zaku" / "doi_cache.json"
     cache: dict[str, dict] = {}
