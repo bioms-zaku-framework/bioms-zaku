@@ -1,4 +1,4 @@
-"""EN: the guided path `bioms-zaku start` (PLANO_v1.0_fluxo.md): navigation, the three uses, reproducibility without questions,
+"""EN: the guided path `bioms-zaku start` (contract §3.5): navigation, the three uses, reproducibility without questions,
 independence of the validation from what was accepted, `--yes`, no English leak in pt."""
 import hashlib
 from pathlib import Path

@@ -1,4 +1,4 @@
-"""EN: contract §4.6 (v0.8) — the report as the product. Guarantees T1–T8 of PLANO_v0.8_relatorio.md."""
+"""EN: contract §4.6 (v0.8) — the report as the product. Guarantees T1–T8 of the report plan (contract §4.6)."""
 import base64
 import builtins
 import html.parser

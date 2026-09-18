@@ -398,7 +398,7 @@ acende, ortogonal ⇒ apagada; identidade do item 4 no exemplo embarcado (1e-9);
 ### 3.6 Pressupostos declarados e limiares com origem (v1.1, 16/09/2026)
 Todo relatório traz a seção **Pressupostos e limiares**, gerada da execução: cada procedimento com o pressuposto que carrega e o
 seu estado naquela execução (por construção · verificado, com o número · limitação declarada), e cada limiar com valor, origem e
-sustentação. Os ajustes de pressuposto desta versão (PLANO_v1.1_pressupostos.md):
+sustentação. Os ajustes de pressuposto desta versão:
 - **Pares:** intervalo bootstrap de pessoas para a correlação de Pearson dos logs (`r_log_lo`, `r_log_hi`, nível `pair_ci_level`),
   sem pressuposto de distribuição; o intervalo de Fisher (normalidade bivariada, rejeitada no NHANES) foi removido. Teste de cobertura.
 - **Escala da auditoria:** `audit.scale: log` por padrão — índice, alvos/controles contínuos e covariáveis entram como logaritmos, a
@@ -470,7 +470,7 @@ excluídas) · 3 `precedence_tree` · 4 `specificity_quadrant` (escore controle 
 · 5 `screening_map` (assinatura) · 6 `sigma_transfer` · 7 `combination_gain`.
 **Portão:** inspeção de cada figura pelo Thalles antes do fechamento da v1.0.
 
-### 4.6 Relatório (`report.html`, v0.8 — plano aprovado em 14/09/2026; ver PLANO_v0.8_relatorio.md; v0.9 — estrutura e referências, 15/09/2026)
+### 4.6 Relatório (`report.html`, v0.8 — plano aprovado em 14/09/2026; v0.9 — estrutura e referências, 15/09/2026)
 - **É a saída principal.** Um único arquivo, autocontido (figuras e tabelas embutidas), abre do disco sem servidor. Terminal:
   a última linha do `run` é o caminho do relatório e como abri-lo. Notebook: `run()` mostra o relatório inline.
 - **Seções, nesta ordem:** cabeçalho (título, preset, aviso se `quick`); resumo; para cada bloco de resultado — entrada e amostra,

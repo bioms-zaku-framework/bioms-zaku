@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0.dev0 — 2026-09-10 (unreleased)
+## 1.0.0rc1 — 2026-09-18
 - ONE example base (2026-09-17, user decision): `zaku_exemplo.csv`, synthetic, drawn per cell sex × diabetes from NHANES means and
   covariances (correlations within 0.013 of the reweighted source), serving regression, the known-answer classification and
   diabetes; generator `tools/make_zaku_example.py` with published parameters. `bioms-zaku examples --copy` copies only this base;

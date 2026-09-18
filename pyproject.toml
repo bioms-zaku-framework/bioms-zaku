@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "bioms-zaku"
-version = "0.1.0.dev0"
+dynamic = ["version"]
 description = "BioMS Zaku: algebraic decomposition and predictive audit of indices and predictive equations (demonstrated on bioimpedance)."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -12,7 +12,7 @@ license = {text = "MIT"}
 authors = [{name = "Thalles Mota", email = "thallesleandromota@gmail.com"}]
 keywords = ["bioimpedance", "body composition", "validation", "negative control", "redundancy"]
 classifiers = [
-  "Development Status :: 2 - Pre-Alpha",
+  "Development Status :: 4 - Beta",
   "Intended Audience :: Science/Research",
   "License :: OSI Approved :: MIT License",
   "Programming Language :: Python :: 3",
@@ -39,6 +39,9 @@ Homepage = "https://github.com/bioms-zaku-framework/bioms-zaku"
 [project.scripts]
 bioms-zaku = "bioms_zaku.cli:entry"
 
+[tool.hatch.version]
+path = "src/bioms_zaku/__init__.py"   # EN: single source of the version
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/bioms_zaku"]
 
@@ -46,7 +49,7 @@ packages = ["src/bioms_zaku"]
 "examples" = "bioms_zaku/examples"      # v1.2 — example data ship with the package (bioms_zaku.datasets, `bioms-zaku examples`)
 
 [tool.hatch.build.targets.sdist]
-include = ["src/bioms_zaku", "tests", "examples", "tools", "README.md", "LICENSE", "CONTRATOS.md", "PROJETO.md"]
+include = ["src/bioms_zaku", "tests", "examples", "tools", "README.md", "LICENSE", "CONTRATOS.md"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

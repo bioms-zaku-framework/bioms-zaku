@@ -10,7 +10,7 @@
 (Lima, S. *A estrutura argumental dos verbos na língua Juruna (Yudjá)*, MSc dissertation, USP, 2008, item 290).
 The method looks at an index before accepting it, cares for its validity, and waits for the out-of-sample result.
 
-Status: pre-alpha · License: MIT · Contracts: `CONTRATOS.md` · Plan: `PROJETO.md` · Cite: `CITATION.cff`
+Status: release candidate (1.0.0rc1) · License: MIT · Cite: `CITATION.cff` · **What the tool guarantees, and under which assumptions:** [`CONTRATOS.md`](CONTRATOS.md)
 
 ## What it does / Qué hace / O que faz
 
@@ -246,6 +246,10 @@ output. Two identical runs give identical hashes (tested in CI). Every quality c
 hand-calculated lessons, exact algebraic identities, synthetic cases with a constructed answer, and the shipped example,
 which is reproducible byte for byte from its published parameters (`tools/make_example_data.py --from-params`). No test
 depends on data outside the repository.
+
+The contract [`CONTRATOS.md`](CONTRATOS.md) is the normative document behind all of this: what the tool promises for
+input, catalogue, configuration, outputs and reproducibility — five contracts, each closing with its justification.
+Read it to know what a number from this tool does and does not claim. (Written in Portuguese.)
 
 ## Development / Desarrollo / Desenvolvimento
 
