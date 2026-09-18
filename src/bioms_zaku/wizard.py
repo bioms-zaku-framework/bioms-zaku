@@ -35,6 +35,21 @@ SUGGEST = {
 GROUP_ROLES = {"sex": "sexo", "age": "idade", "arm": "C_arm", "waist": "C_waist", "calf": "C_calf"}
 
 
+def print_variables(printer, name: str, cols: list[str], numeric: list[str]) -> None:
+    """EN: the variables of the file, ONE PER LINE — the names every answer must use. One layout always: no cut-off
+    above n columns (a threshold with no source) and no width-dependent grid (the same command would print
+    differently on another terminal, and the tool tests its output). Non-numeric columns are listed too and marked:
+    sex and strata are mapped from them."""
+    num = set(numeric)
+    printer("")
+    printer(t("w.vars", name=name, n=len(cols)))
+    mark = t("w.vars.text")
+    for c in cols:
+        printer(f"    {c}" if c in num else f"    {c}  {mark}")
+    printer("")
+    printer(t("w.vars.use"))
+
+
 def detect(path: Path, encoding: str = "utf-8") -> tuple[pd.DataFrame, str, str]:
     """EN: same fixed-order detection as the input contract (§1.2), on all columns. ES/PT: mesma detecção do contrato."""
     try:
@@ -130,7 +145,7 @@ def init(csv: str, out: str | None = None, *, ask: Callable[[str, str | None], s
     cols = [str(c).strip() for c in df.columns]
     numeric = [c for c, raw in zip(cols, df.columns) if pd.api.types.is_numeric_dtype(df[raw])]
     printer(t("w.file", name=p.name, rows=len(df), cols=len(cols), sep=repr(s), dec=repr(d)))
-    printer(t("w.numeric", cols=", ".join(numeric)))
+    print_variables(printer, p.name, cols, numeric)
     def help_(key: str) -> None:   # EN: one explanatory line before a question, interactive mode only
         if ask is not None:
             printer(t(key))

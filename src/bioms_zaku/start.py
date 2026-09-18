@@ -28,7 +28,7 @@ import yaml
 
 from .i18n import LANGS, set_language, t
 from .io import InputError
-from .wizard import GROUP_ROLES, HEADER, build_config, detect, suggest
+from .wizard import GROUP_ROLES, HEADER, build_config, detect, print_variables, suggest
 
 BACK, HELP, NONE = "<", "?", "none"
 COLUMN_KEYS = ("R", "Xc", "H", "W", "target", "control", "strata", "id") + tuple(GROUP_ROLES)
@@ -434,7 +434,7 @@ def start(csv: str, out: str | None = None, *, ask: Callable[[str, str | None], 
     else:
         df, s_, d_ = detect(p, encoding)
     cols = [str(c).strip() for c in df.columns]; numeric = [c for c, raw in zip(cols, df.columns) if pd.api.types.is_numeric_dtype(df[raw])]
-    printer(t("w.file", name=p.name, rows=len(df), cols=len(cols), sep=repr(s_), dec=repr(d_))); printer(t("w.numeric", cols=", ".join(numeric)))
+    printer(t("w.file", name=p.name, rows=len(df), cols=len(cols), sep=repr(s_), dec=repr(d_))); print_variables(printer, p.name, cols, numeric)
     if ask is not None:
         printer(""); printer(t("st.nav")); printer("")
     # ---- screen 2
