@@ -25,7 +25,7 @@ You do not need to know how to program. In a terminal, `bioms-zaku start dados.c
 your answers down; in a notebook, you open it and press run, with the example data already inside. Out comes a single
 file, `report.html`: every number, every figure, and beside each one how it was computed and how to read it.
 
-Status: release candidate (1.0.0rc1) · License: MIT · Cite: `CITATION.cff` · **What the tool guarantees, and under which assumptions:** [`CONTRATOS.md`](CONTRATOS.md)
+Status: release candidate (1.0.0rc1) · License: MIT · Cite: `CITATION.cff` · **What the tool guarantees, and under which assumptions:** [`CONTRACTS.md`](CONTRACTS.md)
 
 ## What it does
 
@@ -267,7 +267,7 @@ hand-calculated lessons, exact algebraic identities, synthetic cases with a cons
 which is reproducible byte for byte from its published parameters (`tools/make_example_data.py --from-params`). No test
 depends on data outside the repository.
 
-The contract [`CONTRATOS.md`](CONTRATOS.md) is the normative document behind all of this: what the tool promises for
+The contract [`CONTRACTS.md`](CONTRACTS.md) is the normative document behind all of this: what the tool promises for
 input, catalogue, configuration, outputs and reproducibility — five contracts, each closing with its justification.
 Read it to know what a number from this tool does and does not claim.
 

@@ -27,7 +27,7 @@ Non devi saper programmare. In un terminale, `bioms-zaku start dati.csv` ti fa l
 un notebook, lo apri e premi esegui, con i dati di esempio già dentro. Ne esce un unico file, `report.html`: ogni
 numero, ogni figura e, accanto a ciascuno, come è stato calcolato e come leggerlo.
 
-Stato: release candidate (1.0.0rc1) · Licenza: MIT · Citazione: `CITATION.cff` · **Ciò che lo strumento garantisce, e sotto quali ipotesi:** [`CONTRATOS.md`](CONTRATOS.md)
+Stato: release candidate (1.0.0rc1) · Licenza: MIT · Citazione: `CITATION.cff` · **Ciò che lo strumento garantisce, e sotto quali ipotesi:** [`CONTRACTS.md`](CONTRACTS.md)
 
 ## Che cosa fa
 
@@ -295,7 +295,7 @@ lezioni calcolate a mano, identità algebriche esatte, casi sintetici con rispos
 è riproducibile byte per byte dai suoi parametri pubblicati (`tools/make_example_data.py --from-params`). Nessun test
 dipende da dati fuori dal repository.
 
-Il contratto [`CONTRATOS.md`](CONTRATOS.md) è il documento normativo dietro tutto questo: ciò che lo strumento promette
+Il contratto [`CONTRACTS.md`](CONTRACTS.md) è il documento normativo dietro tutto questo: ciò che lo strumento promette
 per input, catalogo, configurazione, output e riproducibilità — cinque contratti, ciascuno che chiude con la sua
 giustificazione. Leggilo per sapere che cosa un numero di questo strumento afferma e che cosa non afferma.
 
