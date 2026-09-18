@@ -25,7 +25,7 @@ Cinco contratos: entrada, catálogo, configuração, saídas, reprodutibilidade.
 ## 1. Contrato de ENTRADA
 
 ### 1.1 Forma
-Uma tabela, uma linha por medição. Com `id` repetido, bootstrap e validação cruzada agrupam por `id`.
+Uma tabela, **uma linha por pessoa** (§3.2): `id` repetido é recusado na entrada, com a instrução de agregar antes.
 CSV/TSV (`encoding` utf-8 padrão; `latin-1`/`cp1252` por parâmetro; falha de decodificação → erro) ou `pandas.DataFrame`.
 
 ### 1.2 Separador e decimal
@@ -72,7 +72,7 @@ columns:
 | faltante em `targets`/`controls` | linha fora daquele alvo; contagem no manifesto |
 | n por estrato < `min_n` (30) | estrato ignorado, aviso |
 | classe com < `min_per_class` (20) casos no estrato | auditoria daquele alvo não roda no estrato, aviso |
-| `id` repetido | modo cluster, aviso informativo |
+| `id` repetido | erro, nomeando quantos ids têm mais de uma linha e pedindo agregação (§3.2) |
 
 ### 1.4b Exemplo real embarcado (v1.2, decisão de 16/09/2026)
 `examples/nhanes_diabetes_400.csv`: 400 linhas REAIS dos arquivos públicos do NHANES 1999–2004 (CDC, domínio público; redistribuição
