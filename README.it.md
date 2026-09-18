@@ -63,7 +63,7 @@ bioms-zaku --lang it start dati.csv        # un percorso guidato: colonne → es
 ```
 `<` torna indietro, `?` ripete l'aiuto, Invio accetta il suggerimento. Tutto ciò che rispondi è scritto in
 `dati.zaku.yaml`, così `bioms-zaku run dati.zaku.yaml` ripete l'analisi senza domande. Guida di dieci minuti:
-`GUIA_10_MINUTOS.md`.
+[`GUIDE_10_MINUTES.it.md`](GUIDE_10_MINUTES.it.md).
 
 **In un notebook (Colab o Jupyter)** non c'è nulla da scaricare: `pip install bioms-zaku` porta i dati di esempio
 dentro il pacchetto. `examples/zaku_exemplo.ipynb` installa, li carica e percorre i tre usi in circa un minuto — la

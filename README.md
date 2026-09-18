@@ -56,7 +56,7 @@ pip install "bioms-zaku[plots,excel]"
 bioms-zaku --lang pt start dados.csv        # one guided path: columns → standard run → suggestions (accept/edit/no) → your own index → report
 ```
 `<` goes back, `?` repeats the help, Enter accepts the suggestion. Everything answered is written to `dados.zaku.yaml`, so
-`bioms-zaku run dados.zaku.yaml` repeats the analysis without questions. Ten-minute guide: `GUIA_10_MINUTOS.md`.
+`bioms-zaku run dados.zaku.yaml` repeats the analysis without questions. Ten-minute guide: [`GUIDE_10_MINUTES.md`](GUIDE_10_MINUTES.md).
 
 **In a notebook (Colab or Jupyter)**, nothing has to be downloaded: `pip install bioms-zaku` brings the example data
 inside the package. `examples/zaku_exemplo.ipynb` installs, loads them and walks the three uses in about a minute —

@@ -55,3 +55,35 @@ def test_the_technical_section_follows_and_is_not_the_front_door():
         t = _text(lang)
         first = re.search(r"^## (.+)$", t, re.M).group(1)
         assert not any(j in first for j in JARGON), f"{FILES[lang]}: the first section is technical: {first!r}"
+
+
+# --- the ten-minute guide, same rule: one file per language, kept in step -----------------------------------------
+GUIDES = {"en": "GUIDE_10_MINUTES.md", "es": "GUIDE_10_MINUTES.es.md",
+          "pt": "GUIDE_10_MINUTES.pt.md", "it": "GUIDE_10_MINUTES.it.md"}
+
+
+def test_the_four_guides_exist_with_the_same_sections():
+    counts = {}
+    for lang, name in GUIDES.items():
+        p = ROOT / name
+        assert p.exists(), f"{name} is missing: the guide must exist in the four languages of the tool"
+        counts[lang] = len(re.findall(r"^## ", p.read_text(encoding="utf-8"), re.M))
+    assert len(set(counts.values())) == 1, f"a translation of the guide lost or gained sections: {counts}"
+    assert min(counts.values()) >= 9, counts
+
+
+def test_each_guide_links_the_other_three():
+    for lang, name in GUIDES.items():
+        t = (ROOT / name).read_text(encoding="utf-8")
+        for other, other_name in GUIDES.items():
+            if other != lang:
+                assert f"({other_name})" in t, f"{name} does not link to {other_name}"
+
+
+def test_each_readme_points_to_the_guide_of_its_own_language():
+    for lang, readme in FILES.items():
+        t = (ROOT / readme).read_text(encoding="utf-8")
+        assert f"({GUIDES[lang]})" in t, f"{readme} must link the guide in its own language"
+        for other, guide in GUIDES.items():
+            if other != lang:
+                assert f"({guide})" not in t, f"{readme} links the guide of another language ({guide})"

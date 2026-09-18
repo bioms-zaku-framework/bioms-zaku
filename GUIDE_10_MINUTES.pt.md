@@ -1,5 +1,7 @@
 # BioMS Zaku em dez minutos
 
+[English](GUIDE_10_MINUTES.md) · [Español](GUIDE_10_MINUTES.es.md) · **Português** · [Italiano](GUIDE_10_MINUTES.it.md)
+
 Você tem uma planilha com bioimpedância (R e Xc a 50 kHz), estatura, massa corporal e uma medida de referência, como massa magra
 ou massa gorda por DXA. Quer saber como os índices publicados se comportam nos seus dados, e talvez criar os seus. Tudo é feito
 no terminal, com um comando que conduz por perguntas. Nada é decidido em silêncio: cada resposta fica gravada num arquivo YAML,
