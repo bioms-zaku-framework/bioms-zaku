@@ -57,3 +57,14 @@ def test_one_line_switches_the_language_of_the_tool():
 def test_the_public_api_is_used_as_a_reader_would_write_it():
     src = "\n".join("".join(c["source"]) for c in _nb()["cells"] if c["cell_type"] == "code")
     assert "from bioms_zaku.api import check, example_path, run" in src, "the notebook must use the package surface"
+
+
+def test_the_logo_opens_the_notebook_and_is_embedded():
+    """EN: the logo travels inside the notebook (base64), never as a link: a notebook opened offline, or from a
+    private repository, must still show it (user request, 2026-09-18). The small logo is used on purpose."""
+    nb = _nb()
+    first = "".join(nb["cells"][0]["source"])
+    assert nb["cells"][0]["cell_type"] == "markdown"
+    assert "data:image/png;base64," in first, "the notebook must open with the embedded logo"
+    head = first.split("# BioMS")[0]
+    assert "http" not in head, "the logo must not be fetched from the network"

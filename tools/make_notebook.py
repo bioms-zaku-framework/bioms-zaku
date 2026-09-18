@@ -6,10 +6,15 @@ Written by a generator so the four narrations cannot drift apart and the noteboo
 """
 from __future__ import annotations
 
+import base64
 import sys
 from pathlib import Path
 
 import nbformat as nbf
+
+ROOT = Path(__file__).resolve().parents[1]
+LOGO = ROOT / "docs/assets/logo_small.png"      # EN: the small one on purpose — base64 of the large
+                                                   #     logo would add 634 KB to the notebook
 
 L = ("EN", "ES", "PT", "IT")
 
@@ -23,7 +28,9 @@ CELLS: list[tuple[str, str]] = []
 md = lambda s: CELLS.append(("md", s))
 code = lambda s: CELLS.append(("code", s))
 
-md("# BioMS Zaku\n\n" + four(
+_logo = base64.b64encode(LOGO.read_bytes()).decode()
+md(f'<p align="center"><img src="data:image/png;base64,{_logo}" width="360" alt="BioMS Zaku"></p>'
+   "\n\n# BioMS Zaku\n\n" + four(
     "Run every cell (in Colab: **Runtime → Run all**). There is nothing to download: the example data travel inside "
     "the package. In about a minute you see the three things the tool does — redundancy **predicted** before any index "
     "is computed, an audit against a negative control, and the report.",
