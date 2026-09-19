@@ -2,7 +2,7 @@
 
 # BioMS Zaku
 
-**English** · [Español](README.es.md) · [Português](README.pt.md) · [Italiano](README.it.md)
+**English** · [Español](docs/README.es.md) · [Português](docs/README.pt.md) · [Italiano](docs/README.it.md)
 
 Algebraic decomposition and out-of-sample audit of indices and predictive equations. Demonstrated on bioimpedance.
 
@@ -56,7 +56,7 @@ pip install "bioms-zaku[plots,excel]"
 bioms-zaku --lang en start data.csv        # one guided path: columns → standard run → suggestions (accept/edit/no) → your own index → report
 ```
 `<` goes back, `?` repeats the help, Enter accepts the suggestion. Everything answered is written to `dados.zaku.yaml`, so
-`bioms-zaku run dados.zaku.yaml` repeats the analysis without questions. Ten-minute guide: [`GUIDE_10_MINUTES.md`](GUIDE_10_MINUTES.md).
+`bioms-zaku run dados.zaku.yaml` repeats the analysis without questions. Ten-minute guide: [`GUIDE_10_MINUTES.md`](docs/GUIDE_10_MINUTES.md).
 
 **In a notebook (Colab or Jupyter)**, nothing has to be downloaded: `pip install bioms-zaku` brings the example data
 inside the package. `examples/zaku_exemplo.ipynb` installs, loads them and walks the three uses in about a minute —
@@ -174,7 +174,7 @@ preset: full             # 5×50 CV, B = 2000 (quick = 5×5, B = 200, for demos 
 
 ## Catalog
 
-Eight public bioimpedance indices, each re-verified on its primary source (`catalogo/fontes_primarias_indices/LEITURAS.md`):
+Eight public bioimpedance indices, each re-verified on its primary source (`docs/LEITURAS.md`):
 H²/|Z| at 100 kHz (Hoffer 1969), impedance index H²/R (Lukaski 1985), whole-body phase angle (Baumgartner 1988), the BIVA
 components R/H and Xc/H (Piccoli 1994), specific resistivity and reactivity Rsp/Xcsp (Marini 2013; validated on NHANES by
 Buffa 2013) and LMI (Levi Micheli 2022); the impedance ratio Z200/Z5 is listed with low confidence (commercial origin, no

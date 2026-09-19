@@ -2,7 +2,7 @@
 
 # BioMS Zaku
 
-[English](README.md) · **Español** · [Português](README.pt.md) · [Italiano](README.it.md)
+[English](../README.md) · **Español** · [Português](README.pt.md) · [Italiano](README.it.md)
 
 Descomposición algebraica y auditoría fuera de muestra de índices y ecuaciones predictivas. Demostrado en bioimpedancia.
 
@@ -26,7 +26,7 @@ No necesita saber programar. En un terminal, `bioms-zaku start datos.csv` le hac
 en un notebook, usted lo abre y ejecuta todas las celdas, con los datos de ejemplo ya dentro. La salida es un solo archivo,
 `report.html`: cada número, cada figura y, al lado de cada uno, cómo se calculó y cómo leerlo.
 
-Estado: candidato a publicación (1.0.0rc1) · Licencia: MIT · Cita: `CITATION.cff` · **Lo que la herramienta garantiza, y bajo qué supuestos:** [`CONTRACTS.md`](CONTRACTS.md)
+Estado: candidato a publicación (1.0.0rc1) · Licencia: MIT · Cita: `CITATION.cff` · **Lo que la herramienta garantiza, y bajo qué supuestos:** [`CONTRACTS.md`](../CONTRACTS.md)
 
 ## Qué hace
 
@@ -194,7 +194,7 @@ preset: full             # CV 5×50, B = 2000 (quick = 5×5, B = 200, solo para 
 ## Catálogo
 
 Ocho índices públicos de bioimpedancia, cada uno reverificado en su fuente primaria
-(`catalogo/fontes_primarias_indices/LEITURAS.md`): H²/|Z| a 100 kHz (Hoffer 1969), índice de impedancia H²/R
+(`docs/LEITURAS.md`): H²/|Z| a 100 kHz (Hoffer 1969), índice de impedancia H²/R
 (Lukaski 1985), ángulo de fase de cuerpo entero (Baumgartner 1988), los componentes de la BIVA R/H y Xc/H
 (Piccoli 1994), resistividad y reactividad específicas Rsp/Xcsp (Marini 2013; validados en NHANES por Buffa 2013) y el
 LMI (Levi Micheli 2022); la razón de impedancia Z200/Z5 está listada con confianza baja (origen comercial, sin
@@ -293,7 +293,7 @@ lecciones calculadas a mano, identidades algebraicas exactas, casos sintéticos 
 entregado, que es reproducible byte a byte desde sus parámetros publicados (`tools/make_example_data.py --from-params`).
 Ninguna prueba depende de datos fuera del repositorio.
 
-El contrato [`CONTRACTS.md`](CONTRACTS.md) es el documento normativo detrás de todo esto: lo que la herramienta promete
+El contrato [`CONTRACTS.md`](../CONTRACTS.md) es el documento normativo detrás de todo esto: lo que la herramienta promete
 para entrada, catálogo, configuración, salidas y reproducibilidad — cinco contratos, cada uno cerrando con su
 justificación. Léalo para saber qué afirma y qué no afirma un número de esta herramienta.
 

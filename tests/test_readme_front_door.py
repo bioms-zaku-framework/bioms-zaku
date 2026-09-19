@@ -5,8 +5,8 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-READMES = ("README.md", "README.es.md", "README.pt.md", "README.it.md")
-GUIDES = ("GUIDE_10_MINUTES.md", "GUIDE_10_MINUTES.es.md", "GUIDE_10_MINUTES.pt.md", "GUIDE_10_MINUTES.it.md")
+READMES = ("README.md", "docs/README.es.md", "docs/README.pt.md", "docs/README.it.md")
+GUIDES = ("docs/GUIDE_10_MINUTES.md", "docs/GUIDE_10_MINUTES.es.md", "docs/GUIDE_10_MINUTES.pt.md", "docs/GUIDE_10_MINUTES.it.md")
 
 
 def test_readme_and_guide_exist_in_four_languages_with_the_same_sections():

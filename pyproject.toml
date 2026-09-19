@@ -55,9 +55,9 @@ packages = ["src/bioms_zaku"]
 "examples/zaku_exemplo.ipynb" = "bioms_zaku/examples/zaku_exemplo.ipynb"
 
 [tool.hatch.build.targets.sdist]
-include = ["src/bioms_zaku", "tests", "examples", "tools", "README.md", "README.es.md", "README.pt.md",
-           "README.it.md", "GUIDE_10_MINUTES.md", "GUIDE_10_MINUTES.es.md", "GUIDE_10_MINUTES.pt.md",
-           "GUIDE_10_MINUTES.it.md", "LICENSE", "CONTRATOS.md", "CONTRACTS.md", "docs/LEITURAS.md"]
+include = ["src/bioms_zaku", "tests", "examples", "tools", "README.md", "docs/README.es.md", "docs/README.pt.md",
+           "docs/README.it.md", "docs/GUIDE_10_MINUTES.md", "docs/GUIDE_10_MINUTES.es.md", "docs/GUIDE_10_MINUTES.pt.md",
+           "docs/GUIDE_10_MINUTES.it.md", "LICENSE", "CONTRATOS.md", "CONTRACTS.md", "docs/LEITURAS.md"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

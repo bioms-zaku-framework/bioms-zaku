@@ -2,7 +2,7 @@
 
 # BioMS Zaku
 
-[English](README.md) · [Español](README.es.md) · [Português](README.pt.md) · **Italiano**
+[English](../README.md) · [Español](README.es.md) · [Português](README.pt.md) · **Italiano**
 
 Decomposizione algebrica e audit fuori campione di indici ed equazioni predittive. Dimostrato sulla bioimpedenza.
 
@@ -27,7 +27,7 @@ Non devi saper programmare. In un terminale, `bioms-zaku start dati.csv` ti fa l
 un notebook, lo apri ed esegui tutte le celle, con i dati di esempio già dentro. L'output è un unico file, `report.html`: ogni
 numero, ogni figura e, accanto a ciascuno, come è stato calcolato e come leggerlo.
 
-Stato: release candidate (1.0.0rc1) · Licenza: MIT · Citazione: `CITATION.cff` · **Ciò che lo strumento garantisce, e sotto quali ipotesi:** [`CONTRACTS.md`](CONTRACTS.md)
+Stato: release candidate (1.0.0rc1) · Licenza: MIT · Citazione: `CITATION.cff` · **Ciò che lo strumento garantisce, e sotto quali ipotesi:** [`CONTRACTS.md`](../CONTRACTS.md)
 
 ## Che cosa fa
 
@@ -196,7 +196,7 @@ preset: full             # CV 5×50, B = 2000 (quick = 5×5, B = 200, solo per d
 ## Catalogo
 
 Otto indici pubblici di bioimpedenza, ciascuno riverificato sulla sua fonte primaria
-(`catalogo/fontes_primarias_indices/LEITURAS.md`): H²/|Z| a 100 kHz (Hoffer 1969), indice di impedenza H²/R
+(`docs/LEITURAS.md`): H²/|Z| a 100 kHz (Hoffer 1969), indice di impedenza H²/R
 (Lukaski 1985), angolo di fase di tutto il corpo (Baumgartner 1988), le componenti della BIVA R/H e Xc/H
 (Piccoli 1994), resistività e reattività specifiche Rsp/Xcsp (Marini 2013; validate su NHANES da Buffa 2013) e l'LMI
 (Levi Micheli 2022); il rapporto di impedenza Z200/Z5 è elencato con bassa confidenza (origine commerciale, nessun
@@ -295,7 +295,7 @@ lezioni calcolate a mano, identità algebriche esatte, casi sintetici con rispos
 è riproducibile byte per byte dai suoi parametri pubblicati (`tools/make_example_data.py --from-params`). Nessun test
 dipende da dati fuori dal repository.
 
-Il contratto [`CONTRACTS.md`](CONTRACTS.md) è il documento normativo dietro tutto questo: ciò che lo strumento promette
+Il contratto [`CONTRACTS.md`](../CONTRACTS.md) è il documento normativo dietro tutto questo: ciò che lo strumento promette
 per input, catalogo, configurazione, output e riproducibilità — cinque contratti, ciascuno che chiude con la sua
 giustificazione. Leggilo per sapere che cosa un numero di questo strumento afferma e che cosa non afferma.
 
