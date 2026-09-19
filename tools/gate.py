@@ -59,11 +59,16 @@ def main() -> int:
         run([sys.executable, "-m", "venv", str(venv)])
     py = venv / "bin" / "python"
     wheel = next(dist.glob("*.whl"))
-    pkgs = [str(wheel), "matplotlib", "pytest", "openpyxl"] + (["pytest-xdist"] if a.n != "1" else [])
+    # EN: the wheel is installed the way a user installs it — dependencies RESOLVED from the package metadata,
+    #     declared extras included. Until 2026-09-19 this step passed --no-deps, so a clean environment never
+    #     received pandas or scipy; the suite could not even be collected, and the one fact a release stands on,
+    #     that `dependencies` in pyproject.toml is complete, was never tested here.
+    run([str(py), "-m", "pip", "install", "--quiet", f"{wheel}[plots,excel]"])
     # EN: --force-reinstall is not optional: the version does not change between builds, and plain --upgrade
     #     skips the wheel as "already satisfied" — the gate would then test a stale install (found 2026-09-18).
+    #     It runs SECOND and with --no-deps so it replaces only the package, leaving the resolved deps in place.
     run([str(py), "-m", "pip", "install", "--quiet", "--force-reinstall", "--no-deps", str(wheel)])
-    run([str(py), "-m", "pip", "install", "--quiet", *[p for p in pkgs if p != str(wheel)]])
+    run([str(py), "-m", "pip", "install", "--quiet", "pytest"] + (["pytest-xdist"] if a.n != "1" else []))
 
     say(3, STEPS[2])
     run([str(py), "-m", "pytest", "-q"] + ([] if a.n == "1" else ["-n", a.n, "--dist", "loadfile"]), cwd=ROOT)
