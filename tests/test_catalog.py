@@ -1,5 +1,9 @@
-"""EN: catalog contract (§2). ES: contrato del catálogo. PT: contrato do catálogo."""
+"""Catalog contract (§2)."""
 import copy
+import json
+import re
+from pathlib import Path
+
 import pytest
 from bioms_zaku.catalog import CatalogError, build_catalog, load_catalog
 
@@ -147,3 +151,20 @@ def test_builtin_catalog_ships_inside_the_package():
     from bioms_zaku.catalog import BUILTIN_PATH
     pkg = Path(bioms_zaku.__file__).resolve().parent
     assert BUILTIN_PATH.exists() and pkg in BUILTIN_PATH.parents
+
+
+def test_every_curated_entry_points_at_a_section_that_exists_in_the_record():
+    """The contract (§2.1) says a curated entry has its critical reading recorded in docs/LEITURAS.md, and the READMEs
+    repeat the claim. Publishing the claim without the record, or with a record that does not cover the eight methods,
+    would be an assertion without evidence — this checks that every cited section is really there (2026-09-19)."""
+    root = Path(__file__).resolve().parents[1]
+    registro = (root / "docs" / "LEITURAS.md").read_text(encoding="utf-8")
+    secoes = {m.group(1) for m in re.finditer(r"^## (\d+)\.", registro, re.M)}
+    catalogo = json.loads((root / "src" / "bioms_zaku" / "data" / "catalog_v1.json").read_text(encoding="utf-8"))
+    curados = [e for e in catalogo["entries"] if e.get("curated")]
+    assert len(curados) >= 8, f"expected the eight curated methods, found {len(curados)}"
+    for e in curados:
+        citadas = set(re.findall(r"§\s*(\d+)", e.get("curation_record") or ""))
+        assert citadas, f"{e['id']}: curated without naming a section of the record"
+        faltam = citadas - secoes
+        assert not faltam, f"{e['id']} cites sections {sorted(faltam)}, absent from docs/LEITURAS.md"

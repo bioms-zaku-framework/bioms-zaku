@@ -78,8 +78,7 @@ class Entry:
     derivation_sample: dict | None = None
     target_kind: str | None = None           # EN: one of TARGET_KINDS or None (not declared)
     notes: str | None = None
-    # EN: CURATED = the entry went through the documented critical reading of its primary source (catalogo/fontes_primarias_indices/
-    #     LEITURAS.md) and was approved; only curated methods are audited by default (`catalog.include: curated`, §2.1/§3).
+    # EN: CURATED = the entry went through the documented critical reading of its primary source (docs/#     LEITURAS.md) and was approved; only curated methods are audited by default (`catalog.include: curated`, §2.1/§3).
     #     High provenance confidence alone is NOT curation: a formula copied correctly from a PDF may still lack the reading.
     # ES/PT: curado = passou pela leitura crítica documentada da fonte primária; só curados entram na auditoria por padrão.
     curated: bool = False
