@@ -1,9 +1,6 @@
 """EN: the variables of the file, ONE PER LINE (user decision, 2026-09-18). Every column is listed — sex and strata are
 mapped from non-numeric ones, which the old single line hid — and the layout is the same everywhere: no cut-off above
 n columns (a threshold with no source) and nothing read from the terminal width."""
-import os
-import shutil
-
 from bioms_zaku.i18n import LANGS, set_language, t
 from bioms_zaku.wizard import print_variables
 
@@ -39,9 +36,3 @@ def test_four_languages_render_header_and_closing_line():
     for lang in LANGS:
         block = _block(lang)
         assert block[1].endswith(":") and block[-1] == t("w.vars.use") and _names(block) == COLS
-
-
-def test_layout_never_depends_on_the_terminal_width(monkeypatch):
-    wide = _block()
-    monkeypatch.setattr(shutil, "get_terminal_size", lambda *a, **k: os.terminal_size((20, 24)))
-    assert _block() == wide

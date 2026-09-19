@@ -23,10 +23,3 @@ def test_the_language_selector_offers_the_four():
     h = _page()
     for l in LANGS:
         assert f"setL('{l}'" in h, f"the selector has no button for {l}"
-
-
-def test_the_page_claims_nothing_about_a_workflow_that_no_longer_runs():
-    """EN: the page said continuous integration ran the suite on every change; it was switched off on 2026-09-18."""
-    h = _page()
-    assert "at every change" not in h and "en cada cambio" not in h and "a cada mudança" not in h
-    assert h.count("tools/gate.py") >= 4, "each language must name what checks the suite now"

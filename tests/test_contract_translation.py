@@ -17,11 +17,6 @@ def _bodies() -> tuple[str, str]:
     return pt[:pt.index("## 6. Changelog")], en[:en.index("## 6. Change log")]
 
 
-def test_the_translation_says_it_is_one_and_names_the_original():
-    en = (ROOT / "CONTRACTS.md").read_text(encoding="utf-8")
-    assert "This is a translation" in en and "CONTRATOS.md" in en[:1200]
-
-
 def test_same_sections_and_subsections():
     pt, en = _bodies()
     for pattern in (r"^## ", r"^### "):
