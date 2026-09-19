@@ -32,10 +32,20 @@ def test_citation_file_agrees():
 
 def test_docs_page_agrees():
     html = (ROOT / "docs/index.html").read_text(encoding="utf-8")
-    for place, needle in (("badge", f"v{__version__} · contracts"),
+    for place, needle in (("badge", f'<span class="badge">v{__version__}</span>'),
                           ("citation example", f"Version {__version__}."),
                           ("footer", f"BioMS Zaku v{__version__} ·")):
         assert needle in html, f"docs/index.html: the {place} does not name version {__version__}"
+
+
+def test_the_contract_carries_the_package_version():
+    """EN: ONE version line. Until 2026-09-19 the contract was versioned apart from the package: its title said v0.5.2,
+    its change log numbered a v1.1.0-rc1 that ran AHEAD of the package's 1.0.0rc1, and the documentation page printed
+    both at once. A reviewer holding a manifest could not tell which contract produced that number. The contract now
+    carries the package version, and this test is what stops the two lines from parting again."""
+    for name, form in (("CONTRATOS.md", f"contratos da v{__version__}"), ("CONTRACTS.md", f"contracts of v{__version__}")):
+        head = (ROOT / name).read_text(encoding="utf-8").splitlines()[0]
+        assert form in head, f"{name}: the title says {head!r} and does not carry the package version {__version__}"
 
 
 def test_installed_metadata_agrees():

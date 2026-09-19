@@ -1,4 +1,4 @@
-# BioMS Zaku — contracts (v0.5.2, 2026-09-14; change log in section 6)
+# BioMS Zaku — contracts of v1.0.0rc1 (change log in section 6)
 
 > **This is a translation.** [`CONTRATOS.md`](CONTRATOS.md) is the original, written and reviewed in Portuguese, and it
 > prevails wherever the two diverge. This English version exists because the contract is the document a reviewer reads.
@@ -145,7 +145,7 @@ bootstrap need independent rows, which is why one row per person is required.
 | `provenance` | yes | `{formula_source: pdf_table|pdf_text|pmc_text|abstract|review_table, source_detail, verified_by, verified_on, confidence}`; default map pdf/pmc → high, abstract → medium, review → low |
 | `check_example` | required for contributions | `{inputs, expected, tol}` with a published value; tested at load |
 | `identity_of` | no | an exact transformation of another method → comes out as `identity`, excluded from the prediction statistics |
-| `curated`, `curation_record` | no (default `false`) | **curated** = the primary source was read critically, with a record in `catalogo/fontes_primarias_indices/LEITURAS.md`, and the entry approved. Requires `confidence: high` and a formula from a PDF. **Only curated methods enter the audit by default** (`catalog.include: curated`, §3.2). High confidence alone is NOT curation: a formula copied correctly from a PDF may not have gone through the reading. On 2026-09-14: 8 curated (Hoffer 1969, Lukaski 1985, Baumgartner 1988, Piccoli 1994 R/H and Xc/H, LMI, Rsp, Xcsp); the predictive equations stay in the catalog without curation until they are read one by one |
+| `curated`, `curation_record` | no (default `false`) | **curated** = the primary source was read critically, with a record in `docs/LEITURAS.md`, and the entry approved. Requires `confidence: high` and a formula from a PDF. **Only curated methods enter the audit by default** (`catalog.include: curated`, §3.2). High confidence alone is NOT curation: a formula copied correctly from a PDF may not have gone through the reading. On 2026-09-14: 8 curated (Hoffer 1969, Lukaski 1985, Baumgartner 1988, Piccoli 1994 R/H and Xc/H, LMI, Rsp, Xcsp); the predictive equations stay in the catalog without curation until they are read one by one |
 | `n`, `r2`, `see`, `device`, `reference_method`, `notes` | no | `null` when not informed; never invented |
 
 ### 2.2 Precedence
@@ -589,7 +589,7 @@ the only assumption of the algebraic part. Publishing only aggregates is what al
 
 ---
 
-## 5. REPRODUCIBILITY contract (v0.5.2, 2026-09-14)
+## 5. REPRODUCIBILITY contract
 - **Determinism:** the same input + configuration + versions ⇒ the same `outputs_sha256`, for any `n_jobs`.
 - **Autonomy:** every quality criterion runs from the repository alone. No test reads a file outside it; nothing is
   skipped for "missing data". The community runs the whole suite in ~2 min and sees the same result.
@@ -622,7 +622,9 @@ fast is a condition for other researchers to use it and improve it.
 
 ## 6. Change log
 The change log of this contract is a dated record and is kept as written, in Portuguese, in
-[`CONTRATOS.md`](CONTRATOS.md) section 6 — the same rule applied to `CHANGELOG.md`: dated entries are not rewritten.
+[`CONTRATOS.md`](CONTRATOS.md) section 6: it records what changed in what the tool **promises**, and its dated entries
+are not rewritten. [`CHANGELOG.md`](CHANGELOG.md) is a different record, kept in English: what changed for someone who
+**uses** the tool, per released version. Two records, two questions; the development path itself is the git history.
 
 ## 7. Approval
 Thalles reads, marks disagreements, answers "approved" or gives a list of changes. Only then does stage 2 begin.

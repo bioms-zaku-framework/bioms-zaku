@@ -1,4 +1,4 @@
-# BioMS Zaku — contratos (v0.5.2, 14/09/2026; changelog na seção 6)
+# BioMS Zaku — contratos da v1.0.0rc1 (changelog na seção 6)
 
 Princípio da v1.0: **a versão mais simples possível, sem erros**. Cobre o método; não cobre todos os
 contextos. O que fica de fora está listado na seção 0 e é decisão de escopo, não esquecimento.
@@ -137,7 +137,7 @@ treino/teste.
 | `provenance` | sim | `{formula_source: pdf_table|pdf_text|pmc_text|abstract|review_table, source_detail, verified_by, verified_on, confidence}`; mapa padrão pdf/pmc → high, abstract → medium, review → low |
 | `check_example` | obrig. para contribuições | `{inputs, expected, tol}` com valor publicado; testado na carga |
 | `identity_of` | não | transformação exata de outro método → sai como `identity`, excluído das estatísticas de previsão |
-| `curated`, `curation_record` | não (padrão `false`) | **curado** = a fonte primária foi lida criticamente, com registro em `catalogo/fontes_primarias_indices/LEITURAS.md`, e a entrada aprovada. Exige `confidence: high` e fórmula de PDF. **Só métodos curados entram na auditoria por padrão** (`catalog.include: curated`, §3.2). Confiança alta sozinha NÃO é curadoria: fórmula copiada certa de um PDF pode não ter passado pela leitura. Em 14/09/2026: 8 curados (Hoffer 1969, Lukaski 1985, Baumgartner 1988, Piccoli 1994 R/H e Xc/H, LMI, Rsp, Xcsp); as equações preditivas ficam no catálogo sem curadoria até serem lidas uma a uma |
+| `curated`, `curation_record` | não (padrão `false`) | **curado** = a fonte primária foi lida criticamente, com registro em `docs/LEITURAS.md`, e a entrada aprovada. Exige `confidence: high` e fórmula de PDF. **Só métodos curados entram na auditoria por padrão** (`catalog.include: curated`, §3.2). Confiança alta sozinha NÃO é curadoria: fórmula copiada certa de um PDF pode não ter passado pela leitura. Em 14/09/2026: 8 curados (Hoffer 1969, Lukaski 1985, Baumgartner 1988, Piccoli 1994 R/H e Xc/H, LMI, Rsp, Xcsp); as equações preditivas ficam no catálogo sem curadoria até serem lidas uma a uma |
 | `n`, `r2`, `see`, `device`, `reference_method`, `notes` | não | `null` quando não informado; nunca inventado |
 
 ### 2.2 Precedência
@@ -523,7 +523,7 @@ em dados que não podem sair (container em parceiros). Figuras das tabelas garan
 
 ---
 
-## 5. Contrato de REPRODUTIBILIDADE (v0.5.2, 14/09/2026)
+## 5. Contrato de REPRODUTIBILIDADE
 - **Determinismo:** mesma entrada + configuração + versões ⇒ mesmos `outputs_sha256`, para qualquer `n_jobs`.
 - **Autonomia:** todo critério de qualidade roda a partir do repositório sozinho. Nenhum teste lê arquivo fora dele; nada
   é pulado por "dado ausente". A comunidade roda a suíte inteira em ~2 min e vê o mesmo resultado.
@@ -552,7 +552,34 @@ rápido é condição para outros pesquisadores usarem e aprimorarem.
 ---
 
 ## 6. Changelog
-- **v1.1.0-rc1 (16/09/2026)** — §3.6 pressupostos declarados e limiares com origem: intervalo bootstrap nos pares (Fisher removido),
+A partir da v1.0.0rc1 este documento **não tem versão própria**: ele carrega a versão do pacote, declarada uma única vez em
+`src/bioms_zaku/__init__.py` e gravada em `manifest.json` como `package_version`. Antes disso o contrato era versionado à parte,
+e as entradas anteriores mantêm os números históricos do documento — são registro datado e não se reescrevem. **Atenção ao ler:**
+de `v0.3` a `v1.0.0-rc1 (15/09/2026)` os números são do DOCUMENTO e não correspondem a versões do pacote; em particular, a
+`v1.0.0-rc1` de 15/09 é o contrato, não este lançamento. A partir daqui o número é o do pacote, na forma canônica do PEP 440
+(`1.0.0rc1`, sem hífen), o que também distingue à vista as duas séries.
+
+Esta seção registra o que mudou no que a ferramenta **promete**. O `CHANGELOG.md`, em inglês, é outro registro: o que
+mudou para quem **usa** a ferramenta, por versão lançada. Dois registros, duas perguntas; o trajeto do desenvolvimento
+fica no histórico do git.
+
+- **v1.0.0rc1 (16–19/09/2026)** — *esta entrada dizia `v1.1.0-rc1`, numeração do documento que corria à frente da do pacote;
+  corrigida em 19/09/2026 quando as duas linhas viraram uma só.*
+
+  **Versão única (19/09/2026):** o contrato, o `CITATION.cff` e o pacote dizem o mesmo número, para que um revisor com um
+  `manifest.json` na mão saiba sob qual contrato aquele resultado foi produzido. **O contrato em inglês (18/09/2026):**
+  `CONTRACTS.md` é tradução declarada; `CONTRATOS.md` continua o original, escrito e revisto em português, e prevalece.
+  **Integração contínua desligada (18/09/2026, decisão do Thalles):** o GitHub Actions é cobrado em repositório privado; o
+  rigor passa a ser verificado localmente por `tools/gate.py`, que repete os passos do CI nesta máquina — construção,
+  instalação do wheel como um usuário instala em ambiente limpo, a suíte inteira, execução repetida com comparação de hashes
+  e um usuário externo fora do repositório. O que só uma matriz dá, outras versões do Python, fica declarado como não coberto.
+  **Uma base de exemplo (17/09/2026, decisão do Thalles):** `zaku_exemplo.csv`, sintética, sorteada por célula sexo × diabetes
+  a partir de médias e covariâncias do NHANES, serve à regressão, à classificação com gabarito e ao diabetes; os arquivos
+  técnicos ficam no repositório e fora da instalação. **Idioma do código (18/09/2026):** docstrings e comentários só em inglês;
+  o que o pesquisador lê continua nas quatro línguas. **Id repetido (18/09/2026):** §1.1 e §1.4 ainda descreviam um "modo
+  conglomerado" que a decisão de 16/09 (§3.2) recusa; a regra passou a ser dita uma vez só, fixada por teste.
+
+  **Pressupostos declarados e limiares com origem (§3.6, 16/09/2026):** intervalo bootstrap nos pares (Fisher removido),
   auditoria na escala logarítmica com a escala bruta em sensibilidade, nível de família 1 − 0,05/k reportado, regra de valores
   faltantes declarada, intervalos bootstrap dos expoentes desenhados, seção "Pressupostos e limiares" no relatório (4 línguas),
   três registros verificados no Crossref para as âncoras (Lafontant 2026, Yang 2023, Cohen 1988). Efron 1983 acrescentado em 16/09/2026 após leitura do original (auditoria de citações). Testes de propriedade
