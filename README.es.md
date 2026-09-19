@@ -4,7 +4,7 @@
 
 [English](README.md) · **Español** · [Português](README.pt.md) · [Italiano](README.it.md)
 
-Descomposición algebraica y auditoría predictiva de índices y ecuaciones predictivas. Demostrado en bioimpedancia.
+Descomposición algebraica y auditoría fuera de muestra de índices y ecuaciones predictivas. Demostrado en bioimpedancia.
 
 *zaku* es un verbo de la lengua juruna (yudjá), familia tupí, Xingu, Mato Grosso, Brasil: "ver / cuidar / esperar"
 (Lima, S. *A estrutura argumental dos verbos na língua Juruna (Yudjá)*, tesis de maestría, USP, 2008, ítem 290).
@@ -12,18 +12,18 @@ El método mira un índice antes de aceptarlo, cuida su validez y espera el resu
 
 ## ¿Qué es esto?
 
-Usted tiene una planilla: una fila por persona, con resistencia y reactancia de un equipo de bioimpedancia,
-estatura, masa corporal y una medida de referencia como DXA. BioMS Zaku mira los índices que le interesan y responde
+Usted tiene una hoja de cálculo: una fila por persona, con resistencia y reactancia de un equipo de bioimpedancia,
+estatura, masa corporal y una medida de referencia como DXA. BioMS Zaku mira los índices que usted está evaluando y responde
 tres preguntas sobre cada uno. *¿Es nuevo*, o ya existe con otro nombre? *¿Mide lo que dice medir*, o está siguiendo el
-tamaño corporal — que casi todo sigue? *¿Agrega algo* sobre la estatura y la masa corporal solas?
+tamaño corporal, como casi todo lo sigue? *¿Agrega algo* sobre la estatura y la masa corporal solas?
 
-La segunda pregunta es la que importa. "Mi índice correlaciona con la masa magra" prueba poco: las personas más
-grandes tienen más de todo. Por eso, antes de ver cualquier resultado, usted declara un objetivo y un **control
+La segunda pregunta es la que importa. "Mi índice correlaciona con la masa magra" prueba poco: los individuos de mayor porte
+tienen más de todos los tejidos. Por eso, antes de ver cualquier resultado, usted declara un objetivo y un **control
 negativo**, y la herramienta prueba si el índice predice el objetivo *más allá* de lo que el control ya predice.
 Cuando no lo hace, lo dice con claridad.
 
-No necesita saber programar. En un terminal, `bioms-zaku start datos.csv` le hace las preguntas y anota sus respuestas;
-en un notebook, usted lo abre y presiona ejecutar, con los datos de ejemplo ya dentro. Sale un solo archivo,
+No necesita saber programar. En un terminal, `bioms-zaku start datos.csv` le hace las preguntas y registra sus respuestas;
+en un notebook, usted lo abre y ejecuta todas las celdas, con los datos de ejemplo ya dentro. La salida es un solo archivo,
 `report.html`: cada número, cada figura y, al lado de cada uno, cómo se calculó y cómo leerlo.
 
 Estado: candidato a publicación (1.0.0rc1) · Licencia: MIT · Cita: `CITATION.cff` · **Lo que la herramienta garantiza, y bajo qué supuestos:** [`CONTRACTS.md`](CONTRACTS.md)
@@ -67,7 +67,7 @@ bioms-zaku --lang es start datos.csv        # un camino guiado: columnas → eje
 **En un notebook (Colab o Jupyter)** no hay nada que descargar: `pip install bioms-zaku` trae los datos de ejemplo
 dentro del paquete. `examples/zaku_exemplo.ipynb` instala, los carga y recorre los tres usos en cerca de un minuto — la
 redundancia predicha por Σ antes de calcular ningún índice, la auditoría contra un control negativo y el informe.
-`bioms-zaku examples --copy` entrega el notebook junto con los datos.
+`bioms-zaku examples --copy` copia el notebook junto con los datos.
 
 ## Instalar
 
@@ -81,7 +81,7 @@ Python ≥ 3.10. Dependencias: numpy, pandas, scipy, scikit-learn, pyyaml (+ mat
 ## Datos de ejemplo
 
 **Los datos de ejemplo** (nada se descarga; viajan con el paquete): UNA base sintética, `zaku_exemplo.csv`, 400 filas
-(200 por sexo), sorteadas de una log-normal cuyas medias y covarianzas se estimaron en NHANES 1999–2004 por separado
+(200 por sexo), extraídas de una log-normal cuyas medias y covarianzas se estimaron en NHANES 1999–2004 por separado
 para cada celda sexo × diabetes diagnosticada por un médico — de modo que la asociación de la diabetes con cada
 variable se conserva. Sirve para todos los usos: regresión (`LMI_DXA`, `FMI_DXA`, `ALMI_DXA`), clasificación con
 respuesta conocida (`label_synthetic` depende solo de FMI y edad: con `FMI_DXA` como control, ningún índice debería
@@ -91,7 +91,7 @@ agregar) y `diabetes` (70 por sexo, enriquecido en casos a propósito). Parámet
 ```bash
 bioms-zaku examples --copy             # ./zaku_exemplos (una carpeta existente nunca se toca: _2, _3 …)
 cd zaku_exemplos && bioms-zaku start zaku_exemplo.csv -o regresion.yaml
-bioms-zaku examples --all              # también los archivos técnicos (ejemplo sintético antiguo de 8000 filas, formato de planilla, una muestra real de NHANES)
+bioms-zaku examples --all              # también los archivos técnicos (ejemplo sintético antiguo de 8000 filas, formato de hoja de cálculo, una muestra real de NHANES)
 ```
 
 ```python
@@ -99,7 +99,7 @@ from bioms_zaku.api import load_example
 df = load_example("zaku_exemplo")
 ```
 
-`examples/example_data.csv` — 8 000 filas **sintéticas** (4 000 por sexo). Son sorteos de una log-normal multivariada
+`examples/example_data.csv` — 8 000 filas **sintéticas** (4 000 por sexo). Son extracciones de una log-normal multivariada
 cuyo vector de medias y covarianza Σ de los logs se estimaron, por sexo, en una **muestra de conveniencia** de NHANES
 1999–2004 (adultos de 18 a 49 años, DXA medido, BIA a 50 kHz; n = 2 792 mujeres, 3 036 hombres). Ninguna fila real se
 reproduce; solo μ y Σ salieron de la fuente, y están publicados en `examples/example_data_params.json` (con la
@@ -120,7 +120,7 @@ ls zaku_out/example_quick                       # algebra sigma pairs redundancy
 `examples/nhanes_diabetes_400.csv` — 400 filas **reales** de los archivos de uso público de NHANES 1999–2004 (CDC,
 dominio público): adultos de 18 a 49 años con DXA medido y BIA a 50 kHz, casos completos, con la respuesta del
 cuestionario de diabetes (`diabetes_1Y_0N` = diagnosticada por un médico). Es una **muestra de conveniencia enriquecida
-en casos** — cada diabético diagnosticado con dato completo (139: 79 mujeres, 60 hombres) más un sorteo con semilla de
+en casos** — cada diabético diagnosticado con dato completo (139: 79 mujeres, 60 hombres) más un muestreo aleatorio con semilla de
 no diabéticos — por lo tanto NO es representativa de la prevalencia; existe para demostrar la auditoría de
 clasificación (≥ 20 por clase por sexo) y, con sus masas por DXA, la auditoría de regresión en datos reales.
 Procedencia, exclusiones, semilla y SHA-256: `examples/nhanes_diabetes_400_provenance.json`; generador:
@@ -140,7 +140,7 @@ Las masas en kg se derivan de los índices y la estatura: no las use como objeti
 para pedir índices diseñados; una fila por persona (agregue antes las medidas repetidas — los ids repetidos se rechazan
 en esta versión).
 
-El archivo también lleva `lean_kg`, `alm_kg`, `fat_kg` (índice × estatura², derivados, sin nuevo sorteo) para que las
+El archivo también lleva `lean_kg`, `alm_kg`, `fat_kg` (índice × estatura², derivados, sin nueva extracción) para que las
 masas absolutas puedan usarse como objetivo: `bioms-zaku run examples/example_kg.yaml`. Vea *Geometría* más abajo antes
 de elegir.
 

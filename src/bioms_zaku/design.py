@@ -41,7 +41,6 @@ def holdout_split(frame: pd.DataFrame, *, fraction: float = 0.70, seed: int = 42
     """
     EN: deterministic holdout. `fraction` is the design share; stratified by `stratify` (stratum and/or class) when given;
         grouped by `id_col` when repeated ids exist (all rows of a person on one side).
-    ES/PT: holdout determinístico; estratificado; agrupado por id quando há repetição.
     """
     if fraction not in (0.60, 0.70, 0.75):
         raise DesignError("design.fraction must be one of 0.60, 0.70, 0.75 (declared options)")
@@ -127,7 +126,6 @@ def orthogonal_fit(ly: np.ndarray, lc: np.ndarray, LX: np.ndarray) -> tuple[np.n
     EN: constrained least squares (v0.9): the vector `a` that best explains ln(target) among those Σ-orthogonal to the control's
         implicit vector ĉ, i.e. aᵀΣĉ = 0 (cos_Σ(a, ĉ) = 0). Closed form: a = a_ols − (ĉᵀΣa_ols / ĉᵀΣĉ)·ĉ, with Σ the covariance of the
         log-variables on the same rows (the Σ-projection of a_ols onto ĉ is removed). Returns (a, ĉ, R²_constrained, R²_unconstrained, cos).
-    ES/PT: mínimos quadrados com a restrição de ortogonalidade a ĉ na métrica Σ; forma fechada.
     """
     a_ols, r2_u = _ols(ly, LX); c_hat, _ = _ols(lc, LX)
     Xc = LX - LX.mean(axis=0); S = (Xc.T @ Xc) / max(len(LX) - 1, 1)
@@ -170,7 +168,6 @@ def design_index(frame: pd.DataFrame, target: str, variables: Sequence[str], spl
     EN: fit ln(target) ~ ln(variables) on the design partition (target must be > 0); optionally refit on all rows for the
         deployable vector. With `orthogonal_to` (a control column), the vector is constrained to cos_Σ = 0 with the control's
         implicit vector on the same rows (v0.9). The audited numbers must come from `split.audit` rows only (enforced by the orchestrator).
-    ES/PT: ajusta na partição de desenho; com `orthogonal_to`, restrição de cosseno zero com o controle; reajuste opcional em todas as linhas.
     """
     if orthogonal_to is None:
         y = frame[target].to_numpy(float)

@@ -4,7 +4,7 @@
 
 [English](README.md) · [Español](README.es.md) · **Português** · [Italiano](README.it.md)
 
-Decomposição algébrica e auditoria preditiva de índices e equações preditivas. Demonstrado em bioimpedância.
+Decomposição algébrica e auditoria fora da amostra de índices e equações preditivas. Demonstrado em bioimpedância.
 
 *zaku* é um verbo da língua juruna (yudjá), família tupi, Xingu, Mato Grosso, Brasil: "ver / cuidar / esperar"
 (Lima, S. *A estrutura argumental dos verbos na língua Juruna (Yudjá)*, dissertação de mestrado, USP, 2008, item 290).
@@ -13,16 +13,16 @@ O método olha um índice antes de aceitá-lo, cuida da sua validade e espera o 
 ## O que é isto?
 
 Você tem uma planilha: uma linha por pessoa, com resistência e reatância de um aparelho de bioimpedância,
-estatura, massa corporal e uma medida de referência como o DXA. O BioMS Zaku olha os índices que interessam a você e
+estatura, massa corporal e uma medida de referência como o DXA. O BioMS Zaku olha os índices que você está avaliando e
 responde três perguntas sobre cada um. *Ele é novo*, ou já existe com outro nome? *Ele mede o que diz medir*, ou está
-seguindo o tamanho corporal — que quase tudo segue? *Ele acrescenta algo* sobre a estatura e a massa corporal sozinhas?
+acompanhando o tamanho corporal, como quase tudo acompanha? *Ele acrescenta algo* sobre a estatura e a massa corporal sozinhas?
 
-A segunda pergunta é a que importa. "Meu índice correlaciona com massa magra" prova pouco: pessoas maiores têm mais de
-tudo. Por isso, antes de ver qualquer resultado, você declara um alvo e um **controle negativo**, e a ferramenta testa
+A segunda pergunta é a que importa. "Meu índice correlaciona com massa magra" prova pouco: indivíduos de maior porte têm mais de
+todos os tecidos. Por isso, antes de ver qualquer resultado, você declara um alvo e um **controle negativo**, e a ferramenta testa
 se o índice prediz o alvo *além* do que o controle já prediz. Quando não prediz, ela diz isso com clareza.
 
-Você não precisa saber programar. No terminal, `bioms-zaku start dados.csv` faz as perguntas e anota as suas respostas;
-no notebook, você abre e clica em rodar, com os dados de exemplo já dentro. Sai um arquivo único, `report.html`: cada
+Você não precisa saber programar. No terminal, `bioms-zaku start dados.csv` faz as perguntas e registra as suas respostas;
+no notebook, você abre e roda todas as células, com os dados de exemplo já dentro. A saída é um arquivo único, `report.html`: cada
 número, cada figura e, ao lado de cada um, como foi calculado e como ler.
 
 Estado: candidato a lançamento (1.0.0rc1) · Licença: MIT · Citação: `CITATION.cff` · **O que a ferramenta garante, e sob quais pressupostos:** [`CONTRATOS.md`](CONTRATOS.md)
@@ -62,7 +62,7 @@ bioms-zaku --lang pt start dados.csv        # um caminho guiado: colunas → exe
 **No notebook (Colab ou Jupyter)** não há nada a baixar: `pip install bioms-zaku` traz os dados de exemplo dentro do
 pacote. `examples/zaku_exemplo.ipynb` instala, carrega os dados e percorre os três usos em cerca de um minuto — a
 redundância prevista por Σ antes de qualquer índice ser calculado, a auditoria contra um controle negativo e o
-relatório. `bioms-zaku examples --copy` entrega o notebook junto dos dados.
+relatório. `bioms-zaku examples --copy` copia o notebook junto dos dados.
 
 ## Instalar
 

@@ -141,7 +141,7 @@ def test_curated_default_is_the_eight_read_entries_and_is_locked():
 
 
 def test_builtin_catalog_ships_inside_the_package():
-    # EN: an installed wheel must find the catalogue: it has to live under the package directory (Colab finding, 2026-09-14)
+    # EN: an installed wheel must find the catalog: it has to live under the package directory (Colab finding, 2026-09-14)
     import bioms_zaku
     from pathlib import Path
     from bioms_zaku.catalog import BUILTIN_PATH

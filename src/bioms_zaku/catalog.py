@@ -31,8 +31,8 @@ REQUIRED = ("id", "label", "authors", "year", "doi", "kind", "target", "form", "
 # ES/PT: o que o autor diz que o método mede, como categoria comparável ao tipo declarado do alvo/controle da auditoria.
 TARGET_KINDS = ("lean_mass", "fat_mass", "body_water", "hydration", "cell_mass", "other")
 
-# EN: the catalogue ships INSIDE the package (src/bioms_zaku/data/), so an installed wheel finds it; found by the Colab
-#     simulation of 2026-09-14, when the path pointed outside the package and pip-installed users had no catalogue.
+# EN: the catalog ships INSIDE the package (src/bioms_zaku/data/), so an installed wheel finds it; found by the Colab
+#     simulation of 2026-09-14, when the path pointed outside the package and pip-installed users had no catalog.
 BUILTIN_PATH = Path(__file__).resolve().parent / "data" / "catalog_v1.json"
 
 

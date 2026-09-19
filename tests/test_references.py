@@ -10,7 +10,7 @@ from bioms_zaku.html import BLOCKS
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def test_every_catalogue_doi_has_a_verified_record():
+def test_every_catalog_doi_has_a_verified_record():
     cat = json.loads(BUILTIN_PATH.read_text(encoding="utf-8"))
     dois = {e["doi"] for e in cat["entries"] if e.get("doi")}
     missing = sorted(d for d in dois if d not in R.RECORDS)
@@ -44,7 +44,7 @@ def test_cite_format_and_links():
         t, _ = R.cite(k); assert "et al.." not in t and "  " not in t and t.endswith("."), t
 
 
-def test_bia_references_group_by_source_and_follow_the_catalogue_year():
+def test_bia_references_group_by_source_and_follow_the_catalog_year():
     class E:  # EN: minimal stand-in for catalog.Entry
         def __init__(s, id, label, authors, year, doi): s.id, s.label, s.authors, s.year, s.doi = id, label, authors, year, doi
     ents = [E("Piccoli1994_XcH", "Xc/H", "Piccoli", 1994, "10.1038/ki.1994.305"), E("Piccoli1994_RH", "R/H", "Piccoli", 1994, "10.1038/ki.1994.305"),

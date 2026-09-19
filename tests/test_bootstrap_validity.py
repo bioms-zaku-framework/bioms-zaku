@@ -1,7 +1,7 @@
 """EN: findings of the CrossFit run (2026-09-15): a 33-row audit partition left ONE valid bootstrap resample → zero-width intervals
 and spurious verdicts. Guarantees: the audit refuses an unreliable bootstrap; check and start apply the same rule to the audit
 partition per stratum; many dropped resamples are warned about; designed indices are named from the target; suggestions never
-offer the target/control as a catalogue input; the check is printed once; the input text says how many rows went to the design."""
+offer the target/control as a catalog input; the check is printed once; the input text says how many rows went to the design."""
 from pathlib import Path
 
 import numpy as np

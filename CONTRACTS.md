@@ -5,17 +5,17 @@
 
 Principle of v1.0: **the simplest possible version, without errors**. It covers the method; it does not cover every
 context. What is left out is listed in section 0 and is a decision of scope, not an oversight.
-Five contracts: input, catalogue, configuration, outputs, reproducibility. Each one ends in **Justification**.
+Five contracts: input, catalog, configuration, outputs, reproducibility. Each one ends in **Justification**.
 
 ---
 
 ## 0. Scope of v1.0 (decisions of 2026-09-10)
 - **The outcome belongs to the researcher.** The framework defines neither target, nor control, nor reference criterion;
-  it requires only that labelled columns exist. It holds for lean mass, fat, sprint, sit-to-stand, any continuous or
+  it requires only that labeled columns exist. It holds for lean mass, fat, sprint, sit-to-stand, any continuous or
   categorical label.
 - **Reactance is mandatory.** Devices that do not deliver Xc are out.
 - **Declared frequency, minimal.** The user declares the frequency of each R/Xc pair; more than one frequency can be
-  mapped if available (each becomes its own variable: `R50`, `Xc50`, `R5`…). No comparison against the catalogue, no
+  mapped if available (each becomes its own variable: `R50`, `Xc50`, `R5`…). No comparison against the catalog, no
   device flags.
 - **Out:** metadata of the reference criterion (DXA brand and so on); indices pre-computed by the device; segmental
   variables; sampling weights and survey design (we decompose signal inside a group, for that group; we do not estimate
@@ -48,7 +48,7 @@ Exactly one valid → it is used and written to the manifest; zero or more than 
 | `pairing` | no | target → control; default: each target × the first control |
 | `covariates` | no | numeric; the baseline of utility (if absent, utility does not run) |
 | `strata` | no | categorical; Σ, redundancy and audit per stratum |
-| `groups` | no | columns used by the catalogue's `group_coding` (e.g. sex) |
+| `groups` | no | columns used by the catalog's `group_coding` (e.g. sex) |
 | `id` | no | identifier |
 
 Automatic derived variables when the canonical ones exist: `H_m`, `PhA = atan(Xc/R)·180/π`, `II = H_cm²/R`,
@@ -92,7 +92,7 @@ framework depends on it (independence from the pilot, §5).
 ### 1.4c Examples bundled in the package, and numbered outputs (v1.2, 2026-09-16)
 `examples/` goes into the wheel as `bioms_zaku/examples` (nothing is downloaded). API `bioms_zaku.datasets`
 (`list_examples`, `example_path`, `load_example`, `copy_examples`) and the command
-`bioms-zaku examples [--copy FOLDER] [--name ...]`; each example is labelled **synthetic** or **real**; the copy never
+`bioms-zaku examples [--copy FOLDER] [--name ...]`; each example is labeled **synthetic** or **real**; the copy never
 touches an existing folder (`_2`, `_3`, …) and rewrites the `data.path` of the YAML files to the folder itself.
 **One example base (decision of 2026-09-17):** `zaku_exemplo.csv`, synthetic, 200 per sex, drawn from log-normals whose
 μ and Σ were estimated in NHANES 1999–2004 per cell sex × diabetes (DIQ010 1 vs 2; source n 79/2696 women, 60/2960
@@ -126,7 +126,7 @@ bootstrap need independent rows, which is why one row per person is required.
 
 ---
 
-## 2. CATALOGUE contract
+## 2. CATALOG contract
 
 ### 2.1 Entry (one per method; per-group variants in `expr_by_group`)
 | field | required | content |
@@ -140,12 +140,12 @@ bootstrap need independent rows, which is why one row per person is required.
 | `group_coding` | if a group is used | e.g. `{sexo: {male: 1, female: 0}}` |
 | `frequency_khz` | yes | the frequency for which the formula was derived (informative) |
 | `validity` | yes | applicability **stated or tested by the author**: `{age, bmi, sex, population}`, `null` where the author states nothing (no flag); outside the range → flag †, **never a block** — the researcher may apply any method to any context; the figure only warns |
-| `target_kind` | no | the category of what the author says it measures: `lean_mass` \| `fat_mass` \| `body_water` \| `hydration` \| `cell_mass` \| `other`. Compared with `declarations.target_kinds` of the configuration (§3.2): a fat index audited against a lean-mass target gets the warning "tracks the control by design; swap target and control" — a warning, never a block |
+| `target_kind` | no | the category of what the author says it measures: `lean_mass` \| `fat_mass` \| `body_water` \| `hydration` \| `cell_mass` \| `other`. Compared with `declarations.target_kinds` of the configuration (§3.2): a fat index audited against a lean-mass target receives the warning "tracks the control by design; swap target and control" — a warning, never a block |
 | `derivation_sample` | no | who was used to fit it: `{n, sex, age, condition, country}`; descriptive, never raises a flag. Distinct from `validity` (Hoffer 1969: derived in 20 healthy men, tested and proposed for patients of both sexes, 18–77 years) |
 | `provenance` | yes | `{formula_source: pdf_table|pdf_text|pmc_text|abstract|review_table, source_detail, verified_by, verified_on, confidence}`; default map pdf/pmc → high, abstract → medium, review → low |
 | `check_example` | required for contributions | `{inputs, expected, tol}` with a published value; tested at load |
 | `identity_of` | no | an exact transformation of another method → comes out as `identity`, excluded from the prediction statistics |
-| `curated`, `curation_record` | no (default `false`) | **curated** = the primary source was read critically, with a record in `catalogo/fontes_primarias_indices/LEITURAS.md`, and the entry approved. Requires `confidence: high` and a formula from a PDF. **Only curated methods enter the audit by default** (`catalog.include: curated`, §3.2). High confidence alone is NOT curation: a formula copied correctly from a PDF may not have gone through the reading. On 2026-09-14: 8 curated (Hoffer 1969, Lukaski 1985, Baumgartner 1988, Piccoli 1994 R/H and Xc/H, LMI, Rsp, Xcsp); the predictive equations stay in the catalogue without curation until they are read one by one |
+| `curated`, `curation_record` | no (default `false`) | **curated** = the primary source was read critically, with a record in `catalogo/fontes_primarias_indices/LEITURAS.md`, and the entry approved. Requires `confidence: high` and a formula from a PDF. **Only curated methods enter the audit by default** (`catalog.include: curated`, §3.2). High confidence alone is NOT curation: a formula copied correctly from a PDF may not have gone through the reading. On 2026-09-14: 8 curated (Hoffer 1969, Lukaski 1985, Baumgartner 1988, Piccoli 1994 R/H and Xc/H, LMI, Rsp, Xcsp); the predictive equations stay in the catalog without curation until they are read one by one |
 | `n`, `r2`, `see`, `device`, `reference_method`, `notes` | no | `null` when not informed; never invented |
 
 ### 2.2 Precedence
@@ -154,14 +154,14 @@ The smaller `year`; a tie → `date` (if informed) → the DOI lexicographically
 ### 2.3 Numerical validation at load
 A monomial `vector`: 1,000 random positive vectors → evaluate `expr` → log-linear fit → the coefficients = `vector`
 with |error| < `vector_tol` (default 1e-6; maximum 1e-4, numerical slack, not a budget for approximation).
-**Exactness rule (v0.4.5):** the catalogue's vector is exact or it is not a vector. Derived names that are not
+**Exactness rule (v0.4.5):** the catalog's vector is exact or it is not a vector. Derived names that are not
 monomials in the base variables (`PhA` = atan(Xc/R); `Z` = √(R²+Xc²)) are accepted in `expr`, never in `vector`; the
 method is `composite`, receives a vector fitted per stratum, and the `fit_r2` goes into the table and the figure (the
 old "linearise atan with a tolerance of 0.03" was removed: PhA and LMI became `composite`). `II` and `H_m` remain exact
 re-expressions.
 `check_example`: |expr(inputs) − expected| ≤ tol. A failure → an error at load.
 Version and history: `catalog_version` (semantic) and `history` (one line per curation event: version, date, author,
-change). Version 1.0.0 was born from the migration of the pilot's catalogue (2026-09-08); since then the catalogue
+change). Version 1.0.0 was born from the migration of the pilot's catalog (2026-09-08); since then the catalog
 evolves only through curation, recorded in `history`.
 
 ### 2.4 Grammar (syntax tree, whitelist)
@@ -170,7 +170,7 @@ Numbers; the canonical names of the mapped and derived variables; the names in `
 the argument over the evaluated rows (one stratum, the complete cases that enter the algebra) to a single number,
 applied to every row (`sd` with ddof=1; NaN ignored). An index that uses them is not a fixed formula: its values change
 in each sample. Therefore: every value used is recorded in the manifest (`sample_statistics[stratum][method]`), raises
-a warning during the run, appears in the summary and in the rigour section of the report; `algebra.uses_sample_stats`
+a warning during the run, appears in the summary and in the rigor section of the report; `algebra.uses_sample_stats`
 marks the method. They never use the target or the control (only mapped variables), so they leak no information from
 the target into the cross-validation. Nothing else. A violation → an error at load.
 
@@ -187,15 +187,15 @@ the coefficients are the exponent vector of the new index. Mandatory rule: **des
 - `design.split`: `holdout` (default) with `fraction: 0.70` (declared options 0.60, 0.75), `seed`, stratified by
   `strata` and, in classification, by class; or `by_stratum` (design in one stratum, audit in another; tests transfer).
 - The reported numbers (Σ, redundancy, audit, utility) come **only from the audit partition**.
-- The final vector for practical use is refitted on 100 % of the data and comes out labelled `refit_full=true`, with the
+- The final vector for practical use is refitted on 100 % of the data and comes out labeled `refit_full=true`, with the
   design vector and the R² of both recorded in the manifest.
 - A warning in the summary when the audit partition has n < 100 (wide intervals).
-- The designed index enters the run's catalogue as a `user_entry` with `provenance.formula_source = "designed"`,
-  `confidence = "low"` and the hash of the design partition — it never goes into the built-in catalogue without curation.
+- The designed index enters the run's catalog as a `user_entry` with `provenance.formula_source = "designed"`,
+  `confidence = "low"` and the hash of the design partition — it never goes into the built-in catalog without curation.
 - Variables beyond BIA (e.g. heart rate per stage) enter as positive `variables` and enlarge Σ; a designed index may
   combine BIA and functional signals.
-- The exponents are derived in the sample, never assumed (Benn's principle; Heymsfield 2007 shows β ≈ 2 for height when
-  height is the only predictor). With W, R and Xc in the same fit, the exponent of H comes out below 2 (e.g. 1.05–1.27
+- The exponents are derived in the sample, never assumed (Benn's principle; Heymsfield 2007 shows β ≈ 2 for stature when
+  stature is the only predictor). With W, R and Xc in the same fit, the exponent of H comes out below 2 (e.g. 1.05–1.27
   in NHANES), because part of size is absorbed by the other variables; this does not contradict Heymsfield, it is the
   same model with more predictors.
 
@@ -267,7 +267,7 @@ output: {dir: ./zaku_out, figures: true}
   API); a blocking problem stops the run with the messages of `check` and exit code 2. A report is never produced with
   every audit skipped. `init` records `data.encoding` and, if it cannot decode, says which `--encoding` to try (no
   traceback).
-- **Catalogue by default = curated only (design decision, 09-10, reaffirmed 09-14).** `catalog.include: curated` is the
+- **Catalog by default = curated only (design decision, 09-10, reaffirmed 09-14).** `catalog.include: curated` is the
   default of the package and of `init`; `all` is an explicit choice by the user and marks every output of a non-curated
   method with *; a list of ids is an explicit choice. Record of the error: on 09-14 the default was switched to `all`
   inside a bug fix, without consultation; reverted the same day and locked by tests (`tests/test_catalog.py`,
@@ -285,7 +285,7 @@ output: {dir: ./zaku_out, figures: true}
   difference credited the index for the part of the target that the control also carries; the conditional one asks what
   the index adds.
 - **Convenience sample.** The framework does not estimate population parameters: sampling weights are ignored by design
-  and the verdicts describe the analysed sample. The summary states this.
+  and the verdicts describe the analyzed sample. The summary states this.
 - `declarations.target_kinds` (optional): `{column: lean_mass|fat_mass|body_water|hydration|cell_mass|other}` for
   targets and controls. When the `target_kind` of a method matches the type of the control and differs from the type of
   the target, the summary and the report receive an orientation warning (v0.4.6). Without the declaration, nothing
@@ -295,7 +295,7 @@ output: {dir: ./zaku_out, figures: true}
 - Pipeline: `StandardScaler` → estimator, over the **complete case**: in the audit of an index, the rows where the index
   and the target/control exist; in utility and in the combination, the rows complete on the **union** of the columns of
   the two compared configurations (the same people on both sides of the contrast). `impute: true` inserts
-  `SimpleImputer(median)` before the standardisation and is recorded in the manifest. Regression default `Ridge`;
+  `SimpleImputer(median)` before the standardization and is recorded in the manifest. Regression default `Ridge`;
   classification default `LogisticRegression(l2, C=1, lbfgs, max_iter=1000)`; multiclass: one-vs-rest.
 - Metrics (v1.2, citation review of 2026-09-16): regression `r2_score`; classification **Tjur's D** = the mean of p̂ in
   the cases − the mean in the non-cases (Tjur 2009; the quantity that Pencina's 2008 IDI compares), asymptotically a
@@ -339,18 +339,17 @@ output: {dir: ./zaku_out, figures: true}
 - Verdicts are **descriptive**: the bootstrap P is not a p-value; `multiplicity: bh` is a sensitivity.
 
 **Justification.** With one index (one column), a flexible model can only capture monotone non-linearity and pays for it
-in variance, inflating the score of the control in part of the resamples; the paired contrast wants a conservative
-estimator on both sides. Optimising hyperparameters by result inside the bootstrap would break the pairing (different
+in variance, inflating the score of the control in part of the resamples; the paired contrast requires a conservative estimator on both sides. Optimizing hyperparameters by result inside the bootstrap would break the pairing (different
 choices for target and control) and would cost days; that is why it is a sensitivity mode, nested, declared. In the
 combination of axes (several columns, interactions) boosting is justified, with fixed and declared hyperparameters.
-Shared resamples = the behaviour of the reference plus the condition of pairing.
+Shared resamples reproduce the behavior of the reference and satisfy the condition of pairing.
 
 ---
 
 ### 3.3 Target↔control geometry (v0.6 — approved by Thalles on 2026-09-14)
 
 **The problem it solves.** Target and control usually come from the same reference measurement and the same
-normalisation (e.g. lean mass/H² and fat mass/H² from the same DXA scan; lean + fat + bone = body mass, with H and W
+normalization (e.g. lean mass/H² and fat mass/H² from the same DXA scan; lean + fat + bone = body mass, with H and W
 mapped). In the space of the mapped variables they can point almost the same way. In that case an index close to that
 direction (e.g. W/H²) predicts both by arithmetic, and the verdict of the negative control is right for the wrong
 reason. v0.6 measures this and prints it beside the verdict. **It never changes a verdict**: the verdict is empirical
@@ -391,8 +390,8 @@ the target×control map (§4.4); `report.html` inherits the tables. Zero new com
 `log_covariance` and `predicted_pearson_log` are reused.
 
 **Targets in kilograms (an option, not a rule).** A target in kg (absolute lean mass) instead of an index (mass/H²)
-removes height from both sides and reduces cos_Σ(t^, c^); it does NOT remove the coupling through W (lean + fat +
-bone = body mass) and it makes the target more "size", which favours volume indices (H²/R). It is a declared choice of
+removes stature from both sides and reduces cos_Σ(t^, c^); it does NOT remove the coupling through W (lean + fat +
+bone = body mass) and it makes the target more "size", which favors volume indices (H²/R). It is a declared choice of
 the researcher; the framework accepts any column and prints the geometry of each choice. The bundled example therefore
 carries `lean_kg`, `alm_kg` and `fat_kg`, derived as index × (H/100)² in the generator (columns recorded in
 `example_data_params.json` as derived; no new draw).
@@ -412,13 +411,17 @@ determinism and hash.
 ---
 
 ### 3.4 Language (v0.7, 2026-09-14)
-- A single catalogue of messages (`i18n.py`), four languages: `en`, `es`, `pt`, `it`. A test requires the same keys and
+- A single catalog of messages (`i18n.py`), four languages: `en`, `es`, `pt`, `it`. A test requires the same keys and
   the same format fields in all four; no message is left untranslated in silence.
 - The choice in one place only: `--lang` on the CLI (valid for `init`, `check`, `run`) or `language:` in the YAML (`init`
   asks for the language first and records it). `figures.language` follows `language` unless declared. The API
   (`run(cfg)`) reads `language` from the YAML.
 - Translated: the questions of `init`, the messages of `check` and `run`, `summary.md`, the headings of `report.html`,
-  the texts of the figures and the captions of `figures/README.md`. NOT translated, for reproducibility between users:
+  the texts of the figures and the captions of `figures/README.md`. **Declared exception (2026-09-19):** three
+  SUPPLEMENTARY figures — `sigma_transfer`, `combination_gain` and `compass` — keep their title and axis labels in
+  English; they are support material, produced only on request (`output.supplementary_figures`), and translating them
+  would cost new keys for no return. The five official figures and the other supplementary ones follow the language of
+  the run. NOT translated, for reproducibility between users:
   the column names of the CSVs, the YAML keys, the method ids, the verdicts (`SPECIFIC`, `TRACKS_CONTROL`, `BOTH`,
   `NEITHER`) and the names of the flags.
 - Justification: the tool is for researchers; reading in one's own language is part of being intuitive. What is for the
@@ -444,7 +447,7 @@ each threshold with its value, origin and support. The adjustments of assumption
   the default. Reported, never chosen.
 - **Missing values:** rows with a missing value in the mapped columns are excluded and counted by reason; the results
   describe the people who remained; no imputation and no comparison with the excluded ones (the framework describes the
-  analysed sample, it does not estimate a population — decision of 2026-09-16).
+  analyzed sample, it does not estimate a population — decision of 2026-09-16).
 - **Designed exponents:** a person bootstrap interval per exponent (`vector_lo`, `vector_hi`, B = `transfer_B`) in the
   manifest, in the summary and on the suggestions screen; the vector used is still the fit of the whole partition.
 
@@ -511,11 +514,11 @@ here. The target↔control correlation per stratum, with a warning above 0.8 (a 
   report inline.
 - **Sections, in this order:** the header (title, preset, a warning if `quick`); the summary; for each result block —
   input and sample, redundancy and precedence, specificity (conditional control), utility, target↔control geometry, Σ
-  transfer, sensitivity, screening — three fixed paragraphs **how it was computed · how to read it · rigour applied**,
+  transfer, sensitivity, screening — three fixed paragraphs **how it was computed · how to read it · rigor applied**,
   whose numbers (folds, repeats, B, margins, thresholds, seeds, estimator) come from the resolved configuration and from
   the manifest, never from fixed text; figures with captions; tables with **CSV** buttons (embedded in base64, works
   offline) and **Excel** (a `tables.xlsx` file beside it, one sheet per table, generated only if `openpyxl` is installed
-  — extra `bioms-zaku[excel]`; without it, a warning and the CSV); the section **Rigour of this run** (preset, seeds,
+  — extra `bioms-zaku[excel]`; without it, a warning and the CSV); the section **Rigor of this run** (preset, seeds,
   versions, hash of the input, hash of every output, time, warnings, the declaration of independence); the manifest.
 - **The report recomputes nothing:** it reads the tables, the manifest and the configuration. One source of truth.
   Consequence: `bioms-zaku --lang xx render <folder>` (or `render(folder, lang)` in the API) re-writes the summary, the
@@ -529,27 +532,27 @@ here. The target↔control correlation per stratum, with a warning above 0.8 (a 
   1 About (text, citation, the attribution of the name, and the **Zaku diagram** — a fixed SVG of the method in four
   columns: measured variables → decomposition (exact example vectors H²/R, Xc/H, R/H; a schematic Σ; the identity
   r = aᵀΣb/√(aᵀΣa·bᵀΣb)) → out-of-sample audit → verdicts; also written to `figures/zaku_method.svg`, in the language of
-  the run); 2 Key numbers (people, strata, methods and curated ones, the verdicts of the primary target as coloured
+  the run); 2 Key numbers (people, strata, methods and curated ones, the verdicts of the primary target as colored
   seals, added value k of n, target↔control coupling per stratum — all read from the tables, tested); 3 Summary in text
   (`summary.md`, folded); 4 Figures, grouped by family (the verdict card open; the others closed; one open at a time; a
   human translated title, the caption once per family, a click enlarges); 5 Results, one foldable block per result
   block, **one open at a time** (native `<details name>`, no library), with the method text and the tables (numerics
-  right-aligned; at most 1000 rows shown, the embedded CSV is always complete); 6 Rigour; 7 References; 8 Manifest. The
-  colours of the verdicts are identical to the figures. Printing opens every section (a print stylesheet + `beforeprint`).
+  right-aligned; at most 1000 rows shown, the embedded CSV is always complete); 6 Rigor; 7 References; 8 Manifest. The
+  colors of the verdicts are identical to the figures. Printing opens every section (a print stylesheet + `beforeprint`).
   No external resource: CSS, JS and images embedded.
 - **References (v0.9).** A fixed section, in three parts: (a) the bioimpedance methods evaluated IN THIS run, one line
-  per source (catalogue entries grouped by DOI; year and authors from the catalogue, title and journal from the verified
+  per source (catalog entries grouped by DOI; year and authors from the catalog, title and journal from the verified
   record); (b) the statistical and algebraic methods, a fixed list tagged with the block it supports — Kronmal 1993
   (indices that share components correlate by construction; only in the redundancy block) and Atchley 1976 (the induced
   correlation grows with the variability of the shared variable, the diagonal of Σ; dividing by size does not remove
   size, the reason utility is measured over the covariates; redundancy and utility blocks), Nevill & Holder 1995 (the
   log-linear fit of the exponents is the allometric model that provides the ratio standard appropriate to the target;
-  design and redundancy blocks), Heymsfield 2007 (lean mass and fat scale with height with powers ≈ 2, so targets of
-  mass/height² are independent of stature; the power is derived in the population, Benn's principle; design and utility
+  design and redundancy blocks), Heymsfield 2007 (lean mass and fat scale with stature with powers ≈ 2, so targets of
+  mass/stature² are independent of stature; the power is derived in the population, Benn's principle; design and utility
   blocks), Spearman 1904 (rank correlation: invariant to monotone transformations, insensitive to extremes; attenuation
   by measurement error as support for the 0.95), Lipsitch 2010 (negative control outcome: it shares with the target the
-  sources of spurious association and is analysed by the same procedure; by analogy — the conditional and reciprocal
-  form S1/S2 and the quantitative rule are an extension of this tool), Hoerl & Kennard 1970 (ridge over standardised
+  sources of spurious association and is analyzed by the same procedure; by analogy — the conditional and reciprocal
+  form S1/S2 and the quantitative rule are an extension of this tool), Hoerl & Kennard 1970 (ridge over standardized
   predictors, correlation form; α = 1 fixed and equal for every index, not tuned by design — the authors state there is
   no automatic choice of k; it acts only when index and control are nearly collinear), Stone 1974 (cross-validatory
   assessment, here in K parts, of a fixed prescription: nothing is chosen by the data in the audit, hence no nested
@@ -574,7 +577,7 @@ here. The target↔control correlation per stratum, with a warning above 0.8 (a 
   metadata on 2026-09-15, not typed; entries are listed as published, without translation. In the verification two
   candidates were refused: the DOI 10.1097/ede.0b013e3181e4bfd7 (it is the erratum of Lipsitch 2010; the article is
   10.1097/ede.0b013e3181d61eeb) and 10.1111/sms.12780 (a paper on waist, not a general reference on allometry). Tested:
-  every DOI of the catalogue has a record; the erratum does not enter; the references of the report are exactly those of
+  every DOI of the catalog has a record; the erratum does not enter; the references of the report are exactly those of
   the methods of the run.
 
 ### 4.5 Progress
@@ -582,8 +585,7 @@ The CLI and the API print, per stratum and method, the count, the elapsed time a
 method onwards.
 
 **Justification.** Full precision allows equivalence at 1e-9. Pearson in the logs as the primary verification removes
-the only assumption of the algebraic part. Aggregates only in the outputs is what allows running on data that cannot
-leave (a container at a partner's). Figures from the tables guarantee agreement.
+the only assumption of the algebraic part. Publishing only aggregates is what allows running on data that cannot leave (a container at a partner institution). Figures from the tables guarantee agreement.
 
 ---
 
@@ -602,7 +604,7 @@ leave (a container at a partner's). Figures from the tables guarantee agreement.
      `examples/example_data_params.json` (the draw uses the ROUNDED μ and Σ, exactly the published ones); the μ and Σ of
      the logs match within sampling error; the published Σ predicts the observed correlation between monomial indices
      (< 0.02);
-  5. the numerical examples of the primary sources in the catalogue (`check_example`), checked at load;
+  5. the numerical examples of the primary sources in the catalog (`check_example`), checked at load;
   6. determinism of the examples (equal hashes in two runs; checked by `tools/gate.py`, which runs the steps the
      continuous-integration workflow ran — the workflow was switched off on 2026-09-18, see
      `.github/workflows/ci.yml`).

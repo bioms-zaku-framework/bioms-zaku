@@ -1,7 +1,6 @@
 """
 EN: `bioms-zaku check` — validate a configuration and its data WITHOUT running: rows, strata, targets, classes, controls,
     catalog methods evaluable/skipped, bootstrap feasibility, design partition, circularity declaration. Exit code ≠ 0 on error.
-ES/PT: valida configuração e dados SEM rodar; código de saída ≠ 0 em erro.
 """
 from __future__ import annotations
 

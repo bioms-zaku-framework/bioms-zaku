@@ -112,7 +112,6 @@ def bootstrap_pearson_log_ci(x: np.ndarray, y: np.ndarray, *, B: int = 200, seed
     """
     EN: percentile interval for the Pearson correlation of ln x and ln y by resampling PEOPLE (rows) — no distributional
         assumption (the Fisher z interval assumed bivariate normality of the logs, rejected on NHANES; v1.1). Deterministic.
-    ES/PT: intervalo por percentis do bootstrap de pessoas para a correlação de Pearson dos logs; sem pressuposto de distribuição.
     """
     lx, ly = np.log(np.asarray(x, float)), np.log(np.asarray(y, float)); n = len(lx)
     rng = np.random.default_rng(seed); rs = np.empty(B)
@@ -164,7 +163,6 @@ def pairs_table(cat: Catalog, vecs: dict[str, VectorFit], values: dict[str, np.n
     EN: all method pairs in a stratum: predicted Pearson-on-logs (exact identity), observed Pearson-on-logs with a person-
         bootstrap percentile interval (descriptive, distribution-free; v1.1), observed Spearman, identity flag. No Spearman
         conversion (v0.5: the identity is stated and checked on the Pearson-of-logs scale only).
-    ES/PT: todos os pares no estrato com previsto/observado (intervalo bootstrap) e flag de identidade.
     """
     ids = [e.id for e in cat.entries if e.id in vecs]
     identity = {e.id: e.identity_of for e in cat.entries if e.identity_of}
@@ -191,7 +189,6 @@ def redundancy_table(cat: Catalog, pairs: pd.DataFrame, stratum: str, *, thresho
     """
     EN: for each method, the strongest |Spearman| with an earlier-precedence method (§2.2); redundant if ≥ threshold.
         Identities are reported as 'identity' and never as discovered redundancy.
-    ES/PT: para cada método, o maior |Spearman| com um antecessor; redundante se ≥ limiar; identidades à parte.
     """
     order = {e.id: i for i, e in enumerate(cat.sorted_by_precedence())}
     year = {e.id: e.year for e in cat.entries}

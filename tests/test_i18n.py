@@ -1,4 +1,4 @@
-"""EN: contract v0.7 — one message catalogue, four languages, identical keys and placeholders; the language chosen once
+"""EN: contract v0.7 — one message catalog, four languages, identical keys and placeholders; the language chosen once
 (YAML `language` or --lang) reaches prompts, check, run, summary, report headings and figures. ES/PT/IT: catálogo único."""
 import re
 import subprocess
@@ -18,7 +18,7 @@ def _placeholders(s: str) -> set:
     return set(re.findall(r"\{(\w+)", s))
 
 
-def test_catalogue_has_all_languages_and_identical_placeholders():
+def test_catalog_has_all_languages_and_identical_placeholders():
     assert LANGS == ("en", "es", "pt", "it") and len(MSG) >= 90
     for k, m in MSG.items():
         assert set(m) == set(LANGS), k
@@ -114,7 +114,7 @@ def test_render_changes_language_without_recomputing(tmp_path):
     assert "## Estrato" in (out / "summary.md").read_text(encoding="utf-8")
     render(out, "en", printer=lambda s: None)
     assert "## Stratum" in (out / "summary.md").read_text(encoding="utf-8")
-    html = (out / "report.html").read_text(encoding="utf-8"); assert "Figures</h2>" in html and "Rigour of this run" in html and "Como foi calculado" not in html
+    html = (out / "report.html").read_text(encoding="utf-8"); assert "Figures</h2>" in html and "Rigor of this run" in html and "Como foi calculado" not in html
     caps = (out / "figures" / "README.md").read_text(encoding="utf-8"); assert caps.index("**EN**") < caps.index("**PT**")
     after = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in out.glob("*.csv")}
     assert after == before and (out / "manifest.json").read_bytes() == man_before          # nothing recomputed

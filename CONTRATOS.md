@@ -388,7 +388,10 @@ acende, ortogonal ⇒ apagada; identidade do item 4 no exemplo embarcado (1e-9);
 - Escolha em um só lugar: `--lang` na CLI (vale para `init`, `check`, `run`) ou `language:` no YAML (o `init` pergunta o idioma primeiro e
   grava). `figures.language` segue `language` salvo se declarado. A API (`run(cfg)`) lê `language` do YAML.
 - Traduzido: perguntas do `init`, mensagens do `check` e do `run`, `summary.md`, cabeçalhos do `report.html`, textos das figuras e
-  legendas do `figures/README.md`. NÃO traduzido, por reprodutibilidade entre usuários: nomes de colunas dos CSVs, chaves do YAML,
+  legendas do `figures/README.md`. **Exceção declarada (19/09/2026):** três figuras SUPLEMENTARES — `sigma_transfer`,
+  `combination_gain` e `compass` — têm título e rótulos de eixo fixos em inglês; são material de apoio, geradas só a
+  pedido (`output.supplementary_figures`), e traduzi-las custaria chaves novas sem retorno. As cinco oficiais e as
+  demais suplementares seguem o idioma da execução. NÃO traduzido, por reprodutibilidade entre usuários: nomes de colunas dos CSVs, chaves do YAML,
   ids de métodos, vereditos (`SPECIFIC`, `TRACKS_CONTROL`, `BOTH`, `NEITHER`) e nomes das bandeiras.
 - Justificativa: a ferramenta é para pesquisadores; a leitura na própria língua é parte de ser intuitiva. O que é para máquina fica
   estável.

@@ -12,7 +12,6 @@ def screening_table(redundancy: pd.DataFrame, audit: pd.DataFrame, utility: pd.D
     """
     EN: one row per (method, stratum). `specific` comes from the audit verdict on `primary_target` (default: the
         first target in `audit`); `useful` from `utility` on the same target (False when utility was not run).
-    ES/PT: uma linha por (método, estrato); específico pelo veredito no alvo primário; útil pela utilidade no mesmo alvo.
     """
     if audit.empty:
         return pd.DataFrame(columns=["method_id", "stratum", "redundant", "specific", "useful", "identity", "class"])

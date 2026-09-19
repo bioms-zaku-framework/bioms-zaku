@@ -47,7 +47,7 @@ md(f'<p align="center"><img src="data:image/png;base64,{_logo}" width="360" alt=
    + "\n\n" + four(
     "The data are **synthetic**: 400 people drawn from the means and covariances of NHANES per sex × diabetes. No real "
     "person is in this file, and every number below is reproducible.",
-    "Los datos son **sintéticos**: 400 personas sorteadas de las medias y covarianzas de NHANES por sexo × diabetes. "
+    "Los datos son **sintéticos**: 400 personas extraídas de las medias y covarianzas de NHANES por sexo × diabetes. "
     "Ninguna persona real está en este archivo y todos los números de abajo son reproducibles.",
     "Os dados são **sintéticos**: 400 pessoas sorteadas das médias e covariâncias do NHANES por sexo × diabetes. "
     "Nenhuma pessoa real está neste arquivo e todo número abaixo é reproduzível.",
@@ -78,7 +78,7 @@ print(df.shape)
 df.head()''')
 
 md(four(
-    "The columns: `R` and `Xc` are resistance and reactance (bioimpedance at 50 kHz); `H_cm` and `W` stature and body "
+    "The columns: `R` and `Xc` are resistance and reactance (bioimpedance at 50 kHz); `H_cm` and `W` are stature and body "
     "mass; `idade` age and `sexo` sex (0 = F, 1 = M); `BMXARMC`, `BMXWAIST`, `BMXCALF` circumferences. `LMI_DXA`, "
     "`ALMI_DXA` and `FMI_DXA` are lean, appendicular lean and fat mass indices measured by DXA — the reference. "
     "`label_synthetic` is a label built from fat mass and age **only**: a known answer to check the tool against. "
@@ -172,22 +172,22 @@ md("## 2. " + " · ".join(("The audit: does the index measure what it claims?",
     "The question is not whether an index correlates with lean mass — almost everything does. It is whether it "
     "predicts lean mass **beyond** what a fat mass index already predicts. So the run declares, before seeing any "
     "result: target `LMI_DXA` (lean mass by DXA) and negative control `FMI_DXA` (fat mass by DXA). An index is called "
-    "*specific* only when it beats the control on the target, and *tracks the control* when its apparent success is "
+    "*specific* only when it predicts the target beyond the control, and *tracks the control* when its apparent success is "
     "explained by the control. Everything is declared in the configuration — nothing is chosen afterwards.",
     "La pregunta no es si un índice correlaciona con la masa magra — casi todo lo hace. Es si predice la masa magra "
     "**más allá** de lo que ya predice un índice de masa grasa. Por eso la ejecución declara, antes de ver cualquier "
     "resultado: objetivo `LMI_DXA` (masa magra por DXA) y control negativo `FMI_DXA` (masa grasa por DXA). Un índice "
-    "es *específico* solo cuando supera al control en el objetivo, y *sigue al control* cuando su éxito aparente lo "
+    "es *específico* solo cuando predice el objetivo más allá del control, y *sigue al control* cuando su éxito aparente lo "
     "explica el control. Todo se declara en la configuración — nada se elige después.",
     "A pergunta não é se um índice correlaciona com massa magra — quase tudo correlaciona. É se ele prediz massa magra "
     "**além** do que um índice de massa gorda já prediz. Por isso a execução declara, antes de ver qualquer "
     "resultado: alvo `LMI_DXA` (massa magra por DXA) e controle negativo `FMI_DXA` (massa gorda por DXA). Um índice é "
-    "*específico* só quando bate o controle no alvo, e *mede o controle* quando o sucesso aparente é explicado pelo "
+    "*específico* só quando prediz o alvo além do controle, e *mede o controle* quando o sucesso aparente é explicado pelo "
     "controle. Tudo é declarado na configuração — nada é escolhido depois.",
     "La domanda non è se un indice correla con la massa magra — quasi tutto lo fa. È se predice la massa magra "
     "**oltre** ciò che un indice di massa grassa già predice. Per questo l'esecuzione dichiara, prima di vedere "
     "qualsiasi risultato: target `LMI_DXA` (massa magra da DXA) e controllo negativo `FMI_DXA` (massa grassa da DXA). "
-    "Un indice è *specifico* solo quando batte il controllo sul target, e *segue il controllo* quando il successo "
+    "Un indice è *specifico* solo quando predice il target oltre il controllo, e *segue il controllo* quando il successo "
     "apparente è spiegato dal controllo. Tutto è dichiarato nella configurazione — nulla è scelto dopo."))
 
 code('''from bioms_zaku.api import check, example_path, run
@@ -224,13 +224,13 @@ code("res = run(config)")
 
 md("## 3. " + " · ".join(("The verdicts", "Los veredictos", "Os vereditos", "I verdetti")) + "\n\n" + four(
     "One row per index and stratum. `redundant`: another index already carries the same information. `specific`: it "
-    "beats the negative control on the target. `useful`: it adds something over body mass and stature alone.",
-    "Una fila por índice y estrato. `redundant`: otro índice ya lleva la misma información. `specific`: supera al "
-    "control negativo en el objetivo. `useful`: añade algo sobre masa corporal y estatura solas.",
-    "Uma linha por índice e estrato. `redundant`: outro índice já carrega a mesma informação. `specific`: bate o "
-    "controle negativo no alvo. `useful`: acrescenta algo sobre massa corporal e estatura sozinhas.",
-    "Una riga per indice e strato. `redundant`: un altro indice porta già la stessa informazione. `specific`: batte il "
-    "controllo negativo sul target. `useful`: aggiunge qualcosa oltre massa corporea e statura da sole."))
+    "predicts the target beyond the negative control. `useful`: it adds something over body mass and stature alone.",
+    "Una fila por índice y estrato. `redundant`: otro índice ya lleva la misma información. `specific`: predice el "
+    "objetivo más allá del control negativo. `useful`: añade algo sobre masa corporal y estatura solas.",
+    "Uma linha por índice e estrato. `redundant`: outro índice já carrega a mesma informação. `specific`: prediz o "
+    "alvo além do controle negativo. `useful`: acrescenta algo sobre massa corporal e estatura sozinhas.",
+    "Una riga per indice e strato. `redundant`: un altro indice porta già la stessa informazione. `specific`: predice il "
+    "target oltre il controllo negativo. `useful`: aggiunge qualcosa oltre massa corporea e statura da sole."))
 
 code('''import pandas as pd
 
@@ -239,11 +239,11 @@ pd.read_csv(f"{res['out_dir']}/screening.csv")''')
 md("## 4. " + " · ".join(("The report, and your own data", "El informe y sus propios datos",
                           "O relatório e os seus próprios dados", "Il rapporto e i tuoi dati")) + "\n\n" + four(
     "`report.html` in the output folder holds every number above with the method text beside it — how it was "
-    "computed, how to read it, what rigour was applied — and a download for every table. It is one file: mail it, "
+    "computed, how to read it, what rigor was applied — and a download for every table. It is one file: send it, "
     "archive it, cite it. To read a finished run in another language without recomputing anything, call "
     "`render(res[\"out_dir\"], \"pt\")`. For your own data, point `config[\"data\"][\"path\"]` at your CSV and edit the "
-    "column names above, or let the tool ask you in a terminal: `bioms-zaku start meus_dados.csv`. What the tool "
-    "guarantees, and under which assumptions, is written in `CONTRATOS.md`.",
+    "column names above, or let the tool ask you in a terminal: `bioms-zaku start data.csv`. What the tool "
+    "guarantees, and under which assumptions, is written in `CONTRACTS.md`.",
     "`report.html` en la carpeta de salida tiene todos los números de arriba con el texto del método al lado — cómo se "
     "calculó, cómo leerlo, qué rigor se aplicó — y una descarga por tabla. Es un solo archivo: envíelo, archívelo, "
     "cítelo. Para leer una ejecución terminada en otro idioma sin recalcular nada, llame a "

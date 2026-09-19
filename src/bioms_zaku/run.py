@@ -105,7 +105,6 @@ def _audit_one(args):
 def run(config: dict | str | Path, *, printer: Callable[[str], None] = print, preflight: bool = True) -> dict:
     """
     EN: execute a full run; returns {"tables": {...}, "manifest": {...}, "out_dir": Path}.
-    ES/PT: executa uma rodada completa.
     """
     cfg = resolve(config)
     set_language(cfg["language"])   # EN: API and CLI alike (v0.7)
@@ -126,7 +125,6 @@ def render(out_dir: str | Path, lang: str | None = None, *, printer: Callable[[s
     """
     EN: re-write summary.md, figures/ and report.html of a FINISHED run in another language, from the saved tables and
         manifest — nothing is recomputed (contract §4.6: the report reads, never calculates). Tables and manifest are untouched.
-    ES/PT/IT: regrava resumo, figuras e relatório de uma execução concluída em outro idioma, sem recalcular nada.
     """
     out_dir = Path(out_dir)
     manifest = json.loads((out_dir / "manifest.json").read_text(encoding="utf-8"))
@@ -187,7 +185,6 @@ def scaled_inputs(vals: dict, targets: dict, controls: dict, cov, target_types: 
         construction; non-positive → NaN, excluded from that audit), of every REGRESSION target/control and of the covariates.
         A regression target/control or a covariate with a non-positive value cannot be logged: the whole stratum falls back
         to "raw" with a warning (recorded as the scale used). Classification labels are never transformed.
-    ES/PT: entradas da auditoria na escala pedida; sem valores positivos, volta à escala bruta com aviso.
     """
     if scale == "raw":
         return {"scale": "raw", "vals": vals, "targets": targets, "controls": controls, "cov": cov}
@@ -221,7 +218,6 @@ def design_all(cfg: dict, ds, frame: pd.DataFrame, warnings: list, manifest: dic
     EN: the design stage (contract §2.7, v0.9): ONE partition for every designed index, vectors fitted per stratum on the design
         rows, everything recorded in `manifest["design"]`. Returns (designed{stratum -> {id -> DesignedIndex}}, audit frame).
         Used by `run` and by the guided flow (`start`), so suggestions and the final run see exactly the same vectors.
-    ES/PT: etapa de desenho compartilhada por `run` e `start`.
     """
     designed: dict[str, dict[str, object]] = {}      # EN: stratum key -> {index id -> DesignedIndex}
     if cfg["design"]:
@@ -560,7 +556,6 @@ def _out_of_validity(entry, frame: pd.DataFrame, ds: Dataset) -> tuple[float, st
     """
     EN: §2.2 — fraction of rows outside the method's declared validity (age, bmi, sex) and which fields; never blocks.
         age from group `idade`, bmi from W/H_m² when both exist, sex from group `sexo` (male=1).
-    ES/PT: fração de linhas fora da faixa de validade declarada (idade, IMC, sexo); nunca bloqueia.
     """
     v = entry.validity or {}; n = len(frame); bad = np.zeros(n, dtype=bool); fields = []
     if v.get("age") and "idade" in frame:

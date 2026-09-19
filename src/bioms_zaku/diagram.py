@@ -1,8 +1,8 @@
 """
 EN: The Zaku method diagram (v0.9): one fixed SVG, in the current language, drawn without matplotlib so it also works where
-    the `[plots]` extra is absent. Content is schematic and fixed — the three example vectors are exact catalogue vectors
+    the `[plots]` extra is absent. Content is schematic and fixed — the three example vectors are exact catalog vectors
     (H²/R, Xc/H, R/H); the Σ cells are illustrative shading, not data. Written to figures/zaku_method.svg and embedded
-    inline in the report. Texts come from the i18n catalogue (keys d.*, v.*).
+    inline in the report. Texts come from the i18n catalog (keys d.*, v.*).
 """
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ INK, INK2, LINE, SURF = "#1d1d1f", "#52514e", "#d9d8d3", "#fcfcfb"
 GREEN, VIOLET, BOTH, MUTED = "#22c55e", "#9333ea", "#52514e", "#9a9893"
 POS, NEG = "#dbeafe", "#ffedd5"           # EN: same polarity hues as the exponents heatmap (blue positive, orange negative)
 FONT = "Inter,'Segoe UI','DejaVu Sans',Arial,sans-serif"
-EXAMPLES = (("H²/R", (-1, 0, 2, 0)), ("Xc/H", (0, 1, -1, 0)), ("R/H", (1, 0, -1, 0)))   # EN: exact catalogue vectors (R, Xc, H, W)
+EXAMPLES = (("H²/R", (-1, 0, 2, 0)), ("Xc/H", (0, 1, -1, 0)), ("R/H", (1, 0, -1, 0)))   # EN: exact catalog vectors (R, Xc, H, W)
 SIGMA_SHADE = ((1.0, 0.6, 0.3, 0.4), (0.6, 1.0, 0.2, 0.3), (0.3, 0.2, 1.0, 0.5), (0.4, 0.3, 0.5, 1.0))   # EN: illustrative only
 
 

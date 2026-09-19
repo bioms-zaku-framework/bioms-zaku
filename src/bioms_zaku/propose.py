@@ -33,7 +33,7 @@ def _dataset(cfg: dict):
 
 
 def _try_entry(entry: dict, ds, conv: dict) -> tuple[np.ndarray, list]:
-    """EN: build a one-entry catalogue (same validation as a run) and evaluate it on the data; returns (values, stats used)."""
+    """EN: build a one-entry catalog (same validation as a run) and evaluate it on the data; returns (values, stats used)."""
     cat = build_catalog({"catalog_version": "user", "conventions": conv, "entries": [entry]})
     e = cat.entries[0]
     env = {c: ds.frame[c].to_numpy(float) for c in ds.variables + ds.derived if c in ds.frame}
@@ -66,9 +66,9 @@ def propose(config_path: str | Path, *, ask: Callable[[str, str | None], str], p
     existing = {e.get("id") for e in entries if isinstance(e, dict)}
     from .run import _load_catalog, _values
     from .catalog import load_catalog as _lc
-    cat_ids = set(_lc(None if cfg["catalog"]["path"] in (None, "builtin") else cfg["catalog"]["path"]).ids())   # EN: every catalogue id, curated or not
+    cat_ids = set(_lc(None if cfg["catalog"]["path"] in (None, "builtin") else cfg["catalog"]["path"]).ids())   # EN: every catalog id, curated or not
     cat_run = _load_catalog(cfg)
-    known, _ = _values(cat_run, ds, ds.frame)                       # EN: published indices on these rows, for the neighbour warning
+    known, _ = _values(cat_run, ds, ds.frame)                       # EN: published indices on these rows, for the neighbor warning
     min_n = int(cfg["data"]["min_n"])
     added = []
     while True:
@@ -117,7 +117,7 @@ def propose(config_path: str | Path, *, ask: Callable[[str, str | None], str], p
                     if rho > best:
                         best, best_id = rho, kid
             if best_id is not None and best >= float(cfg["algebra"]["redundancy_threshold"]):
-                printer(t("p.neighbour", m=best_id, rho=f"{best:.2f}"))
+                printer(t("p.neighbor", m=best_id, rho=f"{best:.2f}"))
             if (ask(t("p.keep"), "yes") or "yes").strip().lower() in ("yes", "y", "sim", "sí", "si", "s", "true"):
                 entry = cand
             break

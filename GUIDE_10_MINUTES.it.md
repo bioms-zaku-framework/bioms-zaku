@@ -41,7 +41,7 @@ Che cosa chiede, nell'ordine:
    sono stati calcolati** da R, Xc, H, W;
 3. **esecuzione standard** — `check` verifica tutto e Zaku esegue. L'ultima riga dice dove è il rapporto e come aprirlo.
 
-Chi vuole solo questo ha finito qui. È l'**uso standard**.
+Se è tutto ciò che ti serve, puoi fermarti qui. È l'**uso standard**.
 
 4. **"vuoi suggerimenti di indici progettati?"** — se rispondi `yes`, Zaku stima un indice sul target e uno sul controllo, per
    strato, usando il 70 % delle righe, e mostra ciascuno: formula, R² su quelle righe, l'indice pubblicato più somigliante, un
@@ -106,7 +106,7 @@ H +1.27, W +0.42`) e scrivilo in `propose` come `R**(-0.49) * Xc**(0.11) * H**(1
 
 ## Dati di esempio e risultati che non vengono mai sovrascritti
 
-Zaku porta **una** base di esempio, sintetica, che serve a tutto:
+Zaku porta **una** base di esempio, sintetica, che serve a tutti gli usi:
 
 ```bash
 bioms-zaku examples --copy     # copia in ./zaku_exemplos (se esiste già: zaku_exemplos_2, …)
@@ -132,7 +132,7 @@ viene sovrascritto.
 
 ## Di quante persone ho bisogno?
 
-Zaku descrive il tuo campione e avvisa quando il metro è corto; non stima una popolazione. I minimi sono operativi, e il
+Zaku descrive il tuo campione e avvisa quando è troppo piccolo per sostenere un verdetto; non stima una popolazione. I minimi sono operativi, e il
 rapporto dice, in ogni caso, che cosa è stato possibile calcolare.
 
 | che cosa vuoi | minimo | perché |
@@ -151,7 +151,7 @@ rapporto lo dice; è informazione, non un difetto.
 Lo stimatore principale della classificazione è la regressione logistica con penalità L2: è il più stabile quando gli eventi
 sono pochi. Il rapporto calcola, per ogni modello, gli **eventi per variabile** di un ricampionamento di addestramento
 (`epv_train`) e li segna sotto 10 (Peduzzi 1996): leggi quei verdetti come esplorativi. Il minimo per classe resta 20; Zaku
-descrive il tuo campione e avvisa quando il metro è corto, invece di rifiutare.
+descrive il tuo campione e avvisa quando è troppo piccolo, invece di rifiutare.
 
 Se vuoi vedere se il verdetto resiste a un classificatore di macchina (boosting), dichiaralo come **sensibilità**: gira sugli
 stessi ricampionamenti, esce accanto al principale e non è mai scelto in base al risultato:

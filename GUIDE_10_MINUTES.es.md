@@ -2,7 +2,7 @@
 
 [English](GUIDE_10_MINUTES.md) · **Español** · [Português](GUIDE_10_MINUTES.pt.md) · [Italiano](GUIDE_10_MINUTES.it.md)
 
-Usted tiene una planilla con bioimpedancia (R y Xc a 50 kHz), estatura, masa corporal y una medida de referencia, como masa
+Usted tiene una hoja de cálculo con bioimpedancia (R y Xc a 50 kHz), estatura, masa corporal y una medida de referencia, como masa
 magra o masa grasa por DXA. Quiere saber cómo se comportan los índices publicados en sus datos, y quizá crear los suyos. Todo se
 hace en el terminal, con un comando que lo conduce por preguntas. Nada se decide en silencio: cada respuesta queda escrita en un
 archivo YAML, y el mismo análisis puede repetirse sin preguntas.
@@ -16,7 +16,7 @@ bioms-zaku --lang es
 
 La segunda línea muestra el cartel y los tres comandos. Si apareció, está instalado.
 
-## 2. Preparar la planilla
+## 2. Preparar la hoja de cálculo
 
 Un archivo `.csv` con una fila por persona y columnas numéricas para R, Xc, estatura, masa corporal y la referencia. El
 separador y el decimal se detectan. Los nombres de columna son libres; Zaku sugiere el mapeo y usted lo confirma.
@@ -40,7 +40,7 @@ Lo que pregunta, en orden:
    a partir de R, Xc, H, W;
 3. **ejecución estándar** — el `check` verifica todo y Zaku ejecuta. La última línea dice dónde está el informe y cómo abrirlo.
 
-Quien quiere solo eso, terminó aquí. Es el **uso estándar**.
+Si eso es todo lo que necesita, puede detenerse aquí. Es el **uso estándar**.
 
 4. **"¿quiere sugerencias de índices diseñados?"** — si dice `yes`, Zaku ajusta un índice al objetivo y otro al control, por
    estrato, usando el 70 % de las filas, y muestra cada uno: fórmula, R² en esas filas, el índice publicado más parecido, un
@@ -105,14 +105,14 @@ H +1.27, W +0.42`) y escríbalo en `propose` como `R**(-0.49) * Xc**(0.11) * H**
 
 ## Datos de ejemplo y resultados que nunca se sobrescriben
 
-Zaku trae **una** base de ejemplo, sintética, que sirve para todo:
+Zaku trae **una** base de ejemplo, sintética, que sirve a todos los usos:
 
 ```bash
 bioms-zaku examples --copy     # copia a ./zaku_exemplos (si ya existe: zaku_exemplos_2, …)
 cd zaku_exemplos
 ```
 
-`zaku_exemplo.csv`: 400 personas (200 por sexo), sorteadas a partir de las medias y covarianzas de NHANES estimadas por separado
+`zaku_exemplo.csv`: 400 personas (200 por sexo), extraídas a partir de las medias y covarianzas de NHANES estimadas por separado
 para cada combinación de sexo y diabetes; ninguna persona real. Lo que se puede probar con ella:
 
 | prueba | objetivo | control | respuesta esperada |
@@ -123,7 +123,7 @@ para cada combinación de sexo y diabetes; ninguna persona real. Lo que se puede
 
 Use `-o` para dar nombre a cada prueba (`bioms-zaku start zaku_exemplo.csv -o regresion.yaml`). Las masas en kg (`lean_kg`,
 `fat_kg`) se calculan a partir de la estatura: no las use como objetivo con la estatura mapeada. Archivos técnicos (ejemplo
-antiguo de 8000 filas, formato de planilla, muestra real de NHANES): `bioms-zaku examples --all`.
+antiguo de 8000 filas, formato de hoja de cálculo, muestra real de NHANES): `bioms-zaku examples --all`.
 
 Cada ejecución escribe en `zaku_out/<nombre>`; si la carpeta ya tiene una ejecución concluida, la nueva va a `<nombre>_2`,
 `<nombre>_3`, … En `start`, la ejecución estándar y la final (con los índices aceptados) quedan en carpetas separadas. Nada se
@@ -131,7 +131,7 @@ sobrescribe.
 
 ## ¿Cuántas personas necesito?
 
-Zaku describe su muestra y avisa cuando la regla queda corta; no estima una población. Los mínimos son operativos, y el informe
+Zaku describe su muestra y avisa cuando es demasiado pequeña para sostener un veredicto; no estima una población. Los mínimos son operativos, y el informe
 dice, en cada caso, qué fue posible calcular.
 
 | lo que usted quiere | mínimo | por qué |
@@ -150,7 +150,7 @@ informe lo dice; es información, no defecto.
 El estimador principal de la clasificación es la regresión logística con penalidad L2: es el más estable cuando hay pocos
 eventos. El informe calcula, para cada modelo, los **eventos por variable** de una remuestra de entrenamiento (`epv_train`) y
 los marca por debajo de 10 (Peduzzi 1996): lea esos veredictos como exploratorios. El mínimo por clase sigue siendo 20; Zaku
-describe su muestra y avisa cuando la regla queda corta, en lugar de rechazar.
+describe su muestra y avisa cuando es demasiado pequeña, en lugar de rechazar.
 
 Si quiere ver si el veredicto resiste a un clasificador de máquina (boosting), declárelo como **sensibilidad**: corre en las
 mismas remuestras, sale al lado del principal y nunca se elige por el resultado:

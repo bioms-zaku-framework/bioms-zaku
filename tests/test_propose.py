@@ -53,8 +53,8 @@ def test_cli_has_the_propose_command(capsys, monkeypatch, tmp_path):
     set_language("en")
 
 
-def test_simulation_findings_nonsense_formulas_constants_catalogue_ids_and_neighbours(tmp_path):
-    # EN: user simulation of 2026-09-15: formulas with no auditable value, constants (also from mean()), an id of the catalogue,
+def test_simulation_findings_nonsense_formulas_constants_catalog_ids_and_neighbors(tmp_path):
+    # EN: user simulation of 2026-09-15: formulas with no auditable value, constants (also from mean()), an id of the catalog,
     #     a formula that repeats a published method — every one handled with a message, none accepted silently, no crash.
     from bioms_zaku.propose import propose
     import numpy as np, pandas as pd
@@ -66,7 +66,7 @@ def test_simulation_findings_nonsense_formulas_constants_catalogue_ids_and_neigh
                     "Z2", "", "", "W - R", "",                    # negative everywhere
                     "Z3", "", "", "mean(W)", "",                  # constant from a sample statistic (a 0-d result) → constant
                     "Z4", "", "", "Xc / Xc", "",                  # constant
-                    "LMI", "Z5", "", "", "H**2 / R", "yes",       # id of the catalogue refused; Lukaski's formula accepted with the neighbour warning
+                    "LMI", "Z5", "", "", "H**2 / R", "yes",       # id of the catalog refused; Lukaski's formula accepted with the neighbor warning
                     "Z6", "", "", "(PhA * H / R) * (1/(1+exp(-(PhA - mean(PhA)))))", "yes",   # the author's BioMS_2: fine
                     ""])
     printed = []

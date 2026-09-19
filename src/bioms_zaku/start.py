@@ -4,7 +4,7 @@ EN: `bioms-zaku start dados.csv` (v1.0, CONTRATOS.md §3.5) — ONE guided path 
       screen 2  the columns (same questions as `init`, same suggestions, same validation)
       screen 3  the standard run: how the published indices behave on these data  → the standard use ends here
       screen 4  "suggestions for your target?": the Zaku designs an index per target and stratum on a design partition, prints
-                each one in plain words (formula, R² on the design rows, nearest published neighbour, suggested name) and asks
+                each one in plain words (formula, R² on the design rows, nearest published neighbor, suggested name) and asks
                 accept / edit (name, rounding) / no — nothing about verdicts is shown before accepting
       screen 5  "an index of your own?": paste the formula (the `propose` questions)
       final run only if something was accepted or proposed: published + accepted + own, validated on the rows never used to design.
@@ -174,7 +174,7 @@ def _screen_2(ask, printer, answers: dict, cols: list[str], numeric: list[str]) 
         def d(a):
             v = a.get("strata") if role == "sex" and a.get("strata") else sug.get(role)
             taken = {a.get("target"), a.get("control")} | {x.strip() for x in (a.get("covariates") or "").split(",")}
-            return None if v in taken else v            # EN: never suggest the target/control/covariate as a catalogue input (found on CrossFit)
+            return None if v in taken else v            # EN: never suggest the target/control/covariate as a catalog input (found on CrossFit)
         return d
     qs += [Q(role, (lambda role: lambda a: t("w.group_col", role=f"{role} ({t('w.role.' + role)})"))(role), help=(lambda a: t("w.help.groups")) if role == "sex" else (lambda a: None),
              default=_group_default(role), validate=in_cols) for role in GROUP_ROLES]
@@ -235,7 +235,7 @@ def _reading(variables, vec) -> str:
 def suggestions(cfg: dict, printer: Callable[[str], None]) -> list[dict]:
     """
     EN: design one index per (target, stratum) on the design partition — the SAME function and partition the final run will use —
-        and describe each one with numbers that come only from the design rows: vector, R², nearest published neighbour (Spearman
+        and describe each one with numbers that come only from the design rows: vector, R², nearest published neighbor (Spearman
         on the design rows). No verdict is computed here.
     """
     from .config import resolve
@@ -282,7 +282,7 @@ def suggestions(cfg: dict, printer: Callable[[str], None]) -> list[dict]:
             ps = manifest["design"]["indices"][did]["per_stratum"][st]
             out.append({"id": did, "target": di.target, "stratum": st, "raw_stratum": raw_key, "variables": list(di.variables), "vector": [float(x) for x in di.vector_design],
                         "vector_lo": None if di.vector_lo is None else [float(x) for x in di.vector_lo], "vector_hi": None if di.vector_hi is None else [float(x) for x in di.vector_hi],
-                        "r2": float(di.r2_design), "n_design": ps["n_design"], "n_audit": ps["n_audit"], "neighbour": best_id, "rho": best,
+                        "r2": float(di.r2_design), "n_design": ps["n_design"], "n_audit": ps["n_audit"], "neighbor": best_id, "rho": best,
                         "name": _suggest_name(di.target, st, tgt, ctl)})
     order = {tgt: 0, ctl: 1}
     out.sort(key=lambda sg: (order.get(sg["target"], 9), sg["stratum"]))
@@ -308,8 +308,8 @@ def _print_suggestion(k: int, sg: dict, printer) -> None:
     printer("  " + _reading(sg["variables"], sg["vector"]))
     if sg.get("vector_lo") and all(np.isfinite(sg["vector_lo"])):
         printer("  " + t("st.sug_ci", ci=" · ".join(f"{v} [{l:+.2f}; {h:+.2f}]" for v, l, h in zip(sg["variables"], sg["vector_lo"], sg["vector_hi"]))))
-    if sg["neighbour"]:
-        printer("  " + t("st.sug_neighbour", m=sg["neighbour"], rho=f"{sg['rho']:.2f}", note=(t("st.sug_repeats") if sg["rho"] >= 0.95 else t("st.sug_original"))))
+    if sg["neighbor"]:
+        printer("  " + t("st.sug_neighbor", m=sg["neighbor"], rho=f"{sg['rho']:.2f}", note=(t("st.sug_repeats") if sg["rho"] >= 0.95 else t("st.sug_original"))))
     printer("  " + t("st.sug_name", name=sg["name"]))
 
 

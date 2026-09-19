@@ -4,7 +4,7 @@ EN: Bibliographic records for the report's References section. Every DOI below w
     entries are listed as published and are not translated. Two candidates were rejected at verification: the DOI
     10.1097/ede.0b013e3181e4bfd7 (it is the erratum of Lipsitch 2010, not the article) and 10.1111/sms.12780 (a waist-girth
     paper, not a general allometry reference). Statistical references are fixed per result block; bioimpedance references
-    are those of the methods actually evaluated in the run (from the catalogue). No network access at run time.
+    are those of the methods actually evaluated in the run (from the catalog). No network access at run time.
 """
 from __future__ import annotations
 
@@ -127,9 +127,9 @@ def cite(key: str, *, year: int | None = None) -> tuple[str, str]:
 
 def bia_references(entries: list, *, proposed_text: str = "proposed by the researcher, not published") -> list[tuple[str, str, str]]:
     """
-    EN: one line per distinct source among the catalogue entries evaluated in the run: (formatted reference, url, ids).
-        Year and authors come from the catalogue (the curated precedence record); title and journal from the verified
-        record when the DOI is known, otherwise the catalogue authors and year alone. Sorted by year, then id.
+    EN: one line per distinct source among the catalog entries evaluated in the run: (formatted reference, url, ids).
+        Year and authors come from the catalog (the curated precedence record); title and journal from the verified
+        record when the DOI is known, otherwise the catalog authors and year alone. Sorted by year, then id.
     """
     by_src: dict[str, list] = {}
     for e in entries:

@@ -224,7 +224,7 @@ CITATION = {"title": "BioMS Zaku: an algebraic and predictive framework to decom
 
 
 def _catalog(cfg: dict):
-    """EN: the catalogue as resolved for this configuration; None when it cannot be loaded (e.g. a user file absent at render time)."""
+    """EN: the catalog as resolved for this configuration; None when it cannot be loaded (e.g. a user file absent at render time)."""
     try:
         from .run import _load_catalog
         return _load_catalog(cfg)

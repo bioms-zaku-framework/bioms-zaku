@@ -4,7 +4,7 @@
 
 **English** · [Español](README.es.md) · [Português](README.pt.md) · [Italiano](README.it.md)
 
-Algebraic decomposition and predictive audit of indices and predictive equations. Demonstrated on bioimpedance.
+Algebraic decomposition and out-of-sample audit of indices and predictive equations. Demonstrated on bioimpedance.
 
 *zaku* is a verb of the Juruna (Yudjá) language, Tupi family, Xingu, Mato Grosso, Brazil: "to see / to care for / to wait"
 (Lima, S. *A estrutura argumental dos verbos na língua Juruna (Yudjá)*, MSc dissertation, USP, 2008, item 290).
@@ -13,16 +13,16 @@ The method looks at an index before accepting it, cares for its validity, and wa
 ## What is this?
 
 You have a spreadsheet: one row per person, with resistance and reactance from a bioimpedance device, stature,
-body mass, and a reference measurement such as DXA. BioMS Zaku looks at the indices you care about and answers three
-questions about each one. *Is it new*, or does it already exist under another name? *Does it measure what it claims*, or
-is it following body size — which almost everything follows? *Does it add anything* over stature and body mass alone?
+body mass, and a reference measurement such as DXA. BioMS Zaku looks at the indices you are evaluating and answers three
+questions about each one. *Is it new*, or does it already exist under another name? *Does it measure what it claims*, or is it
+tracking body size, as almost everything does? *Does it add anything* over stature and body mass alone?
 
-The second question is the one that matters. "My index correlates with lean mass" proves little: larger people have
-more of everything. So, before any result is seen, you declare a target and a **negative control**, and the tool tests
+The second question is the one that matters. "My index correlates with lean mass" proves little: larger individuals have
+more of every tissue. So, before any result is seen, you declare a target and a **negative control**, and the tool tests
 whether the index predicts the target *beyond* what the control already predicts. When it does not, it says so plainly.
 
-You do not need to know how to program. In a terminal, `bioms-zaku start dados.csv` asks you the questions and writes
-your answers down; in a notebook, you open it and press run, with the example data already inside. Out comes a single
+You do not need to know how to program. In a terminal, `bioms-zaku start data.csv` asks you the questions and records
+your answers; in a notebook, you open it and run every cell, with the example data already inside. The output is a single
 file, `report.html`: every number, every figure, and beside each one how it was computed and how to read it.
 
 Status: release candidate (1.0.0rc1) · License: MIT · Cite: `CITATION.cff` · **What the tool guarantees, and under which assumptions:** [`CONTRACTS.md`](CONTRACTS.md)
@@ -53,7 +53,7 @@ How to read each figure: `docs/index.html`, section 3.
 
 ```
 pip install "bioms-zaku[plots,excel]"
-bioms-zaku --lang pt start dados.csv        # one guided path: columns → standard run → suggestions (accept/edit/no) → your own index → report
+bioms-zaku --lang en start data.csv        # one guided path: columns → standard run → suggestions (accept/edit/no) → your own index → report
 ```
 `<` goes back, `?` repeats the help, Enter accepts the suggestion. Everything answered is written to `dados.zaku.yaml`, so
 `bioms-zaku run dados.zaku.yaml` repeats the analysis without questions. Ten-minute guide: [`GUIDE_10_MINUTES.md`](GUIDE_10_MINUTES.md).
@@ -61,7 +61,7 @@ bioms-zaku --lang pt start dados.csv        # one guided path: columns → stand
 **In a notebook (Colab or Jupyter)**, nothing has to be downloaded: `pip install bioms-zaku` brings the example data
 inside the package. `examples/zaku_exemplo.ipynb` installs, loads them and walks the three uses in about a minute —
 redundancy predicted from Σ before any index is computed, the audit against a negative control, and the report.
-`bioms-zaku examples --copy` hands over the notebook together with the data.
+`bioms-zaku examples --copy` copies the notebook together with the data.
 
 ## Install
 
@@ -86,7 +86,7 @@ synthetic binary label. Use it to learn the method, to test the tool, and to dec
 bioms-zaku run examples/example_quick.yaml      # 7 curated indices, preset quick, ~20 s
 bioms-zaku run examples/example_full.yaml       # same data, preset full (5×50 CV, B = 2000), for reporting
 bioms-zaku                                      # welcome: the three commands, in your language (--lang pt)
-bioms-zaku propose analise.yaml                 # add your own indices, one question at a time (formula checked on your data)
+bioms-zaku propose analysis.yaml                 # add your own indices, one question at a time (formula checked on your data)
 bioms-zaku run examples/minimal.yaml            # 150 rows, the smallest possible run
 ls zaku_out/example_quick                       # algebra sigma pairs redundancy sigma_transfer audit utility combinations screening sensitivity threshold_sensitivity (.csv) manifest.json summary.md report.html figures/
 ```
@@ -97,7 +97,7 @@ adults 18–49 y with measured DXA and 50 kHz BIA, complete cases, with the diab
 data (139: 79 women, 60 men) plus a seeded random draw of non-diabetics — so it is NOT
 representative of prevalence; it exists to demonstrate the classification audit (≥ 20 per class per sex) and, with its DXA
 masses, the regression audit on real data. Provenance, exclusions, seed and SHA-256: `examples/nhanes_diabetes_400_provenance.json`;
-generator: `tools/make_nhanes_example.py`. Column names are the ones the guided flow recognises (`bioms-zaku start
+generator: `tools/make_nhanes_example.py`. Column names are the ones the guided flow recognizes (`bioms-zaku start
 examples/nhanes_diabetes_400.csv`). This is the only example with real rows; the others are synthetic.
 
 **The example data** (nothing is downloaded; it ships with the package): ONE synthetic base, `zaku_exemplo.csv`, 400 rows
@@ -142,9 +142,8 @@ bioms-zaku run   my_data.zaku.yaml   # the analysis
 ```
 
 Non-interactive `init`: `bioms-zaku init my_data.csv --map R=resistance Xc=reactance H=height W=body_mass target=lmi control=fmi independent=yes`,
-optionally adding `strata=sex id=subject age=age arm=arm_c waist=waist_c calf=calf_c` so that the catalogue equations that need
-sex, age or circumferences can be evaluated; `check` lists every method it cannot evaluate and which column it needs.
-The YAML maps columns to roles (see `CONTRATOS.md` §1): `variables` (R, Xc, H, W at the declared frequency), `units`,
+optionally adding `strata=sex id=subject age=age arm=arm_c waist=waist_c calf=calf_c` so that the catalog equations that need sex, age or circumferences can be evaluated; `check` lists every method it cannot evaluate and which column it needs.
+The YAML maps columns to roles (see `CONTRACTS.md` §1): `variables` (R, Xc, H, W at the declared frequency), `units`,
 `targets`, `controls`, optional `covariates`, `strata`, `groups`, `id`, and `declarations.targets_independent_of_variables`
 (true only if no target/control is computed from the mapped variables — the circularity rule).
 
@@ -181,9 +180,9 @@ components R/H and Xc/H (Piccoli 1994), specific resistivity and reactivity Rsp/
 Buffa 2013) and LMI (Levi Micheli 2022); the impedance ratio Z200/Z5 is listed with low confidence (commercial origin, no
 derivation paper). Each entry records the derivation sample separately from the author-stated validity (outside it the
 framework flags †, never blocks), the declared kind of target (`target_kind`: a fat-mass index audited against a lean-mass
-target gets an orientation warning), and every curation event in the catalog `history`. Phase angle and LMI contain atan
+target receives an orientation warning), and every curation event in the catalog `history`. Phase angle and LMI contain atan
 and are therefore `composite`: their exponent vector is fitted per stratum and the fit R² is reported (exactness rule,
-`CONTRATOS.md` §2.3). **Only curated entries are audited by default** (`catalog.include: curated`, the value `init` writes): the
+`CONTRACTS.md` §2.3). **Only curated entries are audited by default** (`catalog.include: curated`, the value `init` writes): the
 eight whose primary source was critically read (`curated: true`, with `curation_record`). The predictive equations stay in the
 catalog without curation and are audited only with `catalog.include: all`, marked * in every output.
 
@@ -192,7 +191,7 @@ catalog without curation and are audited only with `catalog.include: all`, marke
 A formula of yours enters the audit beside the published methods as a **proposed** entry: no DOI, never curated, never
 precedence over a published method, marked ◇ in every table and figure. Any expression in R, Xc, H, W is accepted
 (`+ - * / **`, `log`, `exp`, `sqrt`, `atan`, `max`, the constants `pi` and `e`, and the sample statistics `mean`, `median`, `sd`, whose
-values are recorded per stratum and flagged); a pure product gets an exact vector, anything else a fitted vector with its R².
+values are recorded per stratum and flagged); a pure product receives an exact vector, anything else a fitted vector with its R².
 The author's own eight BioMS indices are shipped this way in `examples/bioms_mota_proposed.yaml`.
 It is audited only when listed in `catalog.include`:
 
@@ -208,7 +207,7 @@ catalog:
       provenance: {formula_source: proposed, note: "hipótese: a reatância pondera a água intracelular"}
 ```
 
-You do not have to edit the YAML by hand: `bioms-zaku propose analise.yaml` asks id, name, what it measures and the formula,
+You do not have to edit the YAML by hand: `bioms-zaku propose analysis.yaml` asks id, name, what it measures and the formula,
 one at a time; each formula is checked at once against the grammar and evaluated on your data (finite, positive, min/median/max,
 sample statistics used), then written to the YAML and included in the audit.
 
@@ -228,7 +227,7 @@ different goal and usually fails the conditional control (the report says so).
 
 ## Geometry of target and control
 
-Target and control often come from the same reference measurement and the same normalisation (lean/H² and fat/H² from one
+Target and control often come from the same reference measurement and the same normalization (lean/H² and fat/H² from one
 DXA scan; lean + fat + bone = body mass, with H and W among the mapped variables). In the space of the mapped variables they
 can point almost the same way, and then an index close to that direction (W/H²-like) predicts both by arithmetic. The
 framework measures this with the algebra it already uses: the *implicit vector* of each target and control (OLS of the
@@ -237,16 +236,16 @@ monomial indices. Two flags with declared thresholds annotate the verdicts and n
 (‡ next to the index) and COUPLED_TARGET_CONTROL (‡ in the panel title). Tables `implicit_vectors.csv` and
 `geometry.csv`; block in `summary.md`. On the shipped example the target–control cosine is 0.90 (women) and 0.86 (men)
 for LMI vs FMI. Using absolute masses (kg) removes height from both sides and lowers the coupling but does not remove the
-coupling through body mass, and it makes the target more "size", which favours volume indices (H²/R): a declared choice,
+coupling through body mass, and it makes the target more "size", which favors volume indices (H²/R): a declared choice,
 not a fix. Lesson 12 of the notebook works the whole thing by hand on four people.
 
 ## The report
 
 `report.html` is the main output: one self-contained file (figures and tables embedded) that opens from disk. In a notebook
-`run()` shows it inline. Each result block carries three fixed paragraphs — *how it was computed · how to read it · rigour
+`run()` shows it inline. Each result block carries three fixed paragraphs — *how it was computed · how to read it · rigor
 applied* — whose numbers (folds, repeats, B, margins, thresholds, seeds, estimator) come from the resolved configuration,
 never from fixed text. Every table has a **CSV** download button (embedded, works offline); `pip install bioms-zaku[excel]`
-adds `tables.xlsx` (one sheet per table) next to the report. A *Rigour of this run* section lists preset, seeds, versions,
+adds `tables.xlsx` (one sheet per table) next to the report. A *Rigor of this run* section lists preset, seeds, versions,
 input hash, the SHA-256 of every output table, wall time and warnings. The report recomputes nothing — which is why
 `bioms-zaku --lang en render zaku_out/my_run` re-writes summary, figures and report of a finished run in another language
 in seconds, leaving tables and manifest untouched.
@@ -267,8 +266,7 @@ hand-calculated lessons, exact algebraic identities, synthetic cases with a cons
 which is reproducible byte for byte from its published parameters (`tools/make_example_data.py --from-params`). No test
 depends on data outside the repository.
 
-The contract [`CONTRACTS.md`](CONTRACTS.md) is the normative document behind all of this: what the tool promises for
-input, catalogue, configuration, outputs and reproducibility — five contracts, each closing with its justification.
+The contract [`CONTRACTS.md`](CONTRACTS.md) is the normative document behind all of this: what the tool promises for input, catalog, configuration, outputs and reproducibility — five contracts, each closing with its justification.
 Read it to know what a number from this tool does and does not claim.
 
 ## Development

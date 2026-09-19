@@ -131,7 +131,7 @@ def test_T7_text_agrees_with_tables(run_pt):
 
 def test_T8_no_english_leak_in_pt_report(run_pt):
     _, txt = run_pt
-    for en in ("How it was computed", "How to read it", "Rigour applied", "download CSV", "Rigour of this run", ">Results<", "not curated", "Key numbers", "Verdict sheet", "measured variables", "click to enlarge", ">References<"):
+    for en in ("How it was computed", "How to read it", "Rigor applied", "download CSV", "Rigor of this run", ">Results<", "not curated", "Key numbers", "Verdict sheet", "measured variables", "click to enlarge", ">References<"):
         assert en not in txt, en
     for pt in ("Como foi calculado", "Como ler", "Rigor aplicado", "baixar CSV", "Rigor desta execução", "Resultados", "Números-chave", "Ficha de vereditos", "variáveis medidas", "Referências"):
         assert pt in txt, pt

@@ -68,7 +68,7 @@ def test_cli_init_and_check(tmp_path):
 
 
 def test_init_includes_whole_catalog_and_maps_equation_inputs(tmp_path):
-    # EN: Colab finding 2026-09-14 — init must not hide the catalogue behind a fixed include list, and must let the user map
+    # EN: Colab finding 2026-09-14 — init must not hide the catalog behind a fixed include list, and must let the user map
     #     the columns the equations need (sex, age, circumferences). check must name what is missing and how to map it.
     from bioms_zaku.wizard import init
     from bioms_zaku.check import check

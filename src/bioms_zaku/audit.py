@@ -80,7 +80,6 @@ def infer_task(y: np.ndarray) -> str:
 def resamples(n: int, seed: int, B: int, min_oob: int, max_attempts_factor: int = 6) -> tuple[list[np.ndarray], list[np.ndarray]]:
     """
     EN: deterministic OOB resamples for a row set of size n (see module docstring). Returns (train_idx, oob_idx) lists.
-    ES/PT: reamostras OOB determinísticas para n linhas. Retorna listas (treino, fora-da-amostra).
     """
     rng = np.random.default_rng(seed)
     tr, oob, att = [], [], 0
@@ -103,7 +102,6 @@ def _score(task: str, y_true: np.ndarray, model, X: np.ndarray) -> float:
         share the R² margin by declared analogy. Multiclass: one-vs-rest macro average of D over the classes present in
         y_true (this tool's extension, declared). ΔAUROC is NOT used as a gain: it is insensitive even to strong markers
         (Pencina 2008); the AUROC is reported alongside by `_auroc` (Hanley & McNeil 1982).
-    ES/PT: R² em regressão; D de Tjur em classificação (macro um-contra-todos se multiclasse).
     """
     if task == "regression":
         return float(r2_score(y_true, model.predict(X)))
@@ -163,7 +161,6 @@ def metric_name(task: str) -> str:
 def cv_score(X: np.ndarray, y: np.ndarray, task: str, estimator, cfg: AuditConfig, groups: np.ndarray | None = None, metric: str = "default") -> float:
     """
     EN: repeated K-fold out-of-sample score (mean over folds). Stratified for classification; grouped when `groups` given.
-    ES/PT: escore fora da amostra em K-fold repetido; estratificado em classificação; por grupos se houver `groups`.
     """
     pipe = make_pipeline(estimator, cfg.impute)
     if groups is not None:
@@ -191,7 +188,6 @@ def oob_scores(configs: dict[str, np.ndarray], Y: np.ndarray, task: str | Sequen
         ({name: (B_eff, k) scores}, B_eff, B_dropped). All configs and targets use the same resamples. `plan` (optional)
         restricts which outcome columns are fitted for each config (unfitted cells stay NaN); default: every config on
         every outcome.
-    ES/PT: bootstrap OOB pareado; todas as configurações e alvos usam as mesmas reamostras; `plan` restringe os ajustes.
     """
     n = Y.shape[0]
     tr, oob = resamples(n, cfg.seed_bootstrap, cfg.B, cfg.min_oob, cfg.max_attempts_factor)
@@ -233,7 +229,6 @@ def oob_scores(configs: dict[str, np.ndarray], Y: np.ndarray, task: str | Sequen
 def contrast(d: np.ndarray, cfg: AuditConfig) -> dict:
     """
     EN: paired difference summary: mean, percentile CI, P(d>0). Descriptive (§3.2), not a p-value.
-    ES/PT: resumo da diferença pareada: média, IC por percentis, P(d>0). Descritivo, não é valor-p.
     """
     d = d[np.isfinite(d)]
     if len(d) == 0:
@@ -276,7 +271,6 @@ def verdict_sensitivity(rows, margins=(0.02, 0.03, 0.05), p_levels=(0.90, 0.95, 
     EN: §3.2 (v0.5.1) threshold sensitivity — re-apply the conditional rule to the stored S1/S2 summaries under a grid of
         margins and P levels. Pure reclassification (no refit): the CI is fixed (95 %), only the margin and the P
         threshold vary. One row per (audit row, margin, p). `changed` = differs from the verdict under the contract defaults.
-    ES/PT: sensibilidade aos limiares — reclassifica S1/S2 gravados sob uma grade de margens e níveis de P; sem reajuste.
     """
     out = []
     for r in rows:
@@ -357,7 +351,6 @@ def audit_method(method_id: str, stratum: str, x: np.ndarray, targets: dict[str,
     """
     EN: specificity audit of ONE index (one column) against each (target, control) pair, on complete-case rows
         (x, target, control all finite). The bootstrap resamples are shared across targets and controls (paired).
-    ES/PT: auditoria de especificidade de UM índice contra cada par (alvo, controle), em caso completo.
     """
     rows: list[AuditRow] = []
     names = list(targets) + [c for c in controls if c not in targets]
@@ -450,7 +443,6 @@ def utility_method(method_id: str, stratum: str, x: np.ndarray, covariates: np.n
     """
     EN: added value of the index over covariates: A = covariates, B = covariates + index, same resamples, complete-case
         on the union of columns. Useful if the lower CI bound of (B − A) exceeds the margin (§5).
-    ES/PT: valor adicionado do índice sobre as covariáveis; útil se o limite inferior do IC de (B − A) passa a margem.
     """
     names = list(targets)
     Yall = np.column_stack([targets[k] for k in names])
@@ -479,7 +471,6 @@ def combination_gain(host_id: str, added_id: str, stratum: str, xh: np.ndarray, 
                      cfg: AuditConfig, estimator, groups: np.ndarray | None = None) -> list[dict]:
     """
     EN: gain of adding index `added` to index `host`: A = [host], B = [host, added]; same resamples; complete-case on both.
-    ES/PT: ganho de acrescentar um índice a outro; mesmas reamostras; caso completo nos dois.
     """
     names = list(targets); Yall = np.column_stack([targets[k] for k in names])
     ok = np.isfinite(xh) & np.isfinite(xa) & np.isfinite(Yall).all(axis=1)
@@ -502,7 +493,6 @@ def combination_gain(host_id: str, added_id: str, stratum: str, xh: np.ndarray, 
 class Progress:
     """
     EN: real-time progress with ETA, printed from the first unit (project rule).
-    ES/PT: progresso em tempo real com estimativa de término, desde a primeira unidade.
     """
     def __init__(self, total: int, label: str = "", printer: Callable[[str], None] = print):
         self.total, self.label, self.printer, self.t0, self.done = total, label, printer, time.time(), 0

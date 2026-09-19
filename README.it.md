@@ -4,7 +4,7 @@
 
 [English](README.md) · [Español](README.es.md) · [Português](README.pt.md) · **Italiano**
 
-Decomposizione algebrica e audit predittivo di indici ed equazioni predittive. Dimostrato sulla bioimpedenza.
+Decomposizione algebrica e audit fuori campione di indici ed equazioni predittive. Dimostrato sulla bioimpedenza.
 
 *zaku* è un verbo della lingua juruna (yudjá), famiglia tupi, Xingu, Mato Grosso, Brasile: "vedere / prendersi cura /
 attendere" (Lima, S. *A estrutura argumental dos verbos na língua Juruna (Yudjá)*, tesi di laurea magistrale, USP,
@@ -14,17 +14,17 @@ risultato fuori campione.
 ## Che cos'è?
 
 Hai un foglio di calcolo: una riga per persona, con resistenza e reattanza da un apparecchio di bioimpedenza,
-statura, massa corporea e una misura di riferimento come la DXA. BioMS Zaku guarda gli indici che ti interessano e
+statura, massa corporea e una misura di riferimento come la DXA. BioMS Zaku guarda gli indici che stai valutando e
 risponde a tre domande su ciascuno. *È nuovo*, o esiste già con un altro nome? *Misura ciò che dichiara*, o sta
-seguendo la taglia corporea — che quasi tutto segue? *Aggiunge qualcosa* rispetto a statura e massa corporea da sole?
+seguendo le dimensioni corporee, come quasi tutto le segue? *Aggiunge qualcosa* rispetto a statura e massa corporea da sole?
 
-La seconda domanda è quella che conta. "Il mio indice correla con la massa magra" prova poco: le persone più grandi
-hanno più di tutto. Perciò, prima di vedere qualsiasi risultato, dichiari un target e un **controllo negativo**, e lo
+La seconda domanda è quella che conta. "Il mio indice correla con la massa magra" prova poco: gli individui di dimensioni maggiori
+hanno più di ogni tessuto. Perciò, prima di vedere qualsiasi risultato, dichiari un target e un **controllo negativo**, e lo
 strumento verifica se l'indice predice il target *oltre* ciò che il controllo già predice. Quando non lo fa, lo dice
 chiaramente.
 
-Non devi saper programmare. In un terminale, `bioms-zaku start dati.csv` ti fa le domande e annota le tue risposte; in
-un notebook, lo apri e premi esegui, con i dati di esempio già dentro. Ne esce un unico file, `report.html`: ogni
+Non devi saper programmare. In un terminale, `bioms-zaku start dati.csv` ti fa le domande e registra le tue risposte; in
+un notebook, lo apri ed esegui tutte le celle, con i dati di esempio già dentro. L'output è un unico file, `report.html`: ogni
 numero, ogni figura e, accanto a ciascuno, come è stato calcolato e come leggerlo.
 
 Stato: release candidate (1.0.0rc1) · Licenza: MIT · Citazione: `CITATION.cff` · **Ciò che lo strumento garantisce, e sotto quali ipotesi:** [`CONTRACTS.md`](CONTRACTS.md)
@@ -68,7 +68,7 @@ bioms-zaku --lang it start dati.csv        # un percorso guidato: colonne → es
 **In un notebook (Colab o Jupyter)** non c'è nulla da scaricare: `pip install bioms-zaku` porta i dati di esempio
 dentro il pacchetto. `examples/zaku_exemplo.ipynb` installa, li carica e percorre i tre usi in circa un minuto — la
 ridondanza prevista da Σ prima che qualsiasi indice sia calcolato, l'audit contro un controllo negativo e il rapporto.
-`bioms-zaku examples --copy` consegna il notebook insieme ai dati.
+`bioms-zaku examples --copy` copia il notebook insieme ai dati.
 
 ## Installare
 
@@ -247,7 +247,7 @@ visto, come qualsiasi metodo pubblicato (contrassegnato △). Una proprietà reg
 giusto di "pulire il segnale": il miglior predittore del target è, per costruzione, condizionalmente non informativo
 sulla proiezione del controllo — quindi la progettazione semplice è l'indice specifico nel senso del controllo
 negativo condizionale, e l'audit verifica se ciò è sopravvissuto fuori campione. Nel YAML, `design:` è una lista;
-`orthogonal_to: <colonna>` aggiunge la Σ-ortogonalità marginale a una colonna di disturbo (la taglia corporea), che è
+`orthogonal_to: <colonna>` aggiunge la Σ-ortogonalità marginale a una colonna di disturbo (le dimensioni corporee), che è
 un obiettivo diverso e in generale non supera il controllo condizionale (il rapporto lo dice).
 
 ## Geometria di target e controllo

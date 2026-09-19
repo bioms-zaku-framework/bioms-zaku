@@ -62,7 +62,6 @@ def _merge(base: dict, over: dict) -> dict:
 def resolve(cfg: dict | str | Path) -> dict:
     """
     EN: merge user config over defaults, then apply the preset (preset overrides cv/bootstrap sizes). Validates keys.
-    ES/PT: mescla a configuração do usuário sobre os padrões e aplica o preset; valida chaves.
     """
     if not isinstance(cfg, dict):
         cfg = yaml.safe_load(Path(cfg).read_text(encoding="utf-8")) or {}

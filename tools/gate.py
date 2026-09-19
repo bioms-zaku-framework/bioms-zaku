@@ -1,7 +1,7 @@
 """EN: the quality gate, LOCAL. Reproduces step by step what the CI workflow did, on this machine and this Python.
 Why it exists: GitHub Actions is billed on a private repository and was switched off on 2026-09-18 (see
 .github/workflows/ci.yml). The steps are the CI steps, not a weaker substitute: build + twine check, install the
-wheel like a user in a CLEAN virtual environment (an editable install once hid that the catalogue was not shipped),
+wheel like a user in a CLEAN virtual environment (an editable install once hid that the catalog was not shipped),
 the whole suite, an example run repeated to compare output hashes, and init/check/run from a directory outside the
 repository. What is NOT covered here and only a matrix can give: Python versions other than the one running this.
 

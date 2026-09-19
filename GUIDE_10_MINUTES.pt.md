@@ -39,7 +39,7 @@ O que ele pergunta, na ordem:
    perímetros para os métodos que as usam; e a declaração de que alvo e controle **não foram calculados** a partir de R, Xc, H, W;
 3. **rodada padrão** — o `check` confere tudo e o Zaku roda. A última linha diz onde está o relatório e como abrir.
 
-Quem quer só isso, parou aqui. É o **uso padrão**.
+Se é só isso que você precisa, pode parar aqui. É o **uso padrão**.
 
 4. **"quer sugestões de índices desenhados?"** — se disser `yes`, o Zaku ajusta um índice para o alvo e um para o controle, por
    estrato, usando 70 % das linhas, e mostra cada um: fórmula, R² nessas linhas, o índice publicado mais parecido, um nome
@@ -103,7 +103,7 @@ W +0.42`) e digite-o no `propose` como `R**(-0.49) * Xc**(0.11) * H**(1.27) * W*
 
 ## Dados de exemplo e resultados que nunca se sobrescrevem
 
-O Zaku traz **uma** base de exemplo, sintética, que serve para tudo:
+O Zaku traz **uma** base de exemplo, sintética, que serve a todos os usos:
 
 ```bash
 bioms-zaku examples --copy     # copia para ./zaku_exemplos (se já existir: zaku_exemplos_2, …)
@@ -128,7 +128,7 @@ No `start`, a rodada padrão e a rodada final (com os índices aceitos) ficam em
 
 ## Quantas pessoas eu preciso?
 
-O Zaku descreve a sua amostra e avisa quando a régua fica curta; não estima população. Os mínimos são operacionais, e o relatório
+O Zaku descreve a sua amostra e avisa quando ela é pequena demais para sustentar um veredito; não estima população. Os mínimos são operacionais, e o relatório
 diz, em cada caso, o que foi possível calcular.
 
 | o que você quer | mínimo | por quê |
@@ -147,7 +147,7 @@ diz isso; é informação, não defeito.
 O estimador principal da classificação é a regressão logística com penalidade L2: é o mais estável quando há poucos eventos.
 O relatório calcula, para cada modelo, os **eventos por variável** de uma reamostra de treino (`epv_train`) e marca abaixo
 de 10 (Peduzzi 1996): leia esses vereditos como exploratórios. O mínimo por classe continua 20; o Zaku descreve a sua amostra
-e avisa quando a régua fica curta, em vez de recusar.
+e avisa quando ela é pequena demais, em vez de recusar.
 
 Se quiser ver se o veredito resiste a um classificador de máquina (boosting), declare-o como **sensibilidade**: roda nas mesmas
 reamostras, sai ao lado do principal e nunca é escolhido pelo resultado:

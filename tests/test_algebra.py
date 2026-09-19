@@ -1,8 +1,4 @@
-"""
-EN: hand-calculated lessons (caderno/licoes_metodo_bioms_a_mao.md) as unit tests + exactness/invariance properties.
-ES: lecciones a mano como pruebas + propiedades de exactitud/invariancia.
-PT: lições à mão como testes + propriedades de exatidão/invariância.
-"""
+"""Hand-calculated lessons (caderno/licoes_metodo_bioms_a_mao.md) as unit tests, plus exactness and invariance properties."""
 import numpy as np
 import pandas as pd
 import pytest

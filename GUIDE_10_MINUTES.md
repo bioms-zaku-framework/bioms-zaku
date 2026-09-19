@@ -40,13 +40,13 @@ What it asks, in order:
    R, Xc, H, W;
 3. **standard run** — `check` verifies everything and Zaku runs. The last line says where the report is and how to open it.
 
-Whoever wants only that has finished here. This is the **standard use**.
+If that is all you need, you can stop here. This is the **standard use**.
 
 4. **"would you like suggestions of designed indices?"** — if you say `yes`, Zaku fits one index to the target and one to the
    control, per stratum, using 70 % of the rows, and shows each one: formula, R² on those rows, the closest published index, a
    suggested name. You answer `yes`, `edit` (change the name, round the exponents) or `no`. No verdict appears before you decide,
    on purpose. An exponent changed by hand becomes a **proposed** index (◇), not a designed one (△).
-5. **"do you have an index of your own to test?"** — type the formula in R, Xc, H, W (`H_m` stature in metres, `PhA` phase angle
+5. **"do you have an index of your own to test?"** — type the formula in R, Xc, H, W (`H_m` stature in meters, `PhA` phase angle
    in degrees, `mean(PhA)` sample mean). It is checked at once on your data: how many finite and positive values, minimum,
    median, maximum; if it is constant, has no auditable value or equals a published method, you learn that before accepting it.
 6. **final run** — only if something was accepted or proposed: published + accepted + yours, validated on the 30 % of rows the
@@ -56,7 +56,7 @@ Whoever wants only that has finished here. This is the **standard use**.
 
 Open `report.html` in the browser (the command is on the last line of the terminal). Reading order:
 
-- **Key numbers**: people audited, methods, verdicts as coloured seals, how many add value, whether target and control are
+- **Key numbers**: people audited, methods, verdicts as colored seals, how many add value, whether target and control are
   coupled in your data.
 - **Verdict card** (one per stratum): each method in three columns — original or repeats an earlier method; specific, tracks the
   control, measures both or no signal; adds value beyond body mass and stature or not. ◇ = yours; △ = designed.
@@ -84,7 +84,7 @@ H +1.27, W +0.42`) and type it into `propose` as `R**(-0.49) * Xc**(0.11) * H**(
 - **"the control is the target itself"**: control and target must be different measurements.
 - **"would leave ≈ N rows to audit, below data.min_n"**: too few people per stratum to design indices; use more rows or run
   without strata. The standard run is not affected.
-- **"the inputs [...] are missing"**: a catalogue method needs a column you do not have (for instance |Z| at 100 kHz); it is
+- **"the inputs [...] are missing"**: a catalog method needs a column you do not have (for instance |Z| at 100 kHz); it is
   skipped and the report says so.
 - **Ctrl+C** stops without writing anything further.
 
@@ -104,7 +104,7 @@ H +1.27, W +0.42`) and type it into `propose` as `R**(-0.49) * Xc**(0.11) * H**(
 
 ## Example data, and results that are never overwritten
 
-Zaku ships **one** example base, synthetic, which serves everything:
+Zaku ships **one** example base, synthetic, which serves every use:
 
 ```bash
 bioms-zaku examples --copy     # copies to ./zaku_exemplos (if it already exists: zaku_exemplos_2, …)
@@ -129,7 +129,7 @@ In `start`, the standard run and the final run (with the accepted indices) land 
 
 ## How many people do I need?
 
-Zaku describes your sample and warns when the ruler is short; it does not estimate a population. The minima are operational, and
+Zaku describes your sample and warns when it is too small to support a verdict; it does not estimate a population. The minima are operational, and
 the report says, in each case, what it was able to compute.
 
 | what you want | minimum | why |
@@ -147,8 +147,8 @@ says so; that is information, not a defect.
 
 The main estimator for classification is logistic regression with an L2 penalty: it is the most stable when there are few events.
 The report computes, for each model, the **events per variable** of a training resample (`epv_train`) and marks it below 10
-(Peduzzi 1996): read those verdicts as exploratory. The minimum per class stays 20; Zaku describes your sample and warns when
-the ruler is short, instead of refusing.
+(Peduzzi 1996): read those verdicts as exploratory. The minimum per class stays 20; Zaku describes your sample and warns when it
+is too small, instead of refusing.
 
 If you want to see whether the verdict survives a machine classifier (boosting), declare it as a **sensitivity**: it runs on the
 same resamples, comes out beside the main one and is never chosen by the result:
