@@ -1,6 +1,7 @@
 """EN: v1.2 — ONE example base (zaku_exemplo, synthetic, generated per sex × diabetes from NHANES) reachable after installation
 (API and `bioms-zaku examples`), copied by default without ever overwriting; technical files only on request."""
 import json
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -67,3 +68,19 @@ def test_examples_command_lists_and_copies_the_one_example(tmp_path, monkeypatch
     assert main(["--lang", "pt", "examples", "--copy"]) == 0
     assert sorted(p.name for p in (tmp_path / "zaku_exemplos").iterdir()) == ["zaku_exemplo.csv", "zaku_exemplo.ipynb", "zaku_exemplo_params.json"]
     assert "bioms-zaku start zaku_exemplo.csv" in capsys.readouterr().out
+
+
+def test_the_installed_package_carries_only_the_one_base(tmp_path, monkeypatch):
+    """EN: the wheel ships zaku_exemplo only (2026-09-19): 700 KB of technical files were reaching every installation
+    for data the researcher never uses. Listing must not crash when they are absent, and copying one must say where it
+    is. Simulated by pointing the example folder at one holding only the base."""
+    import bioms_zaku.datasets as D
+    for n in ("zaku_exemplo.csv", "zaku_exemplo_params.json", "zaku_exemplo.ipynb"):
+        shutil.copy(ROOT / "examples" / n, tmp_path / n)
+    monkeypatch.setattr(D, "examples_dir", lambda: tmp_path)
+    nomes = [r["name"] for r in D.list_examples(all=True)]
+    assert nomes == ["zaku_exemplo"], f"listing must skip what the package does not ship: {nomes}"
+    destino = D.copy_examples(tmp_path / "saida")
+    assert sorted(p.name for p in destino.iterdir()) == ["zaku_exemplo.csv", "zaku_exemplo.ipynb", "zaku_exemplo_params.json"]
+    with pytest.raises(FileNotFoundError, match="repository"):
+        D.copy_examples(tmp_path / "outra", ["minimal"])

@@ -13,7 +13,6 @@ EN: The bundled example data, available after `pip install` (v1.2). The files li
 
     Two kinds, always said aloud: SYNTHETIC files are draws from a log-normal whose μ and Σ were estimated on NHANES 1999–2004
     (no real row); the REAL file holds NHANES 1999–2004 public-use rows (public domain), with its provenance JSON.
-ES/PT: dados de exemplo embarcados no pacote instalado; sintéticos (μ e Σ do NHANES) e um real (NHANES, domínio público).
 """
 from __future__ import annotations
 
@@ -60,6 +59,8 @@ def list_examples(all: bool = False) -> list[dict]:
     for name, e in EXAMPLES.items():
         if not (all or e["main"]):
             continue
+        if not (d / e["csv"]).exists():
+            continue        # EN: technical file not shipped in the wheel (2026-09-19); it lives in the repository
         df = pd.read_csv(d / e["csv"], sep=e["sep"], decimal=e["decimal"])
         out.append({"name": name, "kind": e["kind"], "main": bool(e["main"]), "rows": int(len(df)), "columns": list(df.columns), "csv": e["csv"],
                     "files": list(e["files"]), "description": t(f"ex.{name}")})
@@ -101,6 +102,11 @@ def copy_examples(dest: str | Path | None = None, names: list[str] | None = None
     bad = [n for n in names if n not in EXAMPLES]
     if bad:
         raise KeyError(f"unknown example(s) {bad}; choose among {sorted(EXAMPLES)}")
+    faltando = [n for n in names if not (src / EXAMPLES[n]["csv"]).exists()]
+    if faltando:
+        raise FileNotFoundError(
+            f"example(s) {faltando} are not shipped in the installed package (only 'zaku_exemplo' is): "
+            "they live in the repository, under examples/ — clone it or download them from the project page")
     folder = _free_folder(Path(dest or "zaku_exemplos"))
     folder.mkdir(parents=True, exist_ok=True)
     for n in names:

@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "bioms-zaku"
 dynamic = ["version"]
-description = "BioMS Zaku: algebraic decomposition and predictive audit of indices and predictive equations (demonstrated on bioimpedance)."
+description = "BioMS Zaku: algebraic decomposition and out-of-sample audit of indices and predictive equations (demonstrated on bioimpedance)."
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}
@@ -46,7 +46,13 @@ path = "src/bioms_zaku/__init__.py"   # EN: single source of the version
 packages = ["src/bioms_zaku"]
 
 [tool.hatch.build.targets.wheel.force-include]
-"examples" = "bioms_zaku/examples"      # v1.2 — example data ship with the package (bioms_zaku.datasets, `bioms-zaku examples`)
+# EN: the installed package carries ONE example base (the decision of 2026-09-17) plus its parameters and the notebook —
+#     34 + 11 + 63 KB. The technical files (the older 8000-row example, the spreadsheet-format one, the real NHANES
+#     sample and the YAMLs) stay in the repository and in the sdist: shipping them added 700 KB to every installation
+#     for data the researcher never uses (2026-09-19).
+"examples/zaku_exemplo.csv" = "bioms_zaku/examples/zaku_exemplo.csv"
+"examples/zaku_exemplo_params.json" = "bioms_zaku/examples/zaku_exemplo_params.json"
+"examples/zaku_exemplo.ipynb" = "bioms_zaku/examples/zaku_exemplo.ipynb"
 
 [tool.hatch.build.targets.sdist]
 include = ["src/bioms_zaku", "tests", "examples", "tools", "README.md", "README.es.md", "README.pt.md",
