@@ -42,10 +42,10 @@ def test_cli_shows_the_banner_only_without_a_command_or_with_version_flag(capsys
     assert main(["--lang", "pt", "--version"]) == 0; out = capsys.readouterr().out
     assert ART0 in out and "repete uma sessão sem perguntas" in out
     assert main(["version"]) == 0; assert capsys.readouterr().out.strip() == __version__   # plain, for scripts
-    assert main(["--lang", "pt", "check", "examples/minimal.yaml"]) == 0; out = capsys.readouterr().out
-    assert ART0 not in out and "check:" in out and out.rstrip().endswith("copie e cole:  bioms-zaku --lang pt run examples/minimal.yaml")
+    assert main(["--lang", "pt", "check", "tests/minimal.yaml"]) == 0; out = capsys.readouterr().out
+    assert ART0 not in out and "check:" in out and out.rstrip().endswith("copie e cole:  bioms-zaku --lang pt run tests/minimal.yaml")
     flags = ["R=resistencia_ohm", "Xc=reatancia_ohm", "H=estatura_cm", "W=massa_kg", "target=lmi_dxa", "control=fmi_dxa", "independent=yes"]
-    assert main(["init", "examples/minimal_data.csv", "-o", str(tmp_path / "a.yaml"), "--map", *flags]) == 0
+    assert main(["init", "tests/minimal_data.csv", "-o", str(tmp_path / "a.yaml"), "--map", *flags]) == 0
     assert ART0 not in capsys.readouterr().out                                          # --map: no banner
     set_language("en")
 
@@ -58,7 +58,7 @@ def test_interactive_init_opens_with_the_short_banner_before_the_file_line(tmp_p
         try: return next(answers)
         except StopIteration: return ""
     try:
-        init(str(ROOT / "examples/minimal_data.csv"), str(tmp_path / "i.yaml"), ask=ask, printer=printed.append)
+        init(str(ROOT / "tests/minimal_data.csv"), str(tmp_path / "i.yaml"), ask=ask, printer=printed.append)
     except Exception:
         pass                                       # EN: the scripted answers need not complete the wizard; only the prologue is under test
     joined = "\n".join(printed)
@@ -68,8 +68,8 @@ def test_interactive_init_opens_with_the_short_banner_before_the_file_line(tmp_p
 
 def test_run_and_render_output_never_carry_the_banner(tmp_path):
     from bioms_zaku.run import run, render
-    cfg = yaml.safe_load((ROOT / "examples/minimal.yaml").read_text(encoding="utf-8"))
-    cfg["data"]["path"] = str(ROOT / "examples/minimal_data.csv"); cfg["output"] = {"dir": str(tmp_path), "figures": False}
+    cfg = yaml.safe_load((ROOT / "tests/minimal.yaml").read_text(encoding="utf-8"))
+    cfg["data"]["path"] = str(ROOT / "tests/minimal_data.csv"); cfg["output"] = {"dir": str(tmp_path), "figures": False}
     cfg["catalog"] = {"include": ["Lukaski1985_II", "Piccoli1994_RH"]}; cfg["audit"] = {"bootstrap": {"min_oob": 10}, "cv": {"folds": 3}}
     lines = []; res = run(cfg, printer=lines.append); render(res["out_dir"], "pt", printer=lines.append)
     assert not any(ART0 in l or "\x1b" in l for l in lines)

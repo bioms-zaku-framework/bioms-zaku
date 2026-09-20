@@ -14,8 +14,8 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def _cfg(tmp_path, name="e2e"):
-    cfg = yaml.safe_load((ROOT / "examples/minimal.yaml").read_text(encoding="utf-8"))
-    cfg["data"]["path"] = str(ROOT / "examples/minimal_data.csv"); cfg["output"]["dir"] = str(tmp_path); cfg["run_name"] = name
+    cfg = yaml.safe_load((ROOT / "tests/minimal.yaml").read_text(encoding="utf-8"))
+    cfg["data"]["path"] = str(ROOT / "tests/minimal_data.csv"); cfg["output"]["dir"] = str(tmp_path); cfg["run_name"] = name
     return cfg
 
 

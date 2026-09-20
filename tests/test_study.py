@@ -9,8 +9,8 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def _cfg(tmp_path, name, **study):
-    cfg = yaml.safe_load((ROOT / "examples/minimal.yaml").read_text(encoding="utf-8"))
-    cfg["data"]["path"] = str(ROOT / "examples/minimal_data.csv"); cfg["output"] = {"dir": str(tmp_path), "figures": False}; cfg["run_name"] = name
+    cfg = yaml.safe_load((ROOT / "tests/minimal.yaml").read_text(encoding="utf-8"))
+    cfg["data"]["path"] = str(ROOT / "tests/minimal_data.csv"); cfg["output"] = {"dir": str(tmp_path), "figures": False}; cfg["run_name"] = name
     cfg["catalog"] = {"include": ["Lukaski1985_II", "Piccoli1994_RH"]}; cfg["audit"] = {"bootstrap": {"min_oob": 10}, "cv": {"folds": 3}}; cfg["language"] = "pt"
     if study:
         cfg["study"] = study
@@ -21,12 +21,12 @@ def test_init_records_data_name_and_researcher(tmp_path):
     from bioms_zaku.wizard import init
     flags = {"R": "resistencia_ohm", "Xc": "reatancia_ohm", "H": "estatura_cm", "W": "massa_kg", "target": "lmi_dxa", "control": "fmi_dxa", "independent": "yes",
              "data_name": "Amostra NHANES 300", "researcher": "Thalles Mota"}
-    printed = []; out = init(str(ROOT / "examples/minimal_data.csv"), str(tmp_path / "a.yaml"), map_flags=flags, lang="pt", printer=printed.append)
+    printed = []; out = init(str(ROOT / "tests/minimal_data.csv"), str(tmp_path / "a.yaml"), map_flags=flags, lang="pt", printer=printed.append)
     cfg = yaml.safe_load(out.read_text(encoding="utf-8"))
     assert cfg["study"] == {"data_name": "Amostra NHANES 300", "researcher": "Thalles Mota"}
     assert any(l.strip().startswith("dados") and "Amostra NHANES 300" in l for l in printed) and any(l.strip().startswith("pesquisador") and "Thalles Mota" in l for l in printed)
     flags.pop("data_name"); flags.pop("researcher")
-    out = init(str(ROOT / "examples/minimal_data.csv"), str(tmp_path / "b.yaml"), map_flags=flags, lang="pt", printer=lambda s: None)
+    out = init(str(ROOT / "tests/minimal_data.csv"), str(tmp_path / "b.yaml"), map_flags=flags, lang="pt", printer=lambda s: None)
     cfg = yaml.safe_load(out.read_text(encoding="utf-8"))
     assert cfg["study"] == {"data_name": "minimal_data", "researcher": None}                 # defaults: file stem, nothing recorded
     set_language("en")

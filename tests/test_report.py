@@ -15,8 +15,8 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def _cfg(tmp_path, name, **over):
-    cfg = yaml.safe_load((ROOT / "examples/minimal.yaml").read_text(encoding="utf-8"))
-    cfg["data"]["path"] = str(ROOT / "examples/minimal_data.csv"); cfg["output"] = {"dir": str(tmp_path), "figures": True}; cfg["run_name"] = name
+    cfg = yaml.safe_load((ROOT / "tests/minimal.yaml").read_text(encoding="utf-8"))
+    cfg["data"]["path"] = str(ROOT / "tests/minimal_data.csv"); cfg["output"] = {"dir": str(tmp_path), "figures": True}; cfg["run_name"] = name
     cfg["catalog"] = {"include": ["Lukaski1985_II", "Piccoli1994_RH", "Baumgartner1988_PhA"]}; cfg["audit"] = {"bootstrap": {"min_oob": 10}, "cv": {"folds": 3}}
     for k, v in over.items():
         cfg[k] = v
@@ -141,7 +141,7 @@ def test_run_name_follows_the_yaml_and_overwrite_is_announced(tmp_path):
     from bioms_zaku.wizard import init
     from bioms_zaku.run import run
     flags = {"R": "resistencia_ohm", "Xc": "reatancia_ohm", "H": "estatura_cm", "W": "massa_kg", "target": "lmi_dxa", "control": "fmi_dxa", "independent": "yes"}
-    out = init(str(ROOT / "examples/minimal_data.csv"), str(tmp_path / "analise_A.yaml"), map_flags=flags, printer=lambda s: None)
+    out = init(str(ROOT / "tests/minimal_data.csv"), str(tmp_path / "analise_A.yaml"), map_flags=flags, printer=lambda s: None)
     assert yaml.safe_load(out.read_text(encoding="utf-8"))["run_name"] == "analise_A"          # named after the YAML, not the CSV
     cfg = _cfg(tmp_path, "same", language="en")
     lines = []; run(cfg, printer=lines.append); assert not any("already holds" in l for l in lines)
@@ -178,7 +178,7 @@ def test_nine_content_fixes_of_2026_09_15(tmp_path):
     assert "## Stratum `F`" in summ and "## Stratum `M`" in summ                     # labels reach the report
     flags = {"R": "resistencia_ohm", "Xc": "reatancia_ohm", "H": "estatura_cm", "W": "massa_kg", "target": "lmi_dxa", "control": "fmi_dxa",
              "strata": "sexo", "labels": "0=F,1=M", "independent": "yes"}
-    printed = []; out = init(str(ROOT / "examples/minimal_data.csv"), str(tmp_path / "lab.yaml"), map_flags=flags, printer=printed.append)
+    printed = []; out = init(str(ROOT / "tests/minimal_data.csv"), str(tmp_path / "lab.yaml"), map_flags=flags, printer=printed.append)
     c2 = yaml.safe_load(out.read_text(encoding="utf-8"))
     assert c2["strata_labels"] == {"0": "F", "1": "M"} and c2["data"]["columns"]["targets"] == {"lmi_dxa": "lmi_dxa"}
     assert any(l.strip().startswith("labels") and "0=F,1=M" in l for l in printed)

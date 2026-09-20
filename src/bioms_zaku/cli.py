@@ -29,10 +29,8 @@ def main(argv=None) -> int:
     st.add_argument("csv"); st.add_argument("-o", "--out", default=None); st.add_argument("--sep", default="auto"); st.add_argument("--decimal", default="auto")
     st.add_argument("--encoding", default="utf-8"); st.add_argument("--map", nargs="*", default=None, help="role=column pairs (no questions)")
     st.add_argument("--yes", action="store_true", help="accept every suggestion (scripts, CI)")
-    ex = sub.add_parser("examples", help="list the bundled example data; --copy FOLDER copies them (never overwriting)")
+    ex = sub.add_parser("examples", help="list the bundled example data; --copy FOLDER copies it (never overwriting)")
     ex.add_argument("--copy", nargs="?", const="zaku_exemplos", default=None, metavar="FOLDER")
-    ex.add_argument("--name", nargs="*", default=None, help="only these examples")
-    ex.add_argument("--all", action="store_true", help="also list the technical files (older synthetic example, spreadsheet format, real NHANES sample)")
     a = ap.parse_args(argv)
     from .i18n import set_language, t
     if a.lang:
@@ -72,21 +70,14 @@ def main(argv=None) -> int:
         return 0
     if a.cmd == "examples":
         from .datasets import copy_examples, list_examples
-        from .datasets import EXAMPLES
-        rows = [r for r in list_examples(all=bool(a.all or a.name)) if not a.name or r["name"] in a.name]
-        # EN: the installed package carries only the one base (2026-09-19); say where the rest is whenever it is absent,
-        #     including when the user explicitly asked for it with --all.
-        faltam = len(rows) < len([n for n, e in EXAMPLES.items() if (a.all or a.name) or e["main"]])
-        for r in rows:
+        for r in list_examples():
             print(t("ex.line", name=r["name"], kind=t("ex.kind." + r["kind"]), n=r["rows"], csv=r["csv"], desc=r["description"]))
         if a.copy is not None:
-            folder = copy_examples(a.copy, a.name)
+            folder = copy_examples(a.copy)
             print(t("ex.copied", dir=folder.resolve()))
             print(t("ex.next", dir=folder))
         else:
             print(t("ex.hint"))
-        if faltam or not (a.all or a.name):
-            print(t("ex.more"))
         return 0
     if a.cmd == "render":
         from .run import render

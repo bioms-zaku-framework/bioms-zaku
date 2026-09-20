@@ -107,10 +107,10 @@ def test_init_never_designs_and_start_yes_writes_both_directions(tmp_path):
     from bioms_zaku.wizard import init
     from bioms_zaku.start import start
     flags = {"R": "resistencia_ohm", "Xc": "reatancia_ohm", "H": "estatura_cm", "W": "massa_kg", "target": "lmi_dxa", "control": "fmi_dxa", "independent": "yes", "design": "both"}
-    cfg = yaml.safe_load(init(str(ROOT / "examples/minimal_data.csv"), str(tmp_path / "d.yaml"), map_flags=flags, lang="pt", printer=lambda s: None).read_text(encoding="utf-8"))
+    cfg = yaml.safe_load(init(str(ROOT / "tests/minimal_data.csv"), str(tmp_path / "d.yaml"), map_flags=flags, lang="pt", printer=lambda s: None).read_text(encoding="utf-8"))
     assert "design" not in cfg and "pairing" not in cfg["data"]["columns"] and list(cfg["data"]["columns"]["targets"]) == ["lmi_dxa"]   # init: columns only (v1.0)
     calls = []; printed = []
-    p = start(str(ROOT / "examples/minimal_data.csv"), str(tmp_path / "s.yaml"), ask=None, map_flags={k: v for k, v in flags.items() if k != "design"} | {"lang": "pt", "strata": "sexo", "labels": "0=F,1=M"},
+    p = start(str(ROOT / "tests/minimal_data.csv"), str(tmp_path / "s.yaml"), ask=None, map_flags={k: v for k, v in flags.items() if k != "design"} | {"lang": "pt", "strata": "sexo", "labels": "0=F,1=M"},
               yes=True, printer=printed.append, runner=lambda q: calls.append(q))
     cfg = yaml.safe_load(p.read_text(encoding="utf-8"))
     assert "design" not in cfg and len(calls) == 1 and any("não é possível sugerir" in l for l in printed)   # 150 rows: blocked before any suggestion, even with --yes

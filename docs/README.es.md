@@ -91,42 +91,16 @@ agregar) y `diabetes` (70 por sexo, enriquecido en casos a propósito). Parámet
 ```bash
 bioms-zaku examples --copy             # ./zaku_exemplos (una carpeta existente nunca se toca: _2, _3 …)
 cd zaku_exemplos && bioms-zaku start zaku_exemplo.csv -o regresion.yaml
-bioms-zaku examples --all              # también los archivos técnicos (ejemplo sintético antiguo de 8000 filas, formato de hoja de cálculo, una muestra real de NHANES)
+bioms-zaku run regresion.yaml          # repite ese análisis sin preguntas (el flujo guiado escribió el YAML)
+bioms-zaku propose regresion.yaml      # agrega sus propios índices, una pregunta por vez (fórmula verificada en sus datos)
+bioms-zaku                             # bienvenida: los tres comandos, en su idioma (--lang es)
+ls zaku_out/regresion                  # algebra sigma pairs redundancy sigma_transfer audit utility combinations screening sensitivity threshold_sensitivity (.csv) manifest.json summary.md report.html figures/
 ```
 
 ```python
 from bioms_zaku.api import load_example
 df = load_example("zaku_exemplo")
 ```
-
-`examples/example_data.csv` — 8 000 filas **sintéticas** (4 000 por sexo). Son extracciones de una log-normal multivariada
-cuyo vector de medias y covarianza Σ de los logs se estimaron, por sexo, en una **muestra de conveniencia** de NHANES
-1999–2004 (adultos de 18 a 49 años, DXA medido, BIA a 50 kHz; n = 2 792 mujeres, 3 036 hombres). Ninguna fila real se
-reproduce; solo μ y Σ salieron de la fuente, y están publicados en `examples/example_data_params.json` (con la
-asimetría y la curtosis de los logs de la fuente, para que la aproximación log-normal pueda juzgarse), junto con el
-generador `tools/make_example_data.py` y su semilla. El archivo lleva R, Xc, estatura, masa corporal, edad, tres
-perímetros, los índices de masa magra/apendicular/grasa por DXA y una etiqueta binaria sintética declarada. Úselo para
-aprender el método, probar la herramienta y descomponer Σ a mano.
-
-```bash
-bioms-zaku run examples/example_quick.yaml      # 7 índices curados, preset quick, ~20 s
-bioms-zaku run examples/example_full.yaml       # los mismos datos, preset full (CV 5×50, B = 2000), para reportar
-bioms-zaku                                      # bienvenida: los tres comandos, en su idioma (--lang es)
-bioms-zaku propose analisis.yaml                # agrega sus propios índices, una pregunta por vez (fórmula verificada en sus datos)
-bioms-zaku run examples/minimal.yaml            # 150 filas, la ejecución más pequeña posible
-ls zaku_out/example_quick                       # algebra sigma pairs redundancy sigma_transfer audit utility combinations screening sensitivity threshold_sensitivity (.csv) manifest.json summary.md report.html figures/
-```
-
-`examples/nhanes_diabetes_400.csv` — 400 filas **reales** de los archivos de uso público de NHANES 1999–2004 (CDC,
-dominio público): adultos de 18 a 49 años con DXA medido y BIA a 50 kHz, casos completos, con la respuesta del
-cuestionario de diabetes (`diabetes_1Y_0N` = diagnosticada por un médico). Es una **muestra de conveniencia enriquecida
-en casos** — cada diabético diagnosticado con dato completo (139: 79 mujeres, 60 hombres) más un muestreo aleatorio con semilla de
-no diabéticos — por lo tanto NO es representativa de la prevalencia; existe para demostrar la auditoría de
-clasificación (≥ 20 por clase por sexo) y, con sus masas por DXA, la auditoría de regresión en datos reales.
-Procedencia, exclusiones, semilla y SHA-256: `examples/nhanes_diabetes_400_provenance.json`; generador:
-`tools/make_nhanes_example.py`. Los nombres de las columnas son los que el flujo guiado reconoce
-(`bioms-zaku start examples/nhanes_diabetes_400.csv`). Este es el único ejemplo con filas reales; los otros son
-sintéticos.
 
 Las masas en kg se derivan de los índices y la estatura: no las use como objetivo mientras la estatura esté mapeada
 (circularidad).
@@ -141,7 +115,7 @@ para pedir índices diseñados; una fila por persona (agregue antes las medidas 
 en esta versión).
 
 El archivo también lleva `lean_kg`, `alm_kg`, `fat_kg` (índice × estatura², derivados, sin nueva extracción) para que las
-masas absolutas puedan usarse como objetivo: `bioms-zaku run examples/example_kg.yaml`. Vea *Geometría* más abajo antes
+masas absolutas puedan usarse como objetivo. Vea *Geometría* más abajo antes
 de elegir.
 
 Idioma: `bioms-zaku --lang es init …` (o `language: es` en el YAML; el `init` lo pregunta primero). en, es, pt, it.
@@ -213,8 +187,8 @@ Una fórmula suya entra en la auditoría al lado de los métodos publicados como
 curada, nunca con precedencia sobre un método publicado, marcada ◇ en toda tabla y figura. Se acepta cualquier
 expresión en R, Xc, H, W (`+ - * / **`, `log`, `exp`, `sqrt`, `atan`, `max`, las constantes `pi` y `e`, y los
 estadísticos de muestra `mean`, `median`, `sd`, cuyos valores se registran por estrato y se señalan); un producto puro
-recibe un vector exacto, cualquier otra cosa un vector ajustado con su R². Los ocho índices BioMS del propio autor se
-entregan así en `examples/bioms_mota_proposed.yaml`. Se audita solo cuando está listada en `catalog.include`:
+recibe un vector exacto, cualquier otra cosa un vector ajustado con su R². Se audita solo cuando está listada en
+`catalog.include`:
 
 ```yaml
 catalog:
@@ -290,7 +264,7 @@ hash de la entrada y el SHA-256 de cada salida. Dos ejecuciones idénticas dan h
 `python tools/gate.py`, que corre los pasos que el flujo de CI corría: build, instalación limpia del wheel, la suite,
 una ejecución de ejemplo repetida y un usuario externo). Toda verificación de calidad corre desde el repositorio solo:
 lecciones calculadas a mano, identidades algebraicas exactas, casos sintéticos con respuesta construida y el ejemplo
-entregado, que es reproducible byte a byte desde sus parámetros publicados (`tools/make_example_data.py --from-params`).
+entregado, que es reproducible byte a byte desde sus parámetros publicados (`tools/make_zaku_example.py --from-params`).
 Ninguna prueba depende de datos fuera del repositorio.
 
 El contrato [`CONTRACTS.md`](../CONTRACTS.md) es el documento normativo detrás de todo esto: lo que la herramienta promete

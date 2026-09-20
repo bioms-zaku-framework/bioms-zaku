@@ -14,7 +14,7 @@ FLAGS = {"R": "resistencia_ohm", "Xc": "reatancia_ohm", "H": "estatura_cm", "W":
 def test_propose_validates_each_formula_and_writes_the_yaml(tmp_path):
     from bioms_zaku.propose import propose
     from bioms_zaku.check import check
-    out = init(str(ROOT / "examples/minimal_data.csv"), str(tmp_path / "a.yaml"), map_flags=FLAGS, lang="pt", printer=lambda s: None)
+    out = init(str(ROOT / "tests/minimal_data.csv"), str(tmp_path / "a.yaml"), map_flags=FLAGS, lang="pt", printer=lambda s: None)
     answers = iter(["meu 1",                                  # invalid id → asked again
                     "BioMS_1", "H²·Xc/R (Mota)", "lean_mass", "H**2 * Xc / Rr",     # unknown name → rejected, asked again
                     "H**2 * Xc / R", "yes",
@@ -33,7 +33,7 @@ def test_propose_validates_each_formula_and_writes_the_yaml(tmp_path):
     e = cfg["catalog"]["user_entries"][0]
     assert e["provenance"]["formula_source"] == "proposed" and e["authors"] == "Thalles Mota" and e["label"] == "H²·Xc/R (Mota)" and e["expr"] == "H**2 * Xc / R"
     assert out.read_text(encoding="utf-8").startswith("# BioMS Zaku configuration")             # init's header kept
-    cfg["data"]["path"] = str(ROOT / "examples/minimal_data.csv"); lines = []; check(cfg, printer=lines.append)
+    cfg["data"]["path"] = str(ROOT / "tests/minimal_data.csv"); lines = []; check(cfg, printer=lines.append)
     assert lines[-1].startswith("check: OK") and any("propostos" in l and "BioMS_1, BioMS_2" in l for l in lines)
     # nothing added → file untouched
     before = out.read_text(encoding="utf-8"); printed = []
@@ -44,7 +44,7 @@ def test_propose_validates_each_formula_and_writes_the_yaml(tmp_path):
 
 def test_cli_has_the_propose_command(capsys, monkeypatch, tmp_path):
     from bioms_zaku.cli import main
-    out = init(str(ROOT / "examples/minimal_data.csv"), str(tmp_path / "b.yaml"), map_flags=FLAGS, lang="en", printer=lambda s: None)
+    out = init(str(ROOT / "tests/minimal_data.csv"), str(tmp_path / "b.yaml"), map_flags=FLAGS, lang="en", printer=lambda s: None)
     answers = iter(["X1", "", "", "Xc / H_m", "yes", ""])
     monkeypatch.setattr("builtins.input", lambda prompt: next(answers))
     assert main(["--lang", "pt", "propose", str(out)]) == 0

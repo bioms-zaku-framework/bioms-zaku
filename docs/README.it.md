@@ -92,42 +92,16 @@ aggiungere) e `diabetes` (70 per sesso, arricchito in casi di proposito). Parame
 ```bash
 bioms-zaku examples --copy             # ./zaku_exemplos (una cartella esistente non è mai toccata: _2, _3 …)
 cd zaku_exemplos && bioms-zaku start zaku_exemplo.csv -o regressione.yaml
-bioms-zaku examples --all              # anche i file tecnici (vecchio esempio sintetico da 8000 righe, formato foglio di calcolo, un campione reale NHANES)
+bioms-zaku run regressione.yaml        # ripete quell'analisi senza domande (il flusso guidato ha scritto lo YAML)
+bioms-zaku propose regressione.yaml    # aggiunge i tuoi indici, una domanda per volta (formula verificata sui tuoi dati)
+bioms-zaku                             # benvenuto: i tre comandi, nella tua lingua (--lang it)
+ls zaku_out/regressione                # algebra sigma pairs redundancy sigma_transfer audit utility combinations screening sensitivity threshold_sensitivity (.csv) manifest.json summary.md report.html figures/
 ```
 
 ```python
 from bioms_zaku.api import load_example
 df = load_example("zaku_exemplo")
 ```
-
-`examples/example_data.csv` — 8 000 righe **sintetiche** (4 000 per sesso). Sono estrazioni da una log-normale
-multivariata il cui vettore di medie e la covarianza Σ dei logaritmi sono stati stimati, per sesso, su un **campione di
-convenienza** di NHANES 1999–2004 (adulti da 18 a 49 anni, DXA misurata, BIA a 50 kHz; n = 2 792 donne, 3 036 uomini).
-Nessuna riga reale è riprodotta; solo μ e Σ hanno lasciato la fonte, e sono pubblicati in
-`examples/example_data_params.json` (con l'asimmetria e la curtosi dei logaritmi della fonte, perché
-l'approssimazione log-normale possa essere giudicata), insieme al generatore `tools/make_example_data.py` e al suo
-seme. Il file porta R, Xc, statura, massa corporea, età, tre circonferenze, gli indici di massa magra/appendicolare/
-grassa da DXA e un'etichetta binaria sintetica dichiarata. Usalo per imparare il metodo, provare lo strumento e
-decomporre Σ a mano.
-
-```bash
-bioms-zaku run examples/example_quick.yaml      # 7 indici curati, preset quick, ~20 s
-bioms-zaku run examples/example_full.yaml       # gli stessi dati, preset full (CV 5×50, B = 2000), per riportare
-bioms-zaku                                      # benvenuto: i tre comandi, nella tua lingua (--lang it)
-bioms-zaku propose analisi.yaml                 # aggiunge i tuoi indici, una domanda per volta (formula verificata sui tuoi dati)
-bioms-zaku run examples/minimal.yaml            # 150 righe, l'esecuzione più piccola possibile
-ls zaku_out/example_quick                       # algebra sigma pairs redundancy sigma_transfer audit utility combinations screening sensitivity threshold_sensitivity (.csv) manifest.json summary.md report.html figures/
-```
-
-`examples/nhanes_diabetes_400.csv` — 400 righe **reali** dai file di uso pubblico di NHANES 1999–2004 (CDC, dominio
-pubblico): adulti da 18 a 49 anni con DXA misurata e BIA a 50 kHz, casi completi, con la risposta del questionario sul
-diabete (`diabetes_1Y_0N` = diagnosticato dal medico). È un **campione di convenienza arricchito in casi** — ogni
-diabetico diagnosticato con dato completo (139: 79 donne, 60 uomini) più un'estrazione con seme di non diabetici —
-quindi NON è rappresentativo della prevalenza; esiste per dimostrare l'audit di classificazione (≥ 20 per classe per
-sesso) e, con le sue masse da DXA, l'audit di regressione su dati reali. Provenienza, esclusioni, seme e SHA-256:
-`examples/nhanes_diabetes_400_provenance.json`; generatore: `tools/make_nhanes_example.py`. I nomi delle colonne sono
-quelli che il flusso guidato riconosce (`bioms-zaku start examples/nhanes_diabetes_400.csv`). Questo è l'unico esempio
-con righe reali; gli altri sono sintetici.
 
 Le masse in kg sono derivate dagli indici e dalla statura: non usarle come target mentre la statura è mappata
 (circolarità).
@@ -142,7 +116,7 @@ chiedere indici progettati; una riga per persona (aggrega prima le misure ripetu
 questa versione).
 
 Il file porta anche `lean_kg`, `alm_kg`, `fat_kg` (indice × statura², derivati, senza nuova estrazione) perché le masse
-assolute possano essere usate come target: `bioms-zaku run examples/example_kg.yaml`. Vedi *Geometria* più sotto prima
+assolute possano essere usate come target. Vedi *Geometria* più sotto prima
 di scegliere.
 
 Lingua: `bioms-zaku --lang it init …` (oppure `language: it` nel YAML; `init` lo chiede per primo). en, es, pt, it.
@@ -216,8 +190,8 @@ Una tua formula entra nell'audit accanto ai metodi pubblicati come voce **propos
 precedenza su un metodo pubblicato, contrassegnata ◇ in ogni tabella e figura. È accettata qualsiasi espressione in
 R, Xc, H, W (`+ - * / **`, `log`, `exp`, `sqrt`, `atan`, `max`, le costanti `pi` ed `e`, e le statistiche di campione
 `mean`, `median`, `sd`, i cui valori sono registrati per strato e segnalati); un prodotto puro riceve un vettore
-esatto, qualsiasi altra cosa un vettore stimato con il suo R². Gli otto indici BioMS dell'autore sono consegnati così
-in `examples/bioms_mota_proposed.yaml`. È sottoposta ad audit solo quando elencata in `catalog.include`:
+esatto, qualsiasi altra cosa un vettore stimato con il suo R². È sottoposta ad audit solo quando elencata in
+`catalog.include`:
 
 ```yaml
 catalog:
@@ -292,7 +266,7 @@ dell'input e lo SHA-256 di ogni output. Due esecuzioni identiche danno hash iden
 `python tools/gate.py`, che esegue i passi che il flusso di CI eseguiva: build, installazione pulita del wheel, la
 suite, un'esecuzione di esempio ripetuta e un utente esterno). Ogni verifica di qualità parte dal solo repository:
 lezioni calcolate a mano, identità algebriche esatte, casi sintetici con risposta costruita e l'esempio consegnato, che
-è riproducibile byte per byte dai suoi parametri pubblicati (`tools/make_example_data.py --from-params`). Nessun test
+è riproducibile byte per byte dai suoi parametri pubblicati (`tools/make_zaku_example.py --from-params`). Nessun test
 dipende da dati fuori dal repository.
 
 Il contratto [`CONTRACTS.md`](../CONTRACTS.md) è il documento normativo dietro tutto questo: ciò che lo strumento promette

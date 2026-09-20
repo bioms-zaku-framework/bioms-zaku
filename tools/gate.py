@@ -77,10 +77,10 @@ def main() -> int:
     zaku = venv / "bin" / "bioms-zaku"
     out = ROOT / "zaku_out" / "minimal"
     shutil.rmtree(out, ignore_errors=True)
-    run([str(zaku), "run", "examples/minimal.yaml"], cwd=ROOT)
+    run([str(zaku), "run", "tests/minimal.yaml"], cwd=ROOT)
     first = json.loads((out / "manifest.json").read_text())["outputs_sha256"]
     shutil.rmtree(out)
-    run([str(zaku), "run", "examples/minimal.yaml"], cwd=ROOT)
+    run([str(zaku), "run", "tests/minimal.yaml"], cwd=ROOT)
     if json.loads((out / "manifest.json").read_text())["outputs_sha256"] != first:
         raise SystemExit("[gate] FAILED: two identical runs gave different outputs")
     print(f"[gate]   deterministic: {len(first)} output files", flush=True)
@@ -88,7 +88,7 @@ def main() -> int:
     say(5, STEPS[4])
     with tempfile.TemporaryDirectory() as tmp:
         d = Path(tmp)
-        shutil.copy(ROOT / "examples/minimal_data.csv", d / "meus_dados.csv")
+        shutil.copy(ROOT / "tests/minimal_data.csv", d / "meus_dados.csv")
         run([str(zaku), "init", "meus_dados.csv", "-o", "estudo.yaml", "--map",
              "R=resistencia_ohm", "Xc=reatancia_ohm", "H=estatura_cm", "W=massa_kg", "target=lmi_dxa",
              "control=fmi_dxa", "covariates=massa_kg,estatura_cm", "strata=sexo", "id=seqn", "independent=yes"], cwd=d)

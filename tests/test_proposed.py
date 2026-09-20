@@ -14,8 +14,8 @@ SP = "/tmp/claude-1000/-home-omota-Desktop-redeeixo/d1d0f193-69c4-4a01-868d-6ecb
 
 
 def _cfg(tmp_path, name, entries, include, **over):
-    cfg = yaml.safe_load((ROOT / "examples/minimal.yaml").read_text(encoding="utf-8"))
-    cfg["data"]["path"] = str(ROOT / "examples/minimal_data.csv"); cfg["output"] = {"dir": str(tmp_path), "figures": over.pop("figures", False)}; cfg["run_name"] = name
+    cfg = yaml.safe_load((ROOT / "tests/minimal.yaml").read_text(encoding="utf-8"))
+    cfg["data"]["path"] = str(ROOT / "tests/minimal_data.csv"); cfg["output"] = {"dir": str(tmp_path), "figures": over.pop("figures", False)}; cfg["run_name"] = name
     cfg["catalog"] = {"include": include, "user_entries": entries}; cfg["audit"] = {"bootstrap": {"min_oob": 10}, "cv": {"folds": 3}}; cfg["language"] = over.pop("language", "pt")
     cfg.update(over)
     return cfg

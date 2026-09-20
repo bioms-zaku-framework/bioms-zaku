@@ -74,25 +74,16 @@ columns:
 | classe com < `min_per_class` (20) casos no estrato | auditoria daquele alvo não roda no estrato, aviso |
 | `id` repetido | erro, nomeando quantos ids têm mais de uma linha e pedindo agregação (§3.2) |
 
-### 1.4b Exemplo real embarcado (v1.2, decisão de 16/09/2026)
-`examples/nhanes_diabetes_400.csv`: 400 linhas REAIS dos arquivos públicos do NHANES 1999–2004 (CDC, domínio público; redistribuição
-permitida), adultos 18–49 com DXA medida e BIA 50 kHz, casos completos, mais a resposta do questionário de diabetes
-(`diabetes_1Y_0N`, diagnóstico médico). Amostra **enriquecida em casos** (todos os diabéticos com dados completos e sorteio de não
-diabéticos com semente): não representa prevalência; existe para demonstrar a auditoria de classificação (≥ 20 por classe por
-sexo) e a regressão em dados reais. Procedência, exclusões, semente e SHA-256 em `examples/nhanes_diabetes_400_provenance.json`;
-gerador `tools/make_nhanes_example.py` (determinístico). Até esta versão todos os exemplos eram sintéticos; este é o único com
-linhas reais, e continua valendo: nenhum resultado do framework depende dele (independência do piloto, §5).
-
 ### 1.4c Exemplos embarcados no pacote e saídas numeradas (v1.2, 16/09/2026)
 `examples/` entra na roda como `bioms_zaku/examples` (nada é baixado). API `bioms_zaku.datasets` (`list_examples`, `example_path`,
-`load_example`, `copy_examples`) e comando `bioms-zaku examples [--copy PASTA] [--name ...]`; cada exemplo é rotulado **sintético**
-ou **real**; a cópia nunca altera uma pasta existente (`_2`, `_3`, …) e reescreve `data.path` dos YAML para a própria pasta.
+`load_example`, `copy_examples`) e comando `bioms-zaku examples [--copy PASTA]`; o exemplo é rotulado **sintético**; a
+cópia nunca altera uma pasta existente (`_2`, `_3`, …).
 **Base de exemplo única (decisão de 17/09/2026):** `zaku_exemplo.csv`, sintética, 200 por sexo, sorteada de log-normais cujos μ e Σ
 foram estimados no NHANES 1999–2004 por célula sexo × diabetes (DIQ010 1 vs 2; n de origem 79/2696 mulheres, 60/2960 homens);
 70 com diabetes por sexo (enriquecida, declarado); `label_synthetic` depende só de ln FMI e ln idade (gabarito). Validação: num
 sorteio grande dos mesmos parâmetros, a matriz de correlação 12 × 12 (11 ln variáveis + diabetes) difere da do NHANES reponderado
 a 35 % em no máximo 0,013. Gerador `tools/make_zaku_example.py` e parâmetros publicados (reprodução byte a byte, testada).
-É o único arquivo copiado por padrão; os demais são técnicos (`--all`). **Saídas**: se `output.dir/run_name` já contém `manifest.json`, a execução vai para
+É a ÚNICA base do repositório desde 20/09/2026 (§6). **Saídas**: se `output.dir/run_name` já contém `manifest.json`, a execução vai para
 `run_name_2`, `_3`, …; `output.overwrite: true` substitui e o aviso fica no manifesto; `manifest.output_folder` registra a pasta.
 
 ### 1.5 Exemplo mínimo (sintético; `;` e `,`)
@@ -368,7 +359,7 @@ por estrato, lista dos índices com bandeira); marcador ‡ no scorecard e conto
 altura dos dois lados e reduz cos_Σ(t^, c^); NÃO remove o acoplamento por W (magro + gordo + osso = peso) e torna o alvo
 mais "tamanho", o que favorece índices de volume (H²/R). É escolha declarada do pesquisador; o framework aceita qualquer
 coluna e imprime a geometria de cada escolha. O exemplo embarcado passa a trazer `lean_kg`, `alm_kg` e `fat_kg`, derivados
-por índice × (H/100)² no gerador (colunas registradas em `example_data_params.json` como derivadas; sem sorteio novo).
+por índice × (H/100)² no gerador (colunas registradas em `zaku_exemplo_params.json` como derivadas; sem sorteio novo).
 
 **Justificativa.** A crítica "alvo e controle são aritmética sobre a medida de referência" é a que um revisor faria. A
 resposta científica não é negá-la nem tentar "desacoplar tudo": é medir o acoplamento com a álgebra que o método já usa
@@ -534,9 +525,13 @@ em dados que não podem sair (container em parceiros). Figuras das tabelas garan
      de escala e potência);
   3. dados sintéticos com resposta construída: índice específico × índice de tamanho, ganho por combinação só com
      informação nova, partição do desenho recupera o vetor gerador;
-  4. **exemplo embarcado com parâmetros publicados:** `examples/example_data.csv` é reproduzível byte a byte a partir de
-     `examples/example_data_params.json` (o sorteio usa μ e Σ ARREDONDADOS, exatamente os publicados); μ e Σ dos logs
-     batem dentro do erro amostral; a Σ publicada prevê a correlação observada entre índices monomiais (< 0,02);
+  4. **exemplo embarcado com parâmetros publicados:** `examples/zaku_exemplo.csv` é reproduzível byte a byte a partir de
+     `examples/zaku_exemplo_params.json`; nas linhas embarcadas a identidade ρ_log = aᵀΣb/√(aᵀΣa·bᵀΣb) é EXATA com a Σ
+     amostral (1e-12) — esse é o portão. Os μ e Σ PUBLICADOS são recuperados apenas dentro do erro amostral, e ele é
+     grande nesta base: 400 pessoas em quatro células de 70 e 130, de modo que a Σ publicada erra a correlação
+     observada em até 0,129 (medido em 20/09/2026; na base de 8000 linhas, retirada nessa data, o mesmo desvio era
+     < 0,02). Declarado aqui porque o teste correspondente é **verificação grosseira, não portão**: ele recusa uma Σ
+     errada, não uma Σ sutilmente errada;
   5. exemplos numéricos das fontes primárias no catálogo (`check_example`), conferidos na carga;
   6. determinismo dos exemplos (hashes iguais em duas execuções, verificado no CI).
 - **O motor anterior (scripts de 08–09/09/2026) foi PILOTO.** O artigo é produzido pelo framework; os CSVs do NHANES de
@@ -563,6 +558,22 @@ Esta seção registra o que mudou no que a ferramenta **promete**. O `CHANGELOG.
 mudou para quem **usa** a ferramenta, por versão lançada. Dois registros, duas perguntas; o trajeto do desenvolvimento
 fica no histórico do git.
 
+- **v1.0.0rc1 (20/09/2026)** — **uma base de exemplo, e só ela (decisão do Thalles).** O repositório carregava quatro
+  bases; o pacote instalado já carregava uma só desde 19/09. Saíram do repositório: o exemplo sintético de 8000 linhas
+  (`example_data.csv`, 677 KB) com seus parâmetros, gerador e os três YAML que só serviam a ele
+  (`example_quick`, `example_full`, `example_kg`); a amostra REAL do NHANES (`nhanes_diabetes_400.csv`, com proveniência
+  e gerador), cuja subseção §1.4b foi removida deste contrato; e `bioms_mota_proposed.yaml`, os oito índices do autor,
+  que são de outro projeto. Fica `zaku_exemplo.csv`, que cobre regressão, classificação com gabarito e diabetes.
+  Razão declarada: a base sintética descende do NHANES por μ e Σ, e dado real entra pelo artigo que cita a ferramenta,
+  não dentro dela. `minimal_data.csv`/`minimal.yaml` deixaram de ser exemplo e passaram a `tests/`, que é o que sempre
+  foram — suporte de 13 arquivos de teste e dos passos 4 e 5 do `tools/gate.py`. O comando `examples` perdeu `--all` e
+  `--name`, que só existiam para os arquivos técnicos, e `datasets.py` deixou de ter a noção de exemplo "principal" e
+  "técnico". **O que perdeu poder de discriminação — um TESTE, não a ferramenta:** o portão 4 de §5 passou de uma base de 8000 linhas para uma
+  de 400, e com isso a verificação "Σ publicada prevê a correlação observada" caiu de < 0,02 para 0,129 — é erro
+  amostral, não defeito, e o teste passou a declarar-se verificação grosseira em vez de portão; a parte que continua
+  sendo portão é a identidade exata (1e-12), que não depende do tamanho da base. O teste das estatísticas amostrais
+  perdeu seu veículo (os oito índices do autor) e passou a declarar um catálogo proposto mínimo dentro do próprio
+  teste, com as sete garantias intactas. Nada em `src/` mudou de comportamento: o método, os vereditos, os limiares e as garantias são os mesmos, e para quem instala pelo `pip` esta entrada não muda nada.
 - **v1.0.0rc1 (16–19/09/2026)** — *esta entrada dizia `v1.1.0-rc1`, numeração do documento que corria à frente da do pacote;
   corrigida em 19/09/2026 quando as duas linhas viraram uma só.*
 

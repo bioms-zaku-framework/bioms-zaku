@@ -85,7 +85,7 @@ def test_classification_only_references_are_listed_only_when_a_label_is_audited(
     from bioms_zaku.config import resolve
     import yaml
     from pathlib import Path
-    c = resolve(yaml.safe_load((Path(__file__).resolve().parents[1] / "examples/minimal.yaml").read_text(encoding="utf-8")))
+    c = resolve(yaml.safe_load((Path(__file__).resolve().parents[1] / "tests/minimal.yaml").read_text(encoding="utf-8")))
     cat = _load_catalog(c)
     h_reg = _references(c, reg, cat, {}); h_cls = _references(c, cls, cat, {})
     for key in R.CLASSIFICATION_ONLY:

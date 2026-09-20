@@ -86,41 +86,16 @@ acrescentar) e `diabetes` (70 por sexo, enriquecido em casos de propósito). Par
 ```bash
 bioms-zaku examples --copy             # ./zaku_exemplos (uma pasta existente nunca é tocada: _2, _3 …)
 cd zaku_exemplos && bioms-zaku start zaku_exemplo.csv -o regressao.yaml
-bioms-zaku examples --all              # também os arquivos técnicos (exemplo sintético antigo de 8000 linhas, formato de planilha, uma amostra real do NHANES)
+bioms-zaku run regressao.yaml          # repete essa análise sem perguntas (o fluxo guiado escreveu o YAML)
+bioms-zaku propose regressao.yaml      # acrescenta índices próprios, uma pergunta por vez (fórmula verificada nos seus dados)
+bioms-zaku                             # boas-vindas: os três comandos, no seu idioma (--lang pt)
+ls zaku_out/regressao                  # algebra sigma pairs redundancy sigma_transfer audit utility combinations screening sensitivity threshold_sensitivity (.csv) manifest.json summary.md report.html figures/
 ```
 
 ```python
 from bioms_zaku.api import load_example
 df = load_example("zaku_exemplo")
 ```
-
-`examples/example_data.csv` — 8 000 linhas **sintéticas** (4 000 por sexo). São sorteios de uma log-normal
-multivariada cujo vetor de médias e covariância Σ dos logs foram estimados, por sexo, numa **amostra de conveniência**
-do NHANES 1999–2004 (adultos de 18 a 49 anos, DXA medido, BIA a 50 kHz; n = 2 792 mulheres, 3 036 homens). Nenhuma
-linha real é reproduzida; só μ e Σ saíram da fonte, e estão publicados em `examples/example_data_params.json` (com a
-assimetria e a curtose dos logs da fonte, para que a aproximação log-normal possa ser julgada), junto do gerador
-`tools/make_example_data.py` e da sua semente. O arquivo traz R, Xc, estatura, massa corporal, idade, três perímetros,
-os índices de massa magra/apendicular/gorda por DXA e um rótulo binário sintético declarado. Use-o para aprender o
-método, testar a ferramenta e decompor Σ à mão.
-
-```bash
-bioms-zaku run examples/example_quick.yaml      # 7 índices curados, preset quick, ~20 s
-bioms-zaku run examples/example_full.yaml       # os mesmos dados, preset full (CV 5×50, B = 2000), para reportar
-bioms-zaku                                      # boas-vindas: os três comandos, na sua língua (--lang pt)
-bioms-zaku propose analise.yaml                 # acrescenta os seus índices, uma pergunta por vez (fórmula conferida nos seus dados)
-bioms-zaku run examples/minimal.yaml            # 150 linhas, a menor execução possível
-ls zaku_out/example_quick                       # algebra sigma pairs redundancy sigma_transfer audit utility combinations screening sensitivity threshold_sensitivity (.csv) manifest.json summary.md report.html figures/
-```
-
-`examples/nhanes_diabetes_400.csv` — 400 linhas **reais** dos arquivos de uso público do NHANES 1999–2004 (CDC,
-domínio público): adultos de 18 a 49 anos com DXA medido e BIA a 50 kHz, casos completos, com a resposta do
-questionário de diabetes (`diabetes_1Y_0N` = diagnosticada por médico). É uma **amostra de conveniência enriquecida em
-casos** — todo diabético diagnosticado com dado completo (139: 79 mulheres, 60 homens) mais um sorteio com semente de
-não diabéticos — portanto NÃO é representativa da prevalência; existe para demonstrar a auditoria de classificação
-(≥ 20 por classe por sexo) e, com as massas por DXA, a auditoria de regressão em dado real. Procedência, exclusões,
-semente e SHA-256: `examples/nhanes_diabetes_400_provenance.json`; gerador: `tools/make_nhanes_example.py`. Os nomes das
-colunas são os que o fluxo guiado reconhece (`bioms-zaku start examples/nhanes_diabetes_400.csv`). Este é o único
-exemplo com linhas reais; os outros são sintéticos.
 
 As massas em kg são derivadas dos índices e da estatura: não as use como alvo enquanto a estatura estiver mapeada
 (circularidade).
@@ -134,7 +109,7 @@ e ~32 o relatório sinaliza *eventos por variável < 10* e o veredito é explora
 índices desenhados; uma linha por pessoa (agregue medidas repetidas antes — ids repetidos são recusados nesta versão).
 
 O arquivo também traz `lean_kg`, `alm_kg`, `fat_kg` (índice × estatura², derivados, sem novo sorteio) para que massas
-absolutas possam ser usadas como alvo: `bioms-zaku run examples/example_kg.yaml`. Veja *Geometria* abaixo antes de
+absolutas possam ser usadas como alvo. Veja *Geometria* abaixo antes de
 escolher.
 
 Idioma: `bioms-zaku --lang pt init …` (ou `language: pt` no YAML; o `init` pergunta isso primeiro). en, es, pt, it.
@@ -206,8 +181,7 @@ Uma fórmula sua entra na auditoria ao lado dos métodos publicados como entrada
 nunca com precedência sobre um método publicado, marcada ◇ em toda tabela e figura. Qualquer expressão em R, Xc, H, W é
 aceita (`+ - * / **`, `log`, `exp`, `sqrt`, `atan`, `max`, as constantes `pi` e `e`, e as estatísticas de amostra
 `mean`, `median`, `sd`, cujos valores são registrados por estrato e sinalizados); um produto puro recebe vetor exato,
-qualquer outra coisa recebe vetor ajustado com o seu R². Os oito índices BioMS do próprio autor são entregues assim em
-`examples/bioms_mota_proposed.yaml`. Ela só é auditada quando listada em `catalog.include`:
+qualquer outra coisa recebe vetor ajustado com o seu R². Ela só é auditada quando listada em `catalog.include`:
 
 ```yaml
 catalog:
@@ -283,7 +257,7 @@ entrada e o SHA-256 de cada saída. Duas execuções idênticas dão hashes idê
 execução de exemplo repetida e um usuário externo). Toda verificação de qualidade roda a partir do repositório sozinho:
 lições calculadas à mão, identidades algébricas exatas, casos sintéticos com resposta construída e o exemplo entregue,
 que é reproduzível byte a byte a partir dos seus parâmetros publicados
-(`tools/make_example_data.py --from-params`). Nenhum teste depende de dado fora do repositório.
+(`tools/make_zaku_example.py --from-params`). Nenhum teste depende de dado fora do repositório.
 
 O contrato [`CONTRATOS.md`](../CONTRATOS.md) é o documento normativo por trás de tudo isso: o que a ferramenta promete
 para entrada, catálogo, configuração, saídas e reprodutibilidade — cinco contratos, cada um fechando com a sua

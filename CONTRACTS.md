@@ -79,21 +79,11 @@ columns:
 | a class with fewer than `min_per_class` (20) cases in the stratum | the audit of that target does not run in the stratum, with a warning |
 | repeated `id` | error, naming how many ids have more than one row and asking for aggregation (§3.2) |
 
-### 1.4b Real bundled example (v1.2, decision of 2026-09-16)
-`examples/nhanes_diabetes_400.csv`: 400 REAL rows from the NHANES 1999–2004 public-use files (CDC, public domain;
-redistribution permitted), adults 18–49 with measured DXA and 50 kHz BIA, complete cases, plus the answer of the
-diabetes questionnaire (`diabetes_1Y_0N`, doctor-diagnosed). A **case-enriched** sample (every diabetic with complete
-data plus a seeded draw of non-diabetics): it does not represent prevalence; it exists to demonstrate the
-classification audit (≥ 20 per class per sex) and regression on real data. Provenance, exclusions, seed and SHA-256 in
-`examples/nhanes_diabetes_400_provenance.json`; generator `tools/make_nhanes_example.py` (deterministic). Until this
-version every example was synthetic; this is the only one with real rows, and the rule still holds: no result of the
-framework depends on it (independence from the pilot, §5).
-
 ### 1.4c Examples bundled in the package, and numbered outputs (v1.2, 2026-09-16)
 `examples/` goes into the wheel as `bioms_zaku/examples` (nothing is downloaded). API `bioms_zaku.datasets`
 (`list_examples`, `example_path`, `load_example`, `copy_examples`) and the command
-`bioms-zaku examples [--copy FOLDER] [--name ...]`; each example is labeled **synthetic** or **real**; the copy never
-touches an existing folder (`_2`, `_3`, …) and rewrites the `data.path` of the YAML files to the folder itself.
+`bioms-zaku examples [--copy FOLDER]`; the example is labeled **synthetic**; the copy never touches an existing folder
+(`_2`, `_3`, …).
 **One example base (decision of 2026-09-17):** `zaku_exemplo.csv`, synthetic, 200 per sex, drawn from log-normals whose
 μ and Σ were estimated in NHANES 1999–2004 per cell sex × diabetes (DIQ010 1 vs 2; source n 79/2696 women, 60/2960
 men); 70 with diabetes per sex (enriched, declared); `label_synthetic` depends only on ln FMI and ln age (a known
@@ -394,7 +384,7 @@ removes stature from both sides and reduces cos_Σ(t^, c^); it does NOT remove t
 bone = body mass) and it makes the target more "size", which favors volume indices (H²/R). It is a declared choice of
 the researcher; the framework accepts any column and prints the geometry of each choice. The bundled example therefore
 carries `lean_kg`, `alm_kg` and `fat_kg`, derived as index × (H/100)² in the generator (columns recorded in
-`example_data_params.json` as derived; no new draw).
+`zaku_exemplo_params.json` as derived; no new draw).
 
 **Justification.** The criticism "target and control are arithmetic on the reference measurement" is the one a reviewer
 would make. The scientific answer is neither to deny it nor to try to "decouple everything": it is to measure the
@@ -600,10 +590,13 @@ the only assumption of the algebraic part. Publishing only aggregates is what al
      scale and power);
   3. synthetic data with a constructed answer: a specific index × a size index, a combination gain only with new
      information, the design partition recovers the generating vector;
-  4. **the bundled example with published parameters:** `examples/example_data.csv` is reproducible byte for byte from
-     `examples/example_data_params.json` (the draw uses the ROUNDED μ and Σ, exactly the published ones); the μ and Σ of
-     the logs match within sampling error; the published Σ predicts the observed correlation between monomial indices
-     (< 0.02);
+  4. **the bundled example with published parameters:** `examples/zaku_exemplo.csv` is reproducible byte for byte from
+     `examples/zaku_exemplo_params.json`; on the shipped rows the identity ρ_log = aᵀΣb/√(aᵀΣa·bᵀΣb) is EXACT with the
+     sample Σ (1e-12) — that is the gate. The PUBLISHED μ and Σ are recovered only within sampling error, and that
+     error is large on this base: 400 people in four cells of 70 and 130, so the published Σ misses the observed
+     correlation by up to 0.129 (measured 2026-09-20; on the 8000-row base retired that day the same deviation was
+     < 0.02). Stated here because the corresponding test is a **smoke check, not a gate**: it refuses a Σ that is
+     wrong, not a Σ that is subtly wrong;
   5. the numerical examples of the primary sources in the catalog (`check_example`), checked at load;
   6. determinism of the examples (equal hashes in two runs; checked by `tools/gate.py`, which runs the steps the
      continuous-integration workflow ran — the workflow was switched off on 2026-09-18, see

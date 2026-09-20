@@ -2,7 +2,7 @@
 # ES/PT: exemplo mínimo (150 linhas sintéticas; preset quick) — demonstra o fluxo em segundos. Não é para reportar.
 run_name: minimal
 data:
-  path: examples/minimal_data.csv
+  path: tests/minimal_data.csv
   columns:
     variables: {R: resistencia_ohm, Xc: reatancia_ohm, H: estatura_cm, W: massa_kg}
     units: {H: cm, W: kg}

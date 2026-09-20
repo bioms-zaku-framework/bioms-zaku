@@ -65,5 +65,5 @@ def banner(*, full: bool = True, colour: bool | None = None) -> str:
     lines = [""] + art + ["", "  " + b(f"BioMS Zaku {__version__}") + " · " + t("bn.tagline"), "  " + d(t("d.name")), ""]
     if full:
         lines += ["  " + l for l in _steps()]
-        lines += ["  " + d(t("bn.expert")), "  " + d(t("bn.langs")) + "       " + d(t("bn.example", cmd="bioms-zaku run examples/example_quick.yaml")), ""]
+        lines += ["  " + d(t("bn.expert")), "  " + d(t("bn.langs")) + "       " + d(t("bn.example", cmd="bioms-zaku examples --copy")), ""]
     return "\n".join(lines)

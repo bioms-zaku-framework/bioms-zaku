@@ -1,5 +1,5 @@
 """
-EN: Generate the bundled SYNTHETIC example (examples/minimal_data.csv): 150 rows, deterministic (seed 2026). Values are
+EN: Generate the bundled SYNTHETIC example (tests/minimal_data.csv): 150 rows, deterministic (seed 2026). Values are
     plausible for adults but do not come from any person. For demonstrating the pipeline only.
 ES/PT: gera o exemplo SINTÉTICO embarcado (150 linhas, semente 2026). Só para demonstrar o fluxo.
 """

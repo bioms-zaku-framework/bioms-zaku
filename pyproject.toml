@@ -46,10 +46,9 @@ path = "src/bioms_zaku/__init__.py"   # EN: single source of the version
 packages = ["src/bioms_zaku"]
 
 [tool.hatch.build.targets.wheel.force-include]
-# EN: the installed package carries ONE example base (the decision of 2026-09-17) plus its parameters and the notebook —
-#     34 + 11 + 63 KB. The technical files (the older 8000-row example, the spreadsheet-format one, the real NHANES
-#     sample and the YAMLs) stay in the repository and in the sdist: shipping them added 700 KB to every installation
-#     for data the researcher never uses (2026-09-19).
+# EN: the package carries ONE example base (the decision of 2026-09-17) plus its parameters and the notebook —
+#     34 + 11 + 63 KB. Since 2026-09-20 it is the only base anywhere: the older 8000-row example, the
+#     spreadsheet-format one and the real NHANES sample left the repository, and the test fixture moved to tests/.
 "examples/zaku_exemplo.csv" = "bioms_zaku/examples/zaku_exemplo.csv"
 "examples/zaku_exemplo_params.json" = "bioms_zaku/examples/zaku_exemplo_params.json"
 "examples/zaku_exemplo.ipynb" = "bioms_zaku/examples/zaku_exemplo.ipynb"

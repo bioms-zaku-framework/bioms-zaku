@@ -60,7 +60,7 @@ def test_check_refuses_a_class_label_that_is_constant_or_too_small_inside_a_stra
     df = pd.DataFrame(dict(id=np.arange(n), sexo=sexo, H=rng.normal(170, 8, n), W=rng.normal(75, 12, n), R=rng.normal(500, 60, n), Xc=rng.normal(55, 8, n),
                            lean=rng.normal(50, 8, n), label=rng.integers(0, 2, n)))
     p = tmp_path / "d.csv"; df.to_csv(p, index=False)
-    cfg = yaml.safe_load((ROOT / "examples/minimal.yaml").read_text(encoding="utf-8"))
+    cfg = yaml.safe_load((ROOT / "tests/minimal.yaml").read_text(encoding="utf-8"))
     cfg["data"]["path"] = str(p); cfg["data"]["sep"] = ","; cfg["data"]["decimal"] = "."; cfg["output"]["dir"] = str(tmp_path); cfg["run_name"] = "chk"
     cfg["data"]["columns"] = {"variables": {"R": "R", "Xc": "Xc", "H": "H", "W": "W"}, "units": {"H": "cm", "W": "kg"},
                               "targets": {"label": "label"}, "controls": {"sexo": "sexo"}, "id": "id"}
@@ -85,7 +85,7 @@ def test_a_class_label_is_never_designed_and_suggestions_say_so(tmp_path):
     df = pd.DataFrame(dict(id=np.arange(n), H=rng.normal(170, 8, n), W=rng.normal(75, 12, n), R=rng.normal(500, 60, n), Xc=rng.normal(55, 8, n),
                            fat=rng.normal(20, 6, n).clip(5), label=rng.integers(0, 2, n)))
     p = tmp_path / "d.csv"; df.to_csv(p, index=False)
-    cfg = yaml.safe_load((ROOT / "examples/minimal.yaml").read_text(encoding="utf-8"))
+    cfg = yaml.safe_load((ROOT / "tests/minimal.yaml").read_text(encoding="utf-8"))
     cfg["data"]["path"] = str(p); cfg["data"]["sep"] = ","; cfg["data"]["decimal"] = "."; cfg["output"]["dir"] = str(tmp_path); cfg["run_name"] = "dc"
     cfg["data"]["columns"] = {"variables": {"R": "R", "Xc": "Xc", "H": "H", "W": "W"}, "units": {"H": "cm", "W": "kg"},
                               "targets": {"label": "label"}, "controls": {"label2": "label"}, "id": "id"}
@@ -131,7 +131,7 @@ def test_events_per_variable_is_computed_per_model_flagged_below_ten_and_never_a
     ROOT = Path(__file__).resolve().parents[1]
     df = pd.DataFrame(dict(id=np.arange(n), H=rng.normal(170, 8, n), W=rng.normal(75, 12, n), R=rng.normal(500, 60, n), Xc=rng.normal(55, 8, n), label=y, fat=rng.normal(20, 5, n).clip(5)))
     p = tmp_path / "d.csv"; df.to_csv(p, index=False)
-    cfg = yaml.safe_load((ROOT / "examples/minimal.yaml").read_text(encoding="utf-8"))
+    cfg = yaml.safe_load((ROOT / "tests/minimal.yaml").read_text(encoding="utf-8"))
     cfg["data"]["path"] = str(p); cfg["data"]["sep"] = ","; cfg["data"]["decimal"] = "."; cfg["output"]["dir"] = str(tmp_path); cfg["run_name"] = "epv"
     cfg["data"]["columns"] = {"variables": {"R": "R", "Xc": "Xc", "H": "H", "W": "W"}, "units": {"H": "cm", "W": "kg"}, "targets": {"label": "label"}, "controls": {"fat": "fat"}, "covariates": ["W", "H"], "id": "id"}
     cfg["strata"] = None

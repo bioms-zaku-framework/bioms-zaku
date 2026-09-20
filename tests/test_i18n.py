@@ -51,10 +51,10 @@ def test_language_flows_from_init_to_check_run_summary_and_figures(tmp_path):
     flags = {"R": "resistencia_ohm", "Xc": "reatancia_ohm", "H": "estatura_cm", "W": "massa_kg", "target": "lmi_dxa", "control": "fmi_dxa",
              "covariates": "massa_kg,estatura_cm", "strata": "sexo", "id": "seqn", "independent": "yes"}
     printed = []
-    out = init(str(ROOT / "examples/minimal_data.csv"), str(tmp_path / "pt.yaml"), map_flags=flags, lang="pt", printer=printed.append)
+    out = init(str(ROOT / "tests/minimal_data.csv"), str(tmp_path / "pt.yaml"), map_flags=flags, lang="pt", printer=printed.append)
     assert any(l.startswith("mapeamento:") for l in printed) and any("gravado" in l for l in printed)
     cfg = yaml.safe_load(out.read_text(encoding="utf-8")); assert cfg["language"] == "pt"
-    cfg["data"]["path"] = str(ROOT / "examples/minimal_data.csv"); cfg["output"] = {"dir": str(tmp_path), "figures": True}; cfg["preset"] = "quick"
+    cfg["data"]["path"] = str(ROOT / "tests/minimal_data.csv"); cfg["output"] = {"dir": str(tmp_path), "figures": True}; cfg["preset"] = "quick"
     cfg["catalog"] = {"include": ["Lukaski1985_II", "Piccoli1994_RH"]}; cfg["audit"] = {"bootstrap": {"min_oob": 10}, "cv": {"folds": 3}}
     (tmp_path / "pt.yaml").write_text(yaml.safe_dump(cfg))
     lines = []; check(str(tmp_path / "pt.yaml"), printer=lines.append)
@@ -70,7 +70,7 @@ def test_language_flows_from_init_to_check_run_summary_and_figures(tmp_path):
 
 
 def test_cli_lang_flag_overrides_yaml(tmp_path):
-    cfg = yaml.safe_load((ROOT / "examples/minimal.yaml").read_text(encoding="utf-8")); cfg["data"]["path"] = str(ROOT / "examples/minimal_data.csv"); cfg["language"] = "es"
+    cfg = yaml.safe_load((ROOT / "tests/minimal.yaml").read_text(encoding="utf-8")); cfg["data"]["path"] = str(ROOT / "tests/minimal_data.csv"); cfg["language"] = "es"
     p = tmp_path / "c.yaml"; p.write_text(yaml.safe_dump(cfg))
     r = subprocess.run([sys.executable, "-m", "bioms_zaku.cli", "check", str(p)], capture_output=True, text=True, env={"PYTHONPATH": str(ROOT / "src"), "PATH": ""})
     assert "check: OK — listo para ejecutar" in r.stdout
@@ -81,8 +81,8 @@ def test_cli_lang_flag_overrides_yaml(tmp_path):
 def test_html_report_has_a_caption_for_every_figure_and_no_english_leak_in_pt(tmp_path):
     # EN: user-simulation findings — the target_control caption was empty (name cut at the first '_'); '‡ coupled' was hard-coded English.
     from bioms_zaku.run import run
-    cfg = yaml.safe_load((ROOT / "examples/minimal.yaml").read_text(encoding="utf-8"))
-    cfg["data"]["path"] = str(ROOT / "examples/minimal_data.csv"); cfg["output"] = {"dir": str(tmp_path), "figures": True}; cfg["language"] = "pt"
+    cfg = yaml.safe_load((ROOT / "tests/minimal.yaml").read_text(encoding="utf-8"))
+    cfg["data"]["path"] = str(ROOT / "tests/minimal_data.csv"); cfg["output"] = {"dir": str(tmp_path), "figures": True}; cfg["language"] = "pt"
     cfg["catalog"] = {"include": ["Lukaski1985_II", "Piccoli1994_RH", "Baumgartner1988_PhA"]}; cfg["audit"] = {"bootstrap": {"min_oob": 10}, "cv": {"folds": 3}}
     res = run(cfg, printer=lambda s: None)
     html = (res["out_dir"] / "report.html").read_text(encoding="utf-8")
@@ -106,8 +106,8 @@ def test_captions_are_complete_in_every_language():
 def test_render_changes_language_without_recomputing(tmp_path):
     import hashlib, subprocess, sys
     from bioms_zaku.run import run, render
-    cfg = yaml.safe_load((ROOT / "examples/minimal.yaml").read_text(encoding="utf-8"))
-    cfg["data"]["path"] = str(ROOT / "examples/minimal_data.csv"); cfg["output"] = {"dir": str(tmp_path), "figures": True}; cfg["language"] = "pt"
+    cfg = yaml.safe_load((ROOT / "tests/minimal.yaml").read_text(encoding="utf-8"))
+    cfg["data"]["path"] = str(ROOT / "tests/minimal_data.csv"); cfg["output"] = {"dir": str(tmp_path), "figures": True}; cfg["language"] = "pt"
     cfg["catalog"] = {"include": ["Lukaski1985_II", "Piccoli1994_RH", "Baumgartner1988_PhA"]}; cfg["audit"] = {"bootstrap": {"min_oob": 10}, "cv": {"folds": 3}}
     res = run(cfg, printer=lambda s: None); out = res["out_dir"]
     before = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in out.glob("*.csv")}; man_before = (out / "manifest.json").read_bytes()
@@ -125,8 +125,8 @@ def test_render_changes_language_without_recomputing(tmp_path):
 
 def test_render_formats_thresholds_cleanly_and_keeps_table_order(tmp_path):
     from bioms_zaku.run import run, render
-    cfg = yaml.safe_load((ROOT / "examples/minimal.yaml").read_text(encoding="utf-8"))
-    cfg["data"]["path"] = str(ROOT / "examples/minimal_data.csv"); cfg["output"] = {"dir": str(tmp_path), "figures": False}; cfg["language"] = "en"
+    cfg = yaml.safe_load((ROOT / "tests/minimal.yaml").read_text(encoding="utf-8"))
+    cfg["data"]["path"] = str(ROOT / "tests/minimal_data.csv"); cfg["output"] = {"dir": str(tmp_path), "figures": False}; cfg["language"] = "en"
     cfg["catalog"] = {"include": ["Lukaski1985_II", "Piccoli1994_RH", "Baumgartner1988_PhA"]}; cfg["audit"] = {"bootstrap": {"min_oob": 10}, "cv": {"folds": 3}}
     res = run(cfg, printer=lambda s: None); out = res["out_dir"]
     s1 = (out / "summary.md").read_text(encoding="utf-8")

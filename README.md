@@ -74,32 +74,6 @@ Python ≥ 3.10. Dependencies: numpy, pandas, scipy, scikit-learn, pyyaml (+ mat
 
 ## Example data
 
-`examples/example_data.csv` — 8 000 **synthetic** rows (4 000 per sex). They are draws from a multivariate log-normal
-whose mean vector and log-covariance Σ were estimated, per sex, from a **convenience sample** of NHANES 1999–2004 (adults
-18–49 y, measured DXA, 50 kHz BIA; n = 2 792 women, 3 036 men). No real row is reproduced; only μ and Σ left the source, and
-they are published in `examples/example_data_params.json` (with the skew and kurtosis of the source logs, so the
-log-normal approximation can be judged) together with the generator `tools/make_example_data.py` and its seed. The
-file carries R, Xc, height, body mass, age, three circumferences, DXA lean/appendicular/fat indices and one declared
-synthetic binary label. Use it to learn the method, to test the tool, and to decompose Σ by hand.
-
-```bash
-bioms-zaku run examples/example_quick.yaml      # 7 curated indices, preset quick, ~20 s
-bioms-zaku run examples/example_full.yaml       # same data, preset full (5×50 CV, B = 2000), for reporting
-bioms-zaku                                      # welcome: the three commands, in your language (--lang pt)
-bioms-zaku propose analysis.yaml                 # add your own indices, one question at a time (formula checked on your data)
-bioms-zaku run examples/minimal.yaml            # 150 rows, the smallest possible run
-ls zaku_out/example_quick                       # algebra sigma pairs redundancy sigma_transfer audit utility combinations screening sensitivity threshold_sensitivity (.csv) manifest.json summary.md report.html figures/
-```
-
-`examples/nhanes_diabetes_400.csv` — 400 **real** rows from the NHANES 1999–2004 public-use files (CDC, public domain):
-adults 18–49 y with measured DXA and 50 kHz BIA, complete cases, with the diabetes questionnaire answer
-(`diabetes_1Y_0N` = doctor-diagnosed). It is a **case-enriched convenience sample** — every diagnosed diabetic with complete
-data (139: 79 women, 60 men) plus a seeded random draw of non-diabetics — so it is NOT
-representative of prevalence; it exists to demonstrate the classification audit (≥ 20 per class per sex) and, with its DXA
-masses, the regression audit on real data. Provenance, exclusions, seed and SHA-256: `examples/nhanes_diabetes_400_provenance.json`;
-generator: `tools/make_nhanes_example.py`. Column names are the ones the guided flow recognizes (`bioms-zaku start
-examples/nhanes_diabetes_400.csv`). This is the only example with real rows; the others are synthetic.
-
 **The example data** (nothing is downloaded; it ships with the package): ONE synthetic base, `zaku_exemplo.csv`, 400 rows
 (200 per sex), drawn from a log-normal whose means and covariances were estimated in NHANES 1999–2004 separately for each
 cell sex × doctor-diagnosed diabetes — so the association of diabetes with every variable is kept. It serves every use:
@@ -110,7 +84,10 @@ generator: `examples/zaku_exemplo_params.json`, `tools/make_zaku_example.py` (re
 ```bash
 bioms-zaku examples --copy             # ./zaku_exemplos (an existing folder is never touched: _2, _3 …)
 cd zaku_exemplos && bioms-zaku start zaku_exemplo.csv -o regression.yaml
-bioms-zaku examples --all              # also the technical files (older 8000-row synthetic example, spreadsheet format, a real NHANES sample)
+bioms-zaku run regression.yaml         # repeat that analysis without questions (the guided flow wrote the YAML)
+bioms-zaku propose regression.yaml     # add your own indices, one question at a time (formula checked on your data)
+bioms-zaku                             # welcome: the three commands, in your language (--lang pt)
+ls zaku_out/regression                 # algebra sigma pairs redundancy sigma_transfer audit utility combinations screening sensitivity threshold_sensitivity (.csv) manifest.json summary.md report.html figures/
 ```
 
 ```python
@@ -128,7 +105,7 @@ and ~32 the report flags *events per variable < 10* and the verdict is explorato
 indices; one row per person (aggregate repeated measurements first — repeated ids are refused in this version).
 
 The file also carries `lean_kg`, `alm_kg`, `fat_kg` (index × height², derived, no new draw) so that absolute masses can be
-used as targets: `bioms-zaku run examples/example_kg.yaml`. See *Geometry* below before choosing.
+used as targets. See *Geometry* below before choosing.
 
 Language: `bioms-zaku --lang pt init …` (or `language: pt` in the YAML; `init` asks it first). en, es, pt, it.
 Prompts, `check`/`run` messages, `summary.md`, report headings and figures follow it; CSV column names and YAML keys stay in English.
@@ -192,7 +169,6 @@ A formula of yours enters the audit beside the published methods as a **proposed
 precedence over a published method, marked ◇ in every table and figure. Any expression in R, Xc, H, W is accepted
 (`+ - * / **`, `log`, `exp`, `sqrt`, `atan`, `max`, the constants `pi` and `e`, and the sample statistics `mean`, `median`, `sd`, whose
 values are recorded per stratum and flagged); a pure product receives an exact vector, anything else a fitted vector with its R².
-The author's own eight BioMS indices are shipped this way in `examples/bioms_mota_proposed.yaml`.
 It is audited only when listed in `catalog.include`:
 
 ```yaml
@@ -263,7 +239,7 @@ combinations) tagged by result block, and the software executed. Every record co
 output. Two identical runs give identical hashes (checked by `python tools/gate.py`, which runs the steps the CI
 workflow used to run: build, a clean install of the wheel, the suite, a repeated example run and an external user). Every quality check runs from the repository alone:
 hand-calculated lessons, exact algebraic identities, synthetic cases with a constructed answer, and the shipped example,
-which is reproducible byte for byte from its published parameters (`tools/make_example_data.py --from-params`). No test
+which is reproducible byte for byte from its published parameters (`tools/make_zaku_example.py --from-params`). No test
 depends on data outside the repository.
 
 The contract [`CONTRACTS.md`](CONTRACTS.md) is the normative document behind all of this: what the tool promises for input, catalog, configuration, outputs and reproducibility — five contracts, each closing with its justification.

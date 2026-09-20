@@ -11,7 +11,7 @@ from bioms_zaku.i18n import set_language
 from bioms_zaku.start import Q, Screen, start
 
 ROOT = Path(__file__).resolve().parents[1]
-CSV = ROOT / "examples/minimal_data.csv"
+CSV = ROOT / "tests/minimal_data.csv"
 FLAGS = {"R": "resistencia_ohm", "Xc": "reatancia_ohm", "H": "estatura_cm", "W": "massa_kg", "target": "lmi_dxa", "control": "fmi_dxa",
          "strata": "sexo", "labels": "0=F,1=M", "id": "seqn", "independent": "yes", "lang": "pt", "researcher": "Thalles Mota"}
 # EN: the interactive answers for screens 1–2 (Enter = accept suggestion), then "correct a line?" → Enter
