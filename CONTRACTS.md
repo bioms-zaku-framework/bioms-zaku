@@ -43,8 +43,8 @@ Exactly one valid → it is used and written to the manifest; zero or more than 
 |---|---|---|
 | `variables` | yes, ≥ 2 | numeric, strictly positive (logarithm). For BIA: `R<f>`, `Xc<f>`, `H`, `W`; `<f>` = declared kHz; `R`/`Xc` without a suffix = 50 kHz |
 | `units` | yes for `H`, `W` | `{H: cm|m, W: kg|g}`; only these conversions |
-| `targets` | yes | continuous (regression) or categorical with 2..k classes (classification); the type is detected and recorded |
-| `controls` | yes | the same type as the paired target |
+| `targets` | yes | continuous (regression) or categorical with 2..k classes (classification). **The type is read from the data and cannot be declared** (decision of 2026-09-21): a column with at most 10 distinct values, all whole numbers → a class; anything else → a number. Writing the same values with decimals (`0.0`, `1.0`) changes nothing, because the rule reads the value, not the format. `check` prints the type chosen for each column before the run costs anything |
+| `controls` | yes | **of any type, independently of the paired target**; the type is read from the data in the same way. A class target with a continuous control, and the reverse, is permitted and audited with a metric per column (§3.2) |
 | `pairing` | no | target → control; default: each target × the first control |
 | `covariates` | no | numeric; the baseline of utility (if absent, utility does not run) |
 | `strata` | no | categorical; Σ, redundancy and audit per stratum |
@@ -217,7 +217,6 @@ algebra:
   min_pair_n: 30
   transfer: true
 audit:
-  task: auto                     # auto | regression | classification
   single:                        # a single index
     estimator: ridge             # ridge | logistic | "module:Class"
     params: {alpha: 1.0}

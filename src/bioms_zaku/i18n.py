@@ -207,7 +207,6 @@ MSG: dict[str, dict[str, str]] = {
     "c.why_closed": {"en": "closed method (no published coefficients)", "es": "método cerrado (sin coeficientes publicados)", "pt": "método fechado (sem coeficientes publicados)", "it": "metodo chiuso (nessun coefficiente pubblicato)"},
     "task.regression": {"en": "regression", "es": "regresión", "pt": "regressão", "it": "regressione"},
     "task.classification": {"en": "classification", "es": "clasificación", "pt": "classificação", "it": "classificazione"},
-    "task.auto": {"en": "auto", "es": "auto", "pt": "auto", "it": "auto"},
     "w.role.sex": {"en": "sex", "es": "sexo", "pt": "sexo", "it": "sesso"},
     "w.role.age": {"en": "age", "es": "edad", "pt": "idade", "it": "età"},
     "w.role.arm": {"en": "arm circumference", "es": "perímetro del brazo", "pt": "perímetro do braço", "it": "circonferenza del braccio"},

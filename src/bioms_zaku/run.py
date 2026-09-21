@@ -87,7 +87,7 @@ def _values(cat: Catalog, ds: Dataset, frame: pd.DataFrame, stats: dict | None =
 
 def _audit_one(args):
     """EN: worker for one method (picklable). ES/PT: trabalhador por método."""
-    mid, stratum, x, targets, controls, pairing, acfg, est_spec, task, groups, cov, cov_names, utility_targets = args
+    mid, stratum, x, targets, controls, pairing, acfg, est_spec, groups, cov, cov_names, utility_targets = args
     # EN: v1.2 — the estimator is built PER COLUMN task (ridge params apply to continuous columns, logistic params to class
     #     columns; module:Class applies to every column), so a class target can be paired with a continuous control.
     est = (lambda tk, _spec=est_spec: _estimator(_spec, tk))   # EN: factory: the audit builds one estimator per column task
@@ -344,7 +344,7 @@ def _run(cfg: dict, *, printer: Callable[[str], None]) -> dict:
                 if e.status == "active" and e.target_kind == kc and e.target_kind != kt and not any(w.startswith(f"{e.id}: declared as") for w in warnings):
                     warnings.append(f"{e.id}: declared as a {kc} index by its authors; audited here against a {kt} target with a {kc} control, "
                                     f"so 'tracks control' is its design, not a defect — swap target and control to audit it on its own terms")
-    acfg = AuditConfig(task=cfg["audit"]["task"], cv_folds=cfg["audit"]["cv"]["folds"], cv_repeats=cfg["audit"]["cv"]["repeats"],
+    acfg = AuditConfig(cv_folds=cfg["audit"]["cv"]["folds"], cv_repeats=cfg["audit"]["cv"]["repeats"],
                        B=cfg["audit"]["bootstrap"]["B"], min_oob=cfg["audit"]["bootstrap"]["min_oob"], max_attempts_factor=cfg["audit"]["bootstrap"]["max_attempts_factor"],
                        seed_cv=cfg["seeds"]["cv"], seed_bootstrap=cfg["seeds"]["bootstrap"], ci=cfg["audit"]["verdict"]["ci"],
                        p_specific=cfg["audit"]["verdict"]["p_specific"], p_control=cfg["audit"]["verdict"]["p_control"],
@@ -420,13 +420,12 @@ def _run(cfg: dict, *, printer: Callable[[str], None]) -> dict:
         controls = {c: fr[c].to_numpy(float) for c in ds.controls}
         groups = None      # EN: v1.2 — repeated ids are refused at input (one row per person); grouped resampling is future work
         cov = fr[ds.covariates].to_numpy(float) if ds.covariates else None
-        task = cfg["audit"]["task"]
         scale = cfg["audit"]["scale"]
         sc = scaled_inputs(vals, targets, controls, cov, ds.target_types, scale, stratum, warnings)
         from dataclasses import replace as _replace
         k_methods = len(vecs)
         acfg_s = _replace(acfg, ci_family=(1 - (1 - acfg.ci) / max(k_methods, 1)), k_methods=k_methods)   # EN: v1.1 — Bonferroni level for k methods audited together
-        jobs = [(mid, stratum, sc["vals"][mid], sc["targets"], sc["controls"], ds.pairing, acfg_s, cfg["audit"]["single"], task, groups, sc["cov"], ds.covariates, sc["targets"])
+        jobs = [(mid, stratum, sc["vals"][mid], sc["targets"], sc["controls"], ds.pairing, acfg_s, cfg["audit"]["single"], groups, sc["cov"], ds.covariates, sc["targets"])
                 for mid in vecs]
         t_s = time.time()
         if cfg["n_jobs"] > 1:
@@ -454,11 +453,11 @@ def _run(cfg: dict, *, printer: Callable[[str], None]) -> dict:
                 warnings.append(warn)
         warnings += low_resample_warnings(T["audit"], stratum)
         # ---- sensitivity to the scale (v1.1): the same audit on the other scale, primary estimator, reported next to the primary, never selected
-        if (cfg["audit"].get("sensitivity") or {}).get("scale") and task != "classification":
+        if (cfg["audit"].get("sensitivity") or {}).get("scale"):
             other = "raw" if sc["scale"] == "log" else "log"
             sc2 = scaled_inputs(vals, targets, controls, cov, ds.target_types, other, stratum, [])
             if sc2["scale"] == other:
-                jobs_sc = [(mid, stratum, sc2["vals"][mid], sc2["targets"], sc2["controls"], ds.pairing, acfg, cfg["audit"]["single"], task, groups, None, [], sc2["targets"]) for mid in vecs]
+                jobs_sc = [(mid, stratum, sc2["vals"][mid], sc2["targets"], sc2["controls"], ds.pairing, acfg, cfg["audit"]["single"], groups, None, [], sc2["targets"]) for mid in vecs]
                 results_sc = [_audit_one(jb) for jb in jobs_sc]
                 prim = {(r["method_id"], r["stratum"], r["target"]): r for r in T["audit"] if r["stratum"] == stratum}
                 for rows_sc, _, warn in results_sc:
@@ -474,7 +473,7 @@ def _run(cfg: dict, *, printer: Callable[[str], None]) -> dict:
         if sens.get("estimator"):
             if sens.get("nested_tuning"):
                 warnings.append(f"{stratum}: sensitivity.nested_tuning requested but not implemented in this version; running the declared estimator with fixed params")
-            jobs_s = [(mid, stratum, vals[mid], targets, controls, ds.pairing, acfg, sens, task, groups, None, [], targets) for mid in vecs]
+            jobs_s = [(mid, stratum, vals[mid], targets, controls, ds.pairing, acfg, sens, groups, None, [], targets) for mid in vecs]
             if cfg["n_jobs"] > 1:
                 with ProcessPoolExecutor(max_workers=cfg["n_jobs"]) as ex:
                     results_s = list(ex.map(_audit_one, jobs_s))

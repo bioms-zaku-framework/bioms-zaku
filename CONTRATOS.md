@@ -39,8 +39,8 @@ Nomes duplicados → erro.
 |---|---|---|
 | `variables` | sim, ≥ 2 | numéricas, estritamente positivas (logaritmo). Para BIA: `R<f>`, `Xc<f>`, `H`, `W`; `<f>` = kHz declarado; `R`/`Xc` sem sufixo = 50 kHz |
 | `units` | sim para `H`, `W` | `{H: cm|m, W: kg|g}`; só estas conversões |
-| `targets` | sim | contínuo (regressão) ou categórico com 2..k classes (classificação); tipo detectado e gravado |
-| `controls` | sim | mesmo tipo do alvo pareado |
+| `targets` | sim | contínuo (regressão) ou categórico com 2..k classes (classificação). **O tipo é lido do dado e não pode ser declarado** (decisão de 21/09/2026): coluna com até 10 valores distintos, todos inteiros → classe; qualquer outra coisa → número. Escrever os mesmos valores com decimais (`0.0`, `1.0`) não muda nada, porque a regra lê o valor e não o formato. `check` imprime o tipo escolhido de cada coluna antes de a execução custar tempo |
+| `controls` | sim | **de qualquer tipo, independente do alvo pareado**; o tipo é lido do dado do mesmo modo. Alvo de classe com controle contínuo, e vice-versa, é permitido e auditado com métrica por coluna (§3.2) |
 | `pairing` | não | alvo → controle; padrão: cada alvo × primeiro controle |
 | `covariates` | não | numéricas; base da utilidade (se ausente, utilidade não roda) |
 | `strata` | não | categórica; Σ, redundância e auditoria por estrato |
@@ -207,7 +207,6 @@ algebra:
   min_pair_n: 30
   transfer: true
 audit:
-  task: auto                     # auto | regression | classification
   single:                        # índice isolado
     estimator: ridge             # ridge | logistic | "modulo:Classe"
     params: {alpha: 1.0}
@@ -558,6 +557,32 @@ Esta seção registra o que mudou no que a ferramenta **promete**. O `CHANGELOG.
 mudou para quem **usa** a ferramenta, por versão lançada. Dois registros, duas perguntas; o trajeto do desenvolvimento
 fica no histórico do git.
 
+- **v1.0.0rc1 (21/09/2026)** — **o tipo de cada alvo e de cada controle é lido do dado; `audit.task` foi removida
+  (decisão do Thalles).** A chave declarava UMA tarefa para a execução inteira e era aplicada a TODAS as colunas,
+  inclusive a um controle do outro tipo — que o §3.2 permite. Na prática: alvo de classe com controle contínuo, a chave
+  declarada como `classification`, e a validação cruzada estratificada caía sobre a coluna contínua; o `scikit-learn`
+  interrompia a execução com `Supported target types are: ('binary', 'multiclass'). Got 'continuous' instead`, minutos
+  depois de o `check` ter dito "OK — pronto para rodar". Encontrado em 20/09/2026 usando a API, na rodada de testes dos
+  três casos de uso; nenhum teste cobria a chave declarada com tipos mistos.
+
+  **Por que remover em vez de consertar.** A chave só servia para contrariar uma regra que a ferramenta já aplica
+  corretamente sozinha, e seu único uso legítimo — um escore inteiro de poucos níveis que o pesquisador quisesse tratar
+  como número — é raro; quem precisar exporta as tabelas e faz a análise fora. O `init` e o `start` nunca a escreviam, e
+  ela não aparecia no README nem no guia: só neste contrato. Consertá-la exigiria formato novo, validação nova e
+  documentação nova para um caso que quase ninguém usa.
+
+  **Recusa em vez de silêncio.** `resolve()` valida apenas chaves de primeiro nível; o que está sob `audit` é mesclado
+  sem validação, então um arquivo antigo seria aceito e a declaração descartada calada. A chave agora é recusada com
+  mensagem que diz o que sumiu e onde ver o tipo de cada coluna.
+
+  **Efeito colateral declarado.** A barreira que pulava a sensibilidade de escala em classificação lia a tarefa da
+  execução; como o valor real era sempre `auto`, ela nunca fechava, e só poderia fechar por causa desta chave. Foi
+  removida junto: nenhuma execução muda de comportamento, e o §4 promete esse bloco sem exceção quando ligado.
+
+  **Contradição corrigida.** O §1 dizia que o controle é "do mesmo tipo do alvo pareado", enquanto o §3.2 permite tipos
+  mistos e o código os audita. O §1 passa a dizer a regra verdadeira, e a regra de inferência foi escrita lá por extenso
+  — até 10 valores distintos inteiros = classe — porque, sem a chave, ela é inapelável e precisa ser previsível antes de
+  rodar. O `check` já anuncia o tipo escolhido de cada alvo e cada controle.
 - **v1.0.0rc1 (20/09/2026)** — **uma base de exemplo, e só ela (decisão do Thalles).** O repositório carregava quatro
   bases; o pacote instalado já carregava uma só desde 19/09. Saíram do repositório: o exemplo sintético de 8000 linhas
   (`example_data.csv`, 677 KB) com seus parâmetros, gerador e os três YAML que só serviam a ele

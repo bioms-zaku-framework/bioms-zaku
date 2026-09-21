@@ -22,8 +22,7 @@ DEFAULTS: dict[str, Any] = {
     "algebra": {"fit_affine": True, "extra_log_variables": [], "min_fit_r2": 0.90, "redundancy_threshold": 0.95,
                 "min_pair_n": 30, "transfer": True, "pair_ci_level": 0.95,   # EN: v1.1 — person-bootstrap interval for the observed Pearson of logs (Fisher removed)
                 "transfer_tol": 0.05, "transfer_B": 200},   # EN: v0.5 Σ-transfer: fixed tolerance and person-bootstrap size
-    "audit": {"task": "auto",
-              "scale": "log",              # EN: v1.1 — index, continuous targets/controls and covariates enter the audit as logarithms (the algebra's scale);
+    "audit": {"scale": "log",              # EN: v1.1 — index, continuous targets/controls and covariates enter the audit as logarithms (the algebra's scale);
                                            #     "raw" keeps the original scales. The other scale is reported in the sensitivity block, never selected.
               "single": {"estimator": "ridge", "params": {"alpha": 1.0}},
               "combination": {"estimator": "hgb", "params": {"max_depth": 3, "learning_rate": 0.05, "max_iter": 300}},
@@ -68,6 +67,16 @@ def resolve(cfg: dict | str | Path) -> dict:
     unknown = set(cfg) - set(DEFAULTS)
     if unknown:
         raise ValueError(f"unknown top-level config keys: {sorted(unknown)}")
+    # EN: audit.task was REMOVED on 2026-09-21. It declared one task for the whole run and was applied to EVERY column,
+    #     including a control of the other kind — a class target with a continuous control crashed inside scikit-learn
+    #     (stratified folds over a continuous column), which `check` did not catch. Nested keys are merged without
+    #     validation, so an old file would be accepted and the declaration silently dropped: refuse it instead.
+    if isinstance(cfg.get("audit"), dict) and "task" in cfg["audit"]:
+        raise ValueError(
+            "audit.task no longer exists (removed 2026-09-21). The type of every target and control is read from the "
+            "data — a column with at most 10 whole numbers is a class, anything else a number — and cannot be "
+            "overridden. Remove the key: `bioms-zaku check` prints the type chosen for each column before the run "
+            "costs anything.")
     r = _merge(DEFAULTS, cfg)
     if r["preset"] not in PRESETS:
         raise ValueError(f"preset must be one of {sorted(PRESETS)}")

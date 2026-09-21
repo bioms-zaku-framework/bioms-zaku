@@ -31,7 +31,6 @@ class AuditError(ValueError):
 # ----------------------------------------------------------------------------------------------
 @dataclass(frozen=True)
 class AuditConfig:
-    task: str = "auto"                    # auto | regression | classification
     estimator: object | None = None       # sklearn estimator; None -> Ridge(alpha=1) / LogisticRegression
     cv_folds: int = 5
     cv_repeats: int = 50
@@ -361,7 +360,7 @@ def audit_method(method_id: str, stratum: str, x: np.ndarray, targets: dict[str,
     X = x[ok].reshape(-1, 1); Y = Yall[ok]; g = groups[ok] if groups is not None else None
     # EN: v1.2 — task per column (a class target may be paired with a continuous control); estimator per column unless one
     #     was given explicitly (then it is used for every column, the caller's responsibility).
-    tasks = [cfg.task if cfg.task != "auto" else infer_task(Y[:, i]) for i in range(len(names))]
+    tasks = [infer_task(Y[:, i]) for i in range(len(names))]
     ests = [_resolve_estimator(estimator, tk) for tk in tasks]
     cv = {k: cv_score(X, Y[:, i], tasks[i], ests[i], cfg, g) for i, k in enumerate(names)}
     # EN: v0.5 — besides the index alone, fit the control as predictor of the target (and with the index), and the target as
@@ -450,7 +449,7 @@ def utility_method(method_id: str, stratum: str, x: np.ndarray, covariates: np.n
     if ok.sum() < cfg.min_n:
         raise AuditError(f"only {int(ok.sum())} complete rows (index, covariates, targets) < min_n={cfg.min_n}")
     FA = covariates[ok]; FB = np.column_stack([FA, x[ok]]); Y = Yall[ok]; g = groups[ok] if groups is not None else None
-    tasks = [cfg.task if cfg.task != "auto" else infer_task(Y[:, i]) for i in range(len(names))]
+    tasks = [infer_task(Y[:, i]) for i in range(len(names))]
     ests = [_resolve_estimator(estimator, tk) for tk in tasks]
     st, b_eff, _ = oob_scores({"A": FA, "B": FB}, Y, tasks, ests, cfg)
     out = []
@@ -477,7 +476,7 @@ def combination_gain(host_id: str, added_id: str, stratum: str, xh: np.ndarray, 
     if ok.sum() < cfg.min_n:
         return []
     A = xh[ok].reshape(-1, 1); Bm = np.column_stack([xh[ok], xa[ok]]); Y = Yall[ok]
-    tasks = [cfg.task if cfg.task != "auto" else infer_task(Y[:, i]) for i in range(Y.shape[1])]
+    tasks = [infer_task(Y[:, i]) for i in range(Y.shape[1])]
     ests = [_resolve_estimator(estimator, tk) for tk in tasks]
     st, b_eff, _ = oob_scores({"A": A, "B": Bm}, Y, tasks, ests, cfg)
     out = []
