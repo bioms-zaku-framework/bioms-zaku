@@ -76,6 +76,12 @@ def check(config: str | Path | dict, *, printer: Callable[[str], None] = print) 
             rho = ok.corr(method="spearman").iloc[0, 1]
             if abs(rho) > 0.8:
                 rep["warnings"].append(t("c.collinear", t=tg, c=c, rho=f"{rho:.2f}"))
+    # EN: geometry needs both sides continuous (class labels are never projected, run.py). Without a single such pair the
+    #     whole §3.3 block is skipped and two tables come out empty — said here, before the run costs anything.
+    if (cfg.get("geometry") or {}).get("enabled") and ds.pairing and not any(
+            ds.target_types.get(tg) != "classification" and ds.target_types.get(c) != "classification"
+            for tg, c in ds.pairing.items()):
+        rep["warnings"].append(t("c.geometry_skipped"))
     # circularity declaration (contract v0.4.3): required whenever an index is designed; recommended always
     decl = (cfg.get("declarations") or {}).get("targets_independent_of_variables")
     for dg in ([cfg["design"]] if isinstance(cfg.get("design"), dict) else list(cfg.get("design") or [])):
@@ -85,6 +91,14 @@ def check(config: str | Path | dict, *, printer: Callable[[str], None] = print) 
         rep["errors"].append(t("c.design_decl"))
     elif decl is not True:
         rep["warnings"].append(t("c.decl_warn"))
+    # EN: a label declared for a value that does not occur is dropped in silence and the report shows the raw value
+    #     (found 2026-09-21: `0=F,M=1` wrote a label for "M", so the stratum 1 stayed unlabelled and nothing said so).
+    if ds.strata and (cfg.get("strata_labels") or {}):
+        presentes = {str(v) for v in ds.frame[ds.strata].dropna().unique()}
+        sobrando = [k for k in cfg["strata_labels"] if str(k) not in presentes]
+        if sobrando:
+            rep["warnings"].append(t("c.label_unknown", k=", ".join(repr(str(k)) for k in sobrando), col=ds.strata,
+                                     vals=", ".join(sorted(presentes))))
     # strata sizes
     if ds.strata:
         for s, n in ds.frame[ds.strata].value_counts().items():

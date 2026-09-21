@@ -350,6 +350,12 @@ def _run(cfg: dict, *, printer: Callable[[str], None]) -> dict:
                        p_specific=cfg["audit"]["verdict"]["p_specific"], p_control=cfg["audit"]["verdict"]["p_control"],
                        utility_margin=cfg["audit"]["utility_margin"], specificity_margin=cfg["audit"]["verdict"]["margin"], impute=d["impute"], min_n=d["min_n"])
     total = sum(1 for _ in strata) ; done_methods = 0
+    # EN: the geometry block is skipped when no pair has both sides continuous; recorded once, in the manifest and the
+    #     report, so an empty geometry.csv is never a silent one (2026-09-21).
+    if (cfg.get("geometry") or {}).get("enabled") and ds.pairing and not any(
+            ds.target_types.get(tg) != "classification" and ds.target_types.get(c) != "classification"
+            for tg, c in ds.pairing.items()):
+        warnings.append(_t("c.geometry_skipped"))
     for stratum, fr in strata:
         sstats: dict = {}
         vals, skipped = _values(cat, ds, fr, stats=sstats)

@@ -626,6 +626,17 @@ This section records what changed in what the tool **promises**. [`CHANGELOG.md`
 what changed for someone who **uses** the tool, per released version. Two records, two questions; the development path
 itself is the git history.
 
+- **v1.0.0rc1 (2026-09-21)** — **two skips stop being silent**, both found by the user in a real run of the guided path
+  on this date. (a) `strata_labels` declared for a value that does not occur in the strata column was dropped without a
+  word: the researcher typed `0=F,M=1` at the prompt, the parser splits on "=", and a label was stored for the value
+  "M"; stratum 1 kept its raw value, the report said "stratum 1", and nothing explained why. `check` now names the
+  value, says the label is ignored and lists the values present. (b) The geometry block (§3.3) is skipped whenever no
+  target↔control pair has BOTH columns continuous — class labels are never projected — and it was skipped in silence,
+  leaving `geometry.csv` and `implicit_vectors.csv` empty with the section still in the report. It is now announced by
+  `check`, before the run costs anything, and recorded in `manifest.warnings`, so a finished run carries the reason for
+  its own empty table. Neither was a wrong number; both were silence, which §0 refuses. Four languages, three tests,
+  one of which reproduces the exact keystroke that caused (a).
+
 - **v1.0.0rc1 (2026-09-21)** — **one language for the documentation: English (the user's decision).** The repository
   carried the same facts in up to eleven files — two contracts, four READMEs, four ten-minute guides and a
   documentation page in four languages — so a single change had to be written eleven times and one copy was bound to
