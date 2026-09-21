@@ -1,7 +1,7 @@
 """
 EN: Safe expression evaluator (whitelist AST). No `eval`, no attributes, no subscripts, no strings.
 
-Grammar / Gramática (CONTRATOS.md §2.4):
+Grammar / Gramática (CONTRACTS.md §2.4):
   numbers; allowed names; + - * / ** ( ); unary + -; functions log exp sqrt atan atan2 abs min max; sample statistics
   mean median sd (v0.9, recorded); constants pi, e.
 """

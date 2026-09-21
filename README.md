@@ -2,8 +2,6 @@
 
 # BioMS Zaku
 
-**English** · [Español](docs/README.es.md) · [Português](docs/README.pt.md) · [Italiano](docs/README.it.md)
-
 Algebraic decomposition and out-of-sample audit of indices and predictive equations. Demonstrated on bioimpedance.
 
 *zaku* is a verb of the Juruna (Yudjá) language, Tupi family, Xingu, Mato Grosso, Brazil: "to see / to care for / to wait"

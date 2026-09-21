@@ -1,7 +1,5 @@
 # BioMS Zaku in ten minutes
 
-**English** · [Español](GUIDE_10_MINUTES.es.md) · [Português](GUIDE_10_MINUTES.pt.md) · [Italiano](GUIDE_10_MINUTES.it.md)
-
 You have a spreadsheet with bioimpedance (R and Xc at 50 kHz), stature, body mass and a reference measurement, such as lean or
 fat mass by DXA. You want to know how the published indices behave on your data, and perhaps to build your own. Everything is
 done in a terminal, with one command that leads you through questions. Nothing is decided in silence: every answer is written to

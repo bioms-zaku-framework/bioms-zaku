@@ -1,5 +1,5 @@
 """
-EN: Input contract (CONTRATOS.md §1): reading, separator/decimal detection, column mapping, validation, derived variables.
+EN: Input contract (CONTRACTS.md §1): reading, separator/decimal detection, column mapping, validation, derived variables.
 """
 from __future__ import annotations
 

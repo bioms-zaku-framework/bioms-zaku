@@ -1,5 +1,5 @@
 """
-EN: Predictive audit (CONTRATOS.md §3–4): out-of-sample scores, paired OOB bootstrap, negative control, utility over
+EN: Predictive audit (CONTRACTS.md §3–4): out-of-sample scores, paired OOB bootstrap, negative control, utility over
     covariates, combination gain, verdicts. Every contrast is paired: both sides see the same resamples of the same rows.
 
 Resampling: for a row set of size n and seed s, the B resamples are a deterministic function of (n, s, B,

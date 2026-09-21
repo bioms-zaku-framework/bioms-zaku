@@ -5,7 +5,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 
 **What belongs here:** what changed for someone who *uses* the tool — a number that can come out different, an
 interface that moved, a dependency that matters. The dated record of changes to what the tool *promises* is section 6
-of [`CONTRATOS.md`](CONTRATOS.md), the normative document. The development path itself is the git history, and stays
+of [`CONTRACTS.md`](CONTRACTS.md), the normative document. The development path itself is the git history, and stays
 there: this file is not a diary.
 
 ## 1.0.0rc1 — unreleased
@@ -55,6 +55,6 @@ follows describes what the tool does, once.
   the repository.
 
 ### Not covered
-- What v1.0 deliberately leaves out is listed in section 0 of [`CONTRATOS.md`](CONTRATOS.md), as a decision of scope.
+- What v1.0 deliberately leaves out is listed in section 0 of [`CONTRACTS.md`](CONTRACTS.md), as a decision of scope.
 - The package declares Python ≥ 3.10, but the local gate verifies only the interpreter it runs on (3.11). Other
   versions need a matrix, which needs continuous integration.

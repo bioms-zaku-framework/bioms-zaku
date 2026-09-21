@@ -1,5 +1,5 @@
 """
-EN: Algebraic part (CONTRATOS.md §2 of the method): exponent vectors, log-covariance Σ, analytic correlation
+EN: Algebraic part (CONTRACTS.md §2 of the method): exponent vectors, log-covariance Σ, analytic correlation
     between indices, observed correlations, redundancy with precedence, Σ transfer between strata.
 
 Exactness:

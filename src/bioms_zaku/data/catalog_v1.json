@@ -363,7 +363,7 @@
    "target_kind": "fat_mass",
    "consistency_note": "Men's means (Table 1): R 463.5 Ω, H 175.7 cm, arm 33.8, waist 95.7, calf 39.1 cm give 404.2 Ω·cm vs 402.4 published (ratio of means vs mean of ratios). Marini 2013 men's means (Table 1): R 486.97 Ω, H 169.85 cm, arm 29.68, waist 95.43, calf 36.08 cm give 392.6 Ω·cm; the paper reports 334.7 (fat < Q1) and 450.3 (fat > Q3), so the mean lies between the quartile groups as expected.",
    "curated": true,
-   "curation_record": "LEITURAS.md §6 e §8 (2026-09-11)"
+   "curation_record": "LEITURAS.md §6 and §8 (2026-09-11)"
   },
   {
    "id": "Xcsp",
@@ -414,7 +414,7 @@
    "target_kind": "fat_mass",
    "consistency_note": "Men's means (Table 1): Xc 60.2 Ω with the same A/L give 52.5 Ω·cm vs 52.5 published. Marini 2013 men's means: Xc 49.12 Ω with the same A/L give 39.6 Ω·cm, between the published quartile-group means 31.3 and 44.8.",
    "curated": true,
-   "curation_record": "LEITURAS.md §6 e §8 (2026-09-11)"
+   "curation_record": "LEITURAS.md §6 and §8 (2026-09-11)"
   },
   {
    "id": "LMI",

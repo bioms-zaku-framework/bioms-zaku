@@ -1,5 +1,5 @@
 """
-EN: `bioms-zaku start dados.csv` (v1.0, CONTRATOS.md §3.5) — ONE guided path through the three uses:
+EN: `bioms-zaku start dados.csv` (v1.0, CONTRACTS.md §3.5) — ONE guided path through the three uses:
       screen 1  who and what (language, data name, researcher)
       screen 2  the columns (same questions as `init`, same suggestions, same validation)
       screen 3  the standard run: how the published indices behave on these data  → the standard use ends here

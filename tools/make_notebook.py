@@ -249,19 +249,19 @@ md("## 4. " + " · ".join(("The report, and your own data", "El informe y sus pr
     "cítelo. Para leer una ejecución terminada en otro idioma sin recalcular nada, llame a "
     "`render(res[\"out_dir\"], \"pt\")`. Para sus propios datos, apunte `config[\"data\"][\"path\"]` a su CSV y edite "
     "los nombres de columna de arriba, o deje que la herramienta le pregunte en un terminal: "
-    "`bioms-zaku start mis_datos.csv`. Lo que la herramienta garantiza, y bajo qué supuestos, está en `CONTRATOS.md`.",
+    "`bioms-zaku start mis_datos.csv`. Lo que la herramienta garantiza, y bajo qué supuestos, está en `CONTRACTS.md`.",
     "`report.html` na pasta de saída tem todo número acima com o texto do método ao lado — como foi calculado, como "
     "ler, que rigor foi aplicado — e um download por tabela. É um arquivo só: mande por e-mail, arquive, cite. Para "
     "ler uma execução terminada em outra língua sem recalcular nada, chame `render(res[\"out_dir\"], \"pt\")`. Para os "
     "seus próprios dados, aponte `config[\"data\"][\"path\"]` para o seu CSV e edite os nomes de coluna acima, ou deixe "
     "a ferramenta perguntar num terminal: `bioms-zaku start meus_dados.csv`. O que a ferramenta garante, e sob quais "
-    "pressupostos, está no `CONTRATOS.md`.",
+    "pressupostos, está no `CONTRACTS.md`.",
     "`report.html` nella cartella di output contiene ogni numero sopra con il testo del metodo accanto — come è stato "
     "calcolato, come leggerlo, quale rigore è stato applicato — e un download per ogni tabella. È un unico file: "
     "invialo, archivialo, citalo. Per leggere un'esecuzione finita in un'altra lingua senza ricalcolare nulla, chiama "
     "`render(res[\"out_dir\"], \"pt\")`. Per i tuoi dati, punta `config[\"data\"][\"path\"]` al tuo CSV e modifica i nomi "
     "delle colonne sopra, oppure lascia che lo strumento ti interroghi in un terminale: "
-    "`bioms-zaku start miei_dati.csv`. Ciò che lo strumento garantisce, e sotto quali ipotesi, è in `CONTRATOS.md`."))
+    "`bioms-zaku start miei_dati.csv`. Ciò che lo strumento garantisce, e sotto quali ipotesi, è in `CONTRACTS.md`."))
 
 nb = nbf.v4.new_notebook()
 nb["cells"] = [nbf.v4.new_markdown_cell(s) if kind == "md" else nbf.v4.new_code_cell(s) for kind, s in CELLS]

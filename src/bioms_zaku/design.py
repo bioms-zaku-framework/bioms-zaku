@@ -1,5 +1,5 @@
 """
-EN: Index design for a context (CONTRATOS.md §2.7): fit an exponent vector to a target on a design partition; audit on
+EN: Index design for a context (CONTRACTS.md §2.7): fit an exponent vector to a target on a design partition; audit on
     the disjoint partition. Deterministic splits recorded for the manifest.
 """
 from __future__ import annotations

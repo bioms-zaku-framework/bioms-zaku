@@ -1,5 +1,5 @@
 """
-EN: Figures (CONTRATOS.md §4.4, revised after inspection on 2026-09-10). Generated ONLY from the output tables.
+EN: Figures (CONTRACTS.md §4.4, revised after inspection on 2026-09-10). Generated ONLY from the output tables.
     Design rules (dataviz method): the reader's job picks the form; ≤ 2 categorical hues (validated: blue #2a78d6 =
     specific, orange #eb6834 = measures control); grey = de-emphasis (inconclusive); identity = marker shape + label,
     never a colour; NOT CURATED (§2.1) = hollow marker / *; one hue light→dark for magnitude; blue/orange + grey midpoint
@@ -782,7 +782,7 @@ def combination_gain(comb: pd.DataFrame, out_dir: Path) -> None:
 
 
 def compass(alg: pd.DataFrame, out_dir: Path, meta: dict | None = None) -> None:
-    """EN: supplementary figure; its labels stay in English by decision of 2026-09-19 (see CONTRATOS.md §3.4).
+    """EN: supplementary figure; its labels stay in English by decision of 2026-09-19 (see CONTRACTS.md §3.4).
     Short method names, alternating label offsets and generous margins: full labels at coincident points piled on top of
     each other and were clipped at the right edge (found by visual inspection, 2026-09-19)."""
     if alg.empty or len(alg.method_id.unique()) > 10 or not {"e_R", "e_Xc", "e_H", "e_W"} <= set(alg.columns):

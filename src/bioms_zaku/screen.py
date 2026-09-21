@@ -1,5 +1,5 @@
 """
-EN: Screening matrix (CONTRATOS.md §4.1): redundant × specific × useful per method and stratum, with identity and
+EN: Screening matrix (CONTRACTS.md §4.1): redundant × specific × useful per method and stratum, with identity and
     validity flags. Classes are enumerated and fixed.
 """
 from __future__ import annotations

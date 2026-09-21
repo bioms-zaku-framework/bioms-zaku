@@ -1,5 +1,5 @@
 """
-EN: Catalog of indices and predictive equations (CONTRATOS.md §2): loading, validation, precedence.
+EN: Catalog of indices and predictive equations (CONTRACTS.md §2): loading, validation, precedence.
 """
 from __future__ import annotations
 

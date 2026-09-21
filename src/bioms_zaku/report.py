@@ -1,5 +1,5 @@
 """
-EN: Outputs (CONTRATOS.md §4): CSV tables at full precision, manifest with hashes/versions, Markdown summary.
+EN: Outputs (CONTRACTS.md §4): CSV tables at full precision, manifest with hashes/versions, Markdown summary.
     Outputs never contain row-level data.
 """
 from __future__ import annotations

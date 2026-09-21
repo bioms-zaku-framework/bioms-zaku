@@ -1,5 +1,5 @@
 """
-EN: Run configuration (CONTRATOS.md §3): defaults = `full` preset; `quick` preset for examples/tests; resolved config
+EN: Run configuration (CONTRACTS.md §3): defaults = `full` preset; `quick` preset for examples/tests; resolved config
     is what the manifest records.
 """
 from __future__ import annotations
