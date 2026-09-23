@@ -4,7 +4,9 @@ message: "If you use BioMS Zaku, please cite it as below."
 type: software
 title: "BioMS Zaku: an algebraic and predictive framework to decompose, audit and design bioimpedance indices and equations"
 version: 1.0.0rc1
-date-released: 2026-09-18
+# EN: no `date-released` while the version is a release candidate that has not been released: CHANGELOG.md
+#     says "1.0.0rc1 — unreleased", and a citation must not claim a date the software does not have.
+#     Set it to the date of the tag when the release is made.
 license: MIT
 repository-code: "https://github.com/bioms-zaku-framework/bioms-zaku"
 authors:

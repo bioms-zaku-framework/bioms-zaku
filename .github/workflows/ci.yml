@@ -4,12 +4,17 @@
 # ES: integración continua — instalación desde el wheel + suite + paso de usuario externo fuera del repositorio.
 # PT: integração contínua — instalação a partir do wheel + suíte + passo de usuário externo fora do repositório.
 name: ci
-# EN: OFF since 2026-09-18 (user decision). GitHub Actions is billed on a PRIVATE repository and the matrix cost about
-#     150 minutes per push (5 jobs x ~30 min), which exhausted the quota: jobs stopped starting and every push mailed a
-#     failure that was a bill, not a defect. The recipe is kept intact and runs on demand (Actions tab -> Run workflow).
-#     Rigour meanwhile is local: the pre-commit hook runs the suite, and `tools/gate.py` reproduces these steps.
-#     Restore `push`/`pull_request` below when the repository becomes public, where Actions is free.
+# EN: OFF from 2026-09-18 to 2026-09-23, and ON again since (user decision, on making the repository public).
+#     It was switched off because GitHub Actions is billed on a PRIVATE repository and the matrix cost about 150
+#     minutes per push (5 jobs x ~30 min), which exhausted the quota: jobs stopped starting and every push mailed a
+#     failure that was a bill, not a defect. On a PUBLIC repository Actions is free, and the matrix is the only thing
+#     that covers Python 3.10, 3.12 and 3.13 — `tools/gate.py` and the pre-commit hook run locally on 3.11 alone.
+#     Local rigour stays as it is; this adds the versions the bench cannot reach.
 on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 jobs:
   test:
