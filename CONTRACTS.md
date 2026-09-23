@@ -398,7 +398,9 @@ determinism and hash.
 
 ### 3.4 Language (v0.7, 2026-09-14)
 - A single catalog of messages (`i18n.py`), four languages: `en`, `es`, `pt`, `it`. A test requires the same keys and
-  the same format fields in all four; no message is left untranslated in silence.
+  the same format fields in all four; no message IN THE CATALOG is left untranslated in silence. What the catalog does
+  not carry is named in the second declared exception below, so that the boundary is written down rather than
+  discovered in use.
 - The choice in one place only: `--lang` on the CLI (valid for `init`, `check`, `run`) or `language:` in the YAML (`init`
   asks for the language first and records it). `figures.language` follows `language` unless declared. The API
   (`run(cfg)`) reads `language` from the YAML.
@@ -410,6 +412,17 @@ determinism and hash.
   the run. NOT translated, for reproducibility between users:
   the column names of the CSVs, the YAML keys, the method ids, the verdicts (`SPECIFIC`, `TRACKS_CONTROL`, `BOTH`,
   `NEITHER`) and the names of the flags.
+- **Declared exception (2026-09-23, the user's decision):** the **refusal messages raised outside the catalog are in
+  ENGLISH ONLY, under every `language`**. They are the messages of `InputError` (`io.py`: encoding, separator,
+  non-numeric or non-positive values, missing mapped column, units, repeated id), `CatalogError`, `ExpressionError`,
+  `DesignError` and `AuditError`, and the strings the input layer collects into `manifest.warnings` (whitespace
+  stripped from column names, rows dropped for a non-positive variable, a stratum ignored for n, a class below
+  `min_per_class`). Reason: each of them names a YAML key, a column name or a row number — objects this same section
+  keeps untranslated for reproducibility — so the translated half of the sentence would wrap an untranslated core, and
+  the researcher who reads them is editing a YAML file. This exception is a boundary, not a target: everything the
+  researcher reads in a run that works — the data, catalog, strata, bootstrap and design lines of `check`, the progress
+  with ETA, the verdicts block, `summary.md`, the headings of `report.html` and the texts of the five official figures —
+  follows `language`, and is tested in the four.
 - Justification: the tool is for researchers; reading in one's own language is part of being intuitive. What is for the
   machine stays stable.
 
@@ -625,6 +638,18 @@ same record in another language.*
 This section records what changed in what the tool **promises**. [`CHANGELOG.md`](CHANGELOG.md) is a different record:
 what changed for someone who **uses** the tool, per released version. Two records, two questions; the development path
 itself is the git history.
+
+- **v1.0.0rc1 (2026-09-23)** — **the language boundary is declared instead of implied (the user's decision).** §3.4
+  promised a single catalog in four languages and that no message is left untranslated in silence, while the refusal
+  messages raised outside that catalog — `InputError` and the other exception classes, and the warnings the input layer
+  writes into `manifest.warnings` — have always been English only. Found by running the eleven planted-truth scenarios
+  of `simulacao_usuario` against this version as an external user, with `language: pt`: the utf-8 refusal, the
+  non-positive-value refusal, the repeated-id refusal and the "dropped N rows" warning all came out in English while
+  every other line of `check` and `run` came out in Portuguese. Neither a wrong number nor a silence — the messages are
+  complete and name the column, the row and the key — but the contract said something the code did not do. The rule
+  now states the boundary and its reason: those messages wrap a YAML key, a column name or a row number, which §3.4
+  itself keeps untranslated for reproducibility. Nothing else changes: what the researcher reads in a run that works
+  stays in the four languages, and the catalog test stays as it is.
 
 - **v1.0.0rc1 (2026-09-21)** — **two skips stop being silent**, both found by the user in a real run of the guided path
   on this date. (a) `strata_labels` declared for a value that does not occur in the strata column was dropped without a
