@@ -40,21 +40,24 @@ jobs:
           python -c "import bioms_zaku, pathlib; print(bioms_zaku.__file__)"
       - name: "Test suite (self-contained)"
         run: python -m pytest -q
+      # EN: the fixture lives in tests/ since 2026-09-20 — `minimal.yaml` and `minimal_data.csv` are the fixture of
+      #     13 test files and of steps 4 and 5 of tools/gate.py, not an example a researcher should open. This file
+      #     still said examples/ and the workflow was dormant, so nothing noticed until it ran again on 2026-09-23.
       - name: Example run (quick preset) must succeed and be deterministic
         run: |
-          bioms-zaku run examples/minimal.yaml
+          bioms-zaku run tests/minimal.yaml
           python - <<'PY'
           import json, shutil, subprocess
           a = json.load(open("zaku_out/minimal/manifest.json"))["outputs_sha256"]
           shutil.rmtree("zaku_out/minimal")
-          subprocess.run(["bioms-zaku", "run", "examples/minimal.yaml"], check=True, capture_output=True)
+          subprocess.run(["bioms-zaku", "run", "tests/minimal.yaml"], check=True, capture_output=True)
           b = json.load(open("zaku_out/minimal/manifest.json"))["outputs_sha256"]
           assert a == b, "outputs differ between two identical runs"
           print("deterministic:", len(a), "output files")
           PY
       - name: "External user: init/check/run from a directory outside the repository"
         run: |
-          mkdir -p /tmp/usuario && cp examples/minimal_data.csv /tmp/usuario/meus_dados.csv && cd /tmp/usuario
+          mkdir -p /tmp/usuario && cp tests/minimal_data.csv /tmp/usuario/meus_dados.csv && cd /tmp/usuario
           bioms-zaku init meus_dados.csv -o estudo.yaml --map R=resistencia_ohm Xc=reatancia_ohm H=estatura_cm W=massa_kg target=lmi_dxa control=fmi_dxa covariates=massa_kg,estatura_cm strata=sexo id=seqn independent=yes
           bioms-zaku check estudo.yaml
           python - <<'PY'
