@@ -174,7 +174,10 @@ def test_nine_content_fixes_of_2026_09_15(tmp_path):
     assert empties and all(f"{n}: {res['manifest']['outputs_sha256'][n]} (empty)" in txt for n in empties)   # every empty table is marked
     assert "About this report" in txt and "How to cite" in txt and CITATION["title"] in txt
     cff = (ROOT / "CITATION.cff").read_text(encoding="utf-8")
-    assert CITATION["title"] in cff and CITATION["repo"] in cff and all(n in cff for n in ("Mota", "Martins", "Oliveira Gonçalves"))
+    # EN: the surnames are DERIVED from CITATION["authors"], never listed here: on 2026-09-23 a fourth author was added
+    #     and a hard-coded tuple of three would have kept passing while the report and CITATION.cff disagreed.
+    sobrenomes = [a.rsplit(" ", 1)[0] for a in CITATION["authors"].split(", ")]
+    assert len(sobrenomes) >= 3 and CITATION["title"] in cff and CITATION["repo"] in cff and all(n in cff for n in sobrenomes)
     assert "## Stratum `F`" in summ and "## Stratum `M`" in summ                     # labels reach the report
     flags = {"R": "resistencia_ohm", "Xc": "reatancia_ohm", "H": "estatura_cm", "W": "massa_kg", "target": "lmi_dxa", "control": "fmi_dxa",
              "strata": "sexo", "labels": "0=F,1=M", "independent": "yes"}

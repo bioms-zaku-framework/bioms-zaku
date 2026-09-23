@@ -43,7 +43,7 @@ footer{padding:28px 22px;color:var(--muted);font-size:13px;text-align:center;bor
 <main>
 <h1>BioMS Zaku</h1>
 <p class="lead"><span>Algebraic decomposition and out-of-sample audit of indices built from measured variables. Demonstrated on bioimpedance.</span></p>
-<p class="meta">Python package <code>bioms-zaku</code> · Mota T, Martins C, Oliveira Gonçalves LC · Universidade Federal de Mato Grosso · Universidade Federal de Uberlândia · <a href="https://github.com/bioms-zaku-framework/bioms-zaku">repository</a></p>
+<p class="meta">Python package <code>bioms-zaku</code> · Mota TPL, Martins CA, Oliveira Gonçalves LC, Magalhães Neto AM · Universidade Federal de Mato Grosso · Universidade Federal de Uberlândia · <a href="https://github.com/bioms-zaku-framework/bioms-zaku">repository</a></p>
 
 <h2 id="s1"><span class="n">1</span><span>Purpose</span></h2>
 <p><span>An index is a formula that combines measured variables into one number: for example, stature squared over resistance. Indices are usually validated by correlating each one, in isolation, with a reference measurement. That leaves three questions unanswered: whether a new index carries information different from earlier ones; whether it measures what it claims to measure or a confounder shared with the reference; and whether its validity depends on the population where it was derived. BioMS Zaku answers the three with one algebraic operation and one predictive audit, and produces the same four figures whatever the index or the outcome.</span></p>
@@ -216,7 +216,7 @@ bioms-zaku run   data.zaku.yaml  # preset full: 5×50 CV, 2000 paired resamples 
 <p><span>Every check runs from the repository alone; no test reads data outside it. The suite checks the algebra against hand-calculated cases (the lessons notebook) and exact identities on random data; the audit on synthetic cases with a constructed answer (a specific index versus a size index, gain only from new information, the design partition recovering the generating vector); determinism of every output hash across runs; the catalog examples from the primary sources; the shipped example against its published parameters (the CSV is reproduced byte for byte from the parameters file, and the published Σ predicts the observed correlation between monomial indices); and the command line. A pre-commit hook refuses commits when the battery fails, and <code>python tools/gate.py</code> runs locally the same steps the continuous-integration workflow ran: build, a clean install of the wheel, the suite, a repeated example run and an external user outside the repository.</span></p>
 
 <h2 id="s10"><span class="n">10</span><span>Cite</span></h2>
-<pre><code>Mota T, Martins C, Oliveira Gonçalves LC. BioMS Zaku: an algebraic and predictive framework to decompose, audit
+<pre><code>Mota TPL, Martins CA, Oliveira Gonçalves LC, Magalhães Neto AM. BioMS Zaku: an algebraic and predictive framework to decompose, audit
 and design bioimpedance indices and equations. Version 1.0.0rc1. MIT. https://github.com/bioms-zaku-framework/bioms-zaku</code></pre>
 <p class="meta"><span><i>zaku</i>: verb of the Juruna (Yudjá) language, Tupi family, Xingu, Mato Grosso, Brazil, “to see / to care for / to wait”. Lima S. <i>A estrutura argumental dos verbos na língua Juruna (Yudjá)</i>. MSc dissertation, Universidade de São Paulo, 2008, item 290.</span></p>
 

@@ -220,7 +220,7 @@ BLOCKS = (("m.input", ["sigma"]), ("m.design", []), ("m.redund", ["algebra", "pa
 
 
 CITATION = {"title": "BioMS Zaku: an algebraic and predictive framework to decompose, audit and design bioimpedance indices and equations",
-            "authors": "Mota T, Martins C, Oliveira Gonçalves LC", "repo": "https://github.com/bioms-zaku-framework/bioms-zaku"}   # EN: kept equal to CITATION.cff (tested)
+            "authors": "Mota TPL, Martins CA, Oliveira Gonçalves LC, Magalhães Neto AM", "repo": "https://github.com/bioms-zaku-framework/bioms-zaku"}   # EN: kept equal to CITATION.cff (tested)
 
 
 def _catalog(cfg: dict):

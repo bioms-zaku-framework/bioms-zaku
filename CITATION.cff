@@ -11,17 +11,22 @@ license: MIT
 repository-code: "https://github.com/bioms-zaku-framework/bioms-zaku"
 authors:
   - family-names: "Mota"
-    given-names: "Thalles"
+    given-names: "Thalles Pereira Leandro"
     email: "thallesleandromota@gmail.com"
     affiliation: "Universidade Federal de Mato Grosso, Brazil"
   - family-names: "Martins"
-    given-names: "Claudia"
+    given-names: "Claudia Aparecida"
     email: "claudia@ic.ufmt.br"
     affiliation: "Universidade Federal de Mato Grosso, Brazil"
   - family-names: "Oliveira Gonçalves"
     given-names: "Luis Carlos"
     email: "luiscarlosoliveiragoncalves@gmail.com"
     affiliation: "Universidade Federal de Uberlândia, Brazil"
+  - family-names: "Magalhães Neto"
+    name-particle: "de"   # EN: the particle belongs to the surname and is dropped in the abbreviation (Magalhães Neto AM)
+    given-names: "Anibal Monteiro"
+    email: "professoranibal@yahoo.com.br"
+    affiliation: "Universidade Federal de Mato Grosso, Brazil"
 keywords:
   - bioimpedance
   - body composition
