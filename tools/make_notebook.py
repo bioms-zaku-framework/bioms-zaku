@@ -200,7 +200,10 @@ config = {
             "variables": {"R": "R", "Xc": "Xc", "H": "H_cm", "W": "W"},
             "units": {"H": "cm", "W": "kg"},
             "covariates": ["W", "H_cm"],
-            "groups": {"sexo": "sexo", "idade": "idade"},
+            # EN: the three circumferences are in the example file and two curated methods need them (Rsp, Xcsp):
+            #     leaving them unmapped would silently reduce the catalogue from 7 evaluable methods to 5.
+            "groups": {"sexo": "sexo", "idade": "idade",
+                       "C_arm": "BMXARMC", "C_waist": "BMXWAIST", "C_calf": "BMXCALF"},
             "id": "id",
             "targets": {"LMI_DXA": "LMI_DXA"},
             "controls": {"FMI_DXA": "FMI_DXA"},
@@ -209,7 +212,9 @@ config = {
     },
     "strata": "sexo",
     "strata_labels": {0: "F", 1: "M"},
-    "catalog": {"include": ["Lukaski1985_II", "Baumgartner1988_PhA", "LMI"]},
+    # EN: every CURATED method — the ones whose primary source was read in the original. 7 of the 8 run on these
+    #     columns; Hoffer 1969 is skipped and says why (it needs |Z| at 100 kHz, which this device does not record).
+    "catalog": {"include": "curated"},
     "declarations": {
         "targets_independent_of_variables": True,           # DXA is not computed from R, Xc, H, W
         "target_kinds": {"LMI_DXA": "lean_mass", "FMI_DXA": "fat_mass"},
@@ -262,6 +267,33 @@ md("## 4. " + " · ".join(("The report, and your own data", "El informe y sus pr
     "`render(res[\"out_dir\"], \"pt\")`. Per i tuoi dati, punta `config[\"data\"][\"path\"]` al tuo CSV e modifica i nomi "
     "delle colonne sopra, oppure lascia che lo strumento ti interroghi in un terminale: "
     "`bioms-zaku start miei_dati.csv`. Ciò che lo strumento garantisce, e sotto quali ipotesi, è in `CONTRACTS.md`."))
+
+md("## 5. " + " · ".join(("Opening the report in Colab", "Abrir el informe en Colab",
+                         "Abrir o relatório no Colab", "Aprire il rapporto in Colab")) + "\n\n" + four(
+    "In Colab the file lives on a machine in Google's cloud, not on yours: there is no desktop to double-click and no "
+    "terminal, so the line the tool prints at the end of a run (`xdg-open ...`) has nothing to open. Uncomment the cell "
+    "below and run it: the browser downloads `report.html` and you open it with a double-click, as a normal file. "
+    "The same by hand: the folder icon on the left of Colab, then `zaku_out` → `notebook` → the three dots on "
+    "`report.html` → Download. Running a notebook on your own machine, ignore this cell and open the file directly.",
+    "En Colab el archivo está en una máquina en la nube de Google, no en la suya: no hay escritorio para hacer doble "
+    "clic ni terminal, así que la línea que la herramienta imprime al terminar (`xdg-open ...`) no tiene qué abrir. "
+    "Descomente la celda de abajo y ejecútela: el navegador descarga `report.html` y usted lo abre con doble clic, "
+    "como un archivo normal. Lo mismo a mano: el icono de carpeta a la izquierda de Colab, luego `zaku_out` → "
+    "`notebook` → los tres puntos en `report.html` → Download. En su propia máquina, ignore esta celda.",
+    "No Colab o arquivo está numa máquina na nuvem do Google, não na sua: não há área de trabalho para dar dois "
+    "cliques nem terminal, então a linha que a ferramenta imprime ao terminar (`xdg-open ...`) não tem o que abrir. "
+    "Descomente a célula abaixo e rode: o navegador baixa o `report.html` e você abre com dois cliques, como um "
+    "arquivo qualquer. O mesmo na mão: ícone de pasta à esquerda do Colab, depois `zaku_out` → `notebook` → os três "
+    "pontinhos no `report.html` → Download. Rodando o notebook na sua própria máquina, ignore esta célula.",
+    "In Colab il file si trova su una macchina nel cloud di Google, non sulla tua: non c'è un desktop su cui fare "
+    "doppio clic né un terminale, quindi la riga che lo strumento stampa alla fine (`xdg-open ...`) non ha nulla da "
+    "aprire. Decommenta la cella qui sotto ed eseguila: il browser scarica `report.html` e lo apri con un doppio "
+    "clic, come un file qualsiasi. Lo stesso a mano: icona della cartella a sinistra in Colab, poi `zaku_out` → "
+    "`notebook` → i tre puntini su `report.html` → Download. Sulla tua macchina, ignora questa cella."))
+
+code('''# EN: Colab only — remove the # from the two lines below and run the cell.
+# from google.colab import files
+# files.download(f"{res['out_dir']}/report.html")''')
 
 nb = nbf.v4.new_notebook()
 nb["cells"] = [nbf.v4.new_markdown_cell(s) if kind == "md" else nbf.v4.new_code_cell(s) for kind, s in CELLS]
