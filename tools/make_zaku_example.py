@@ -8,7 +8,7 @@ EN: Build THE example dataset of BioMS Zaku (v1.2, decision of 2026-09-17): one 
     the source; no real row is copied. The parameters are published next to the CSV and ARE the generating parameters
     (μ rounded to 6 decimals, Σ to 8), so the CSV is reproducible from the JSON alone.
 
-    Design: 200 persons per sex, 70 of them with diabetes (35 %, case-enriched on purpose, declared: prevalence is NOT that of
+    Design: 700 persons per sex, 245 of them with diabetes (35 %, case-enriched on purpose, declared: prevalence is NOT that of
     NHANES), so the classification audit has ≥ 20 cases per class per sex. `label_synthetic` = Bernoulli(logistic(b0 +
     b1·z(ln FMI) + b2·z(ln age))), z on the sex-level (both classes) moments: it depends on FMI and age only, so a
     classification audit with FMI as control has a known answer (no index should add beyond FMI). Masses in kg are derived
@@ -34,7 +34,7 @@ ROUND = {"R": 2, "Xc": 2, "H_cm": 1, "W": 1, "idade": 0, "BMXARMC": 1, "BMXWAIST
 DERIVED = {"LMI_DXA": "lean_kg", "ALMI_DXA": "alm_kg", "FMI_DXA": "fat_kg"}
 LABEL = {"name": "label_synthetic", "b0": -2.0, "b1": 1.2, "b2": 0.5,
          "note": "synthetic outcome with a known answer: depends on ln FMI and ln age only (z on sex-level moments)"}
-N_PER_SEX, N_DIAB_PER_SEX, SEED = 200, 70, 20260917
+N_PER_SEX, N_DIAB_PER_SEX, SEED = 700, 245, 20260917
 
 
 def estimate(pool: Path, diq_dir: Path) -> dict:

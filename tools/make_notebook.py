@@ -241,7 +241,87 @@ code('''import pandas as pd
 
 pd.read_csv(f"{res['out_dir']}/screening.csv")''')
 
-md("## 4. " + " · ".join(("The report, and your own data", "El informe y sus propios datos",
+md("## 4. " + " · ".join(("The tool proposes new indices", "La herramienta propone nuevos índices",
+                         "A ferramenta propõe índices novos", "Lo strumento propone nuovi indici")) + "\n\n" + four(
+    "The audit above judged what already exists. This is the other direction: from the SAME data the tool fits the "
+    "exponents of R, Xc, H and W to the target by least squares on 70 % of the rows of each stratum, and audits the "
+    "index it built on the other 30 %, never seen — like any published method, and marked △. The design is not a "
+    "shortcut past the audit: it produces a candidate and then has to survive the same negative control. "
+    "`expr` below is yours to change: any formula you write enters the same run beside the published methods, marked "
+    "◇, with no DOI and never precedence over a publication.",
+    "La auditoría anterior juzgó lo que ya existe. Esta es la otra dirección: con los MISMOS datos la herramienta "
+    "ajusta los exponentes de R, Xc, H y W al objetivo por mínimos cuadrados en el 70 % de las filas de cada estrato, "
+    "y audita el índice que construyó en el otro 30 %, nunca visto — como cualquier método publicado, y marcado △. El "
+    "diseño no es un atajo que evite la auditoría: produce un candidato que luego debe sobrevivir al mismo control "
+    "negativo. El `expr` de abajo es suyo: cualquier fórmula que escriba entra en la misma ejecución junto a los "
+    "métodos publicados, marcada ◇, sin DOI y sin precedencia sobre una publicación.",
+    "A auditoria acima julgou o que já existe. Esta é a outra direção: dos MESMOS dados a ferramenta ajusta os "
+    "expoentes de R, Xc, H e W ao alvo por mínimos quadrados em 70 % das linhas de cada estrato, e audita o índice "
+    "que ela construiu nos outros 30 %, nunca vistos — como qualquer método publicado, e marcado △. O desenho não é "
+    "atalho que pule a auditoria: ele produz um candidato, que depois tem de sobreviver ao mesmo controle negativo. "
+    "O `expr` abaixo é seu: qualquer fórmula que você escrever entra na mesma execução ao lado dos métodos "
+    "publicados, marcada ◇, sem DOI e sem nunca ter precedência sobre uma publicação.",
+    "L'audit sopra ha giudicato ciò che già esiste. Questa è l'altra direzione: dagli STESSI dati lo strumento adatta "
+    "gli esponenti di R, Xc, H e W al target ai minimi quadrati sul 70 % delle righe di ogni strato, e verifica "
+    "l'indice che ha costruito sul restante 30 %, mai visto — come qualsiasi metodo pubblicato, e marcato △. Il "
+    "disegno non è una scorciatoia che evita l'audit: produce un candidato che poi deve sopravvivere allo stesso "
+    "controllo negativo. L'`expr` qui sotto è tuo: qualsiasi formula tu scriva entra nella stessa esecuzione accanto "
+    "ai metodi pubblicati, marcata ◇, senza DOI e senza mai precedenza su una pubblicazione."))
+
+code('''import copy
+
+config2 = copy.deepcopy(config)
+config2["run_name"] = "proposals"
+config2["design"] = [{"target": "LMI_DXA", "id": "Zaku_LMI"}]        # the tool builds an index for the target
+config2["catalog"] = {
+    "include": ["curated", "my_index"],                              # the curated methods PLUS your formula
+    "user_entries": [{
+        "id": "my_index",
+        "label": "H²·Xc/R (proposed)",
+        "authors": "you",
+        "target": "lean_mass",                                       # what it intends to measure
+        "expr": "H**2 * Xc / R",                                     # <- write your own formula here
+        "provenance": {"formula_source": "proposed"},
+    }],
+}
+
+res2 = run(config2)''')
+
+md(four(
+    "The exponents the tool fitted, and the verdict each new index earned out of sample. `designed` marks the index "
+    "the tool built (△); the proposed formula (◇) sits beside it and beside the published methods, judged by the same "
+    "rule. On this example the designed index hits the target's own direction almost exactly (cos_Σ ≈ 0.999 in the "
+    "geometry table) and STILL does not come out specific — the tool refusing its own proposal. The Geometry block of "
+    "the report says why in one number: the flag COUPLED_TARGET_CONTROL is lit, because lean and fat index come from "
+    "one DXA scan and point nearly the same way in the measured space, so pointing at the target IS pointing at the "
+    "control. That is the whole framework working on itself, and it is why the design is audited and not trusted.",
+    "Los exponentes ajustados y el veredicto que cada índice nuevo obtuvo fuera de muestra. `designed` marca el índice "
+    "construido por la herramienta (△); la fórmula propuesta (◇) está al lado, juzgada por la misma regla. En este "
+    "ejemplo el índice diseñado alcanza casi exactamente la dirección del objetivo (cos_Σ ≈ 0,999) y AUN ASÍ no sale "
+    "específico — la herramienta rechazando su propia propuesta. El bloque de Geometría del informe dice por qué: la "
+    "bandera COUPLED_TARGET_CONTROL está encendida, porque los índices de masa magra y de grasa vienen de un mismo "
+    "DXA y apuntan casi en la misma dirección, así que apuntar al objetivo ES apuntar al control.",
+    "Os expoentes que a ferramenta ajustou, e o veredito que cada índice novo recebeu fora da amostra. `designed` "
+    "marca o índice que ela construiu (△); a fórmula proposta (◇) fica ao lado, julgada pela mesma regra. Neste "
+    "exemplo o índice desenhado acerta quase exatamente a direção do alvo (cos_Σ ≈ 0,999) e MESMO ASSIM não sai "
+    "específico — a ferramenta recusando a própria proposta. O bloco de Geometria do relatório diz por quê: a "
+    "bandeira COUPLED_TARGET_CONTROL está acesa, porque o índice de massa magra e o de gordura vêm do mesmo exame de "
+    "DXA e apontam quase na mesma direção, então apontar para o alvo É apontar para o controle.",
+    "Gli esponenti adattati e il verdetto che ogni nuovo indice ha ottenuto fuori campione. `designed` marca l'indice "
+    "costruito dallo strumento (△); la formula proposta (◇) gli sta accanto, giudicata dalla stessa regola. In questo "
+    "esempio l'indice disegnato coglie quasi esattamente la direzione del target (cos_Σ ≈ 0,999) e COMUNQUE non esce "
+    "specifico — lo strumento che rifiuta la propria proposta. Il blocco Geometria del rapporto dice perché: la "
+    "bandiera COUPLED_TARGET_CONTROL è accesa, perché indice di massa magra e di grasso vengono dallo stesso esame "
+    "DXA e puntano quasi nella stessa direzione, quindi puntare al target È puntare al controllo."))
+
+code('''novos = pd.read_csv(f"{res2['out_dir']}/algebra.csv")
+novos = novos[novos["method_id"].isin(["Zaku_LMI", "my_index"])]
+display(novos[["method_id", "stratum", "vector_source", "fit_r2", "e_R", "e_Xc", "e_H", "e_W"]])
+
+vereditos = pd.read_csv(f"{res2['out_dir']}/screening.csv")
+vereditos[vereditos["method_id"].isin(["Zaku_LMI", "my_index"])]''')
+
+md("## 5. " + " · ".join(("The report, and your own data", "El informe y sus propios datos",
                           "O relatório e os seus próprios dados", "Il rapporto e i tuoi dati")) + "\n\n" + four(
     "`report.html` in the output folder holds every number above with the method text beside it — how it was "
     "computed, how to read it, what rigor was applied — and a download for every table. It is one file: send it, "
@@ -268,7 +348,7 @@ md("## 4. " + " · ".join(("The report, and your own data", "El informe y sus pr
     "delle colonne sopra, oppure lascia che lo strumento ti interroghi in un terminale: "
     "`bioms-zaku start miei_dati.csv`. Ciò che lo strumento garantisce, e sotto quali ipotesi, è in `CONTRACTS.md`."))
 
-md("## 5. " + " · ".join(("Opening the report in Colab", "Abrir el informe en Colab",
+md("## 6. " + " · ".join(("Opening the report in Colab", "Abrir el informe en Colab",
                          "Abrir o relatório no Colab", "Aprire il rapporto in Colab")) + "\n\n" + four(
     "In Colab the file lives on a machine in Google's cloud, not on yours: there is no desktop to double-click and no "
     "terminal, so the line the tool prints at the end of a run (`xdg-open ...`) has nothing to open. Uncomment the cell "

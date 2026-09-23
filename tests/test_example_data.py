@@ -6,8 +6,9 @@ EN: the shipped example is a KNOWN TRUTH. Two guarantees, of very different shar
         the sample covariance of their logs (agreement at 1e-12). This is algebra, and it is checked here on the data a
         researcher actually receives, not on data constructed inside a test.
     (2) LOOSE — the PUBLISHED μ and Σ, from which the base was drawn, are recovered from the rows only up to sampling
-        error. The base has 400 people in four cells of 70 and 130, so that error is large: the published Σ misses the
-        observed correlation by up to 0.13. The tolerances below were MEASURED on 2026-09-20, not chosen to pass. This
+        error. The base has 1400 people in four cells of 245 and 455 (2026-09-23; it was 400 in cells of 70 and 130),
+        so that error, while smaller than it was, is still the dominant term: the published Σ misses the observed
+        correlation by up to 0.074. The tolerances below were RE-MEASURED on 2026-09-23, not chosen to pass. This
         catches a gross error (wrong parameters, wrong cell, a generator that ignored its input); it cannot catch a
         subtle one, and it is not the gate.
 
@@ -54,25 +55,29 @@ def test_identity_is_exact_on_the_shipped_rows():
 
 
 def test_published_parameters_are_recovered_up_to_sampling_error():
-    """EN: (2) the loose one. Measured on 2026-09-20: μ within 0.060, continuous Σ within 0.045, age Σ within 0.037
-    (age is rounded to whole years). The tolerances carry a margin over what was measured, and are deliberately not
-    tight: with 70 to 130 people per cell, sampling error is the dominant term."""
+    """EN: (2) the loose one. Re-measured on 2026-09-23, on the base of 1400: μ within 0.049, continuous Σ within
+    0.019, age Σ within 0.031 (age is drawn, then clipped to 18-49 and rounded to whole years, which shrinks its
+    variance by construction — hence its own tolerance). On the base of 400 the same three were 0.060, 0.044 and 0.037.
+    The tolerances carry a margin over what was measured, and are deliberately not tight: with 245 to 455 people per
+    cell, sampling error is still the dominant term."""
     for name, rows, mu, S, variables, n_source in _cells():
         L = np.log(rows[variables].to_numpy(float))
         age = variables.index("idade")
         D = np.abs(np.cov(L.T, ddof=1) - S)
         mask = np.zeros_like(D, dtype=bool); mask[age, :] = True; mask[:, age] = True
-        assert np.abs(L.mean(axis=0) - mu).max() < 0.08, name
-        assert D[~mask].max() < 0.06, name
-        assert D[mask].max() < 0.05, name
+        assert np.abs(L.mean(axis=0) - mu).max() < 0.07, name
+        assert D[~mask].max() < 0.03, name
+        assert D[mask].max() < 0.045, name
         assert n_source >= 60                       # EN: every cell was estimated on a real NHANES cell, not invented
         assert (rows[variables] > 0).all().all()    # EN: log-normal draw: strictly positive everywhere
 
 
 def test_published_sigma_still_points_at_the_observed_correlation():
     """EN: (2) the loose one, continued — a smoke check, NOT a gate. The published Σ misses the observed correlation by
-    up to 0.129 on this base (measured 2026-09-20); on the 8000-row base retired on 2026-09-20 the same check held to
-    0.02. The difference is n, not a defect. A tolerance of 0.20 still refuses a Σ that is simply wrong."""
+    up to 0.074 on this base (re-measured 2026-09-23, after the base went from 400 rows to 1400); it was 0.129 on the
+    base of 400, and 0.02 on the 8000-row base retired on 2026-09-20. The difference is n, not a defect: enlarging the
+    base recovered a little over half of what the reduction of 2026-09-20 had cost this check. A tolerance of 0.12
+    still refuses a Σ that is simply wrong."""
     worst = 0.0
     for name, rows, _, S_pub_full, variables, _ in _cells():
         idx = [variables.index(v) for v in VARIABLES]
@@ -84,4 +89,4 @@ def test_published_sigma_still_points_at_the_observed_correlation():
                 a, b = VECTORS[names[i]], VECTORS[names[j]]
                 observed = np.corrcoef(L @ a, L @ b)[0, 1]
                 worst = max(worst, abs(predicted_pearson_log(a, b, S_pub) - observed))
-    assert worst < 0.20, f"published Σ misses the observed ρ by {worst:.4f}"
+    assert worst < 0.12, f"published Σ misses the observed ρ by {worst:.4f}"

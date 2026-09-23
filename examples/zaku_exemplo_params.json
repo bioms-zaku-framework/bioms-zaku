@@ -2,8 +2,8 @@
  "generator": "tools/make_zaku_example.py",
  "date": "2026-09-17",
  "seed": 20260917,
- "n_per_sex": 200,
- "n_diabetes_per_sex": 70,
+ "n_per_sex": 700,
+ "n_diabetes_per_sex": 245,
  "variables": [
   "R",
   "Xc",

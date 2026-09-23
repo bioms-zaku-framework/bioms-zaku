@@ -109,7 +109,7 @@ bioms-zaku examples --copy     # copies to ./zaku_exemplos (if it already exists
 cd zaku_exemplos
 ```
 
-`zaku_exemplo.csv`: 400 people (200 per sex), drawn from the means and covariances of NHANES estimated separately for each
+`zaku_exemplo.csv`: 1400 people (700 per sex), drawn from the means and covariances of NHANES estimated separately for each
 combination of sex and diabetes; no real person. What you can test with it:
 
 | test | target | control | expected answer |

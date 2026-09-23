@@ -602,10 +602,10 @@ the only assumption of the algebraic part. Publishing only aggregates is what al
   4. **the bundled example with published parameters:** `examples/zaku_exemplo.csv` is reproducible byte for byte from
      `examples/zaku_exemplo_params.json`; on the shipped rows the identity ρ_log = aᵀΣb/√(aᵀΣa·bᵀΣb) is EXACT with the
      sample Σ (1e-12) — that is the gate. The PUBLISHED μ and Σ are recovered only within sampling error, and that
-     error is large on this base: 400 people in four cells of 70 and 130, so the published Σ misses the observed
-     correlation by up to 0.129 (measured 2026-09-20; on the 8000-row base retired that day the same deviation was
-     < 0.02). Stated here because the corresponding test is a **smoke check, not a gate**: it refuses a Σ that is
-     wrong, not a Σ that is subtly wrong;
+     error is the dominant term: 1400 people in four cells of 245 and 455, so the published Σ misses the observed
+     correlation by up to 0.074 (re-measured 2026-09-23; it was 0.129 on the base of 400 rows used from 2026-09-20 to
+     2026-09-23, and < 0.02 on the 8000-row base retired on 2026-09-20). Stated here because the corresponding test is
+     a **smoke check, not a gate**: it refuses a Σ that is wrong, not a Σ that is subtly wrong;
   5. the numerical examples of the primary sources in the catalog (`check_example`), checked at load;
   6. determinism of the examples (equal hashes in two runs; checked by `tools/gate.py`, which runs the steps the
      continuous-integration workflow ran — the workflow was switched off on 2026-09-18, see
@@ -638,6 +638,28 @@ same record in another language.*
 This section records what changed in what the tool **promises**. [`CHANGELOG.md`](CHANGELOG.md) is a different record:
 what changed for someone who **uses** the tool, per released version. Two records, two questions; the development path
 itself is the git history.
+
+- **v1.0.0rc1 (2026-09-23)** — **the example base goes from 400 rows to 1400 (700 per sex), so that the tool can
+  demonstrate its own design step.** `design` fits the exponents on 70 % of each stratum and audits the index it built
+  on the other 30 %; on 200 people per sex that left 60 rows for the audit, and the designed index came out with an
+  interval so wide that a reader could not tell a failed design from an absent sample — the demonstration was ambiguous
+  exactly where it exists to be clear. At 700 per sex the audit keeps 210, the same room the base had before the design
+  step existed. Nothing about the provenance changes: μ and Σ per cell sex × diabetes are the NHANES estimates already
+  published in `zaku_exemplo_params.json`, byte for byte unchanged — only `n_per_sex` and `n_diabetes_per_sex` moved,
+  from 200/70 to 700/245, which holds the declared 35 % case enrichment. Verified against the published parameters
+  rather than asserted: the cells are identical, two generations of the CSV give the same sha256, and every cell's
+  observed moments are closer to the published ones than they were (variance ratios now 0.69–1.07 against 0.56–1.26;
+  the low end is `idade` in both, which the generator clips to 18–49 and rounds to whole years, shrinking its variance
+  by construction).
+  **What this RECOVERS, in a test rather than in the tool:** gate 4 of §5 had lost discriminating power on 2026-09-20
+  when the base went from 8000 rows to 400, and the smoke check "the published Σ predicts the observed correlation"
+  went from < 0.02 to 0.129. It is now 0.074, and the deviation of the published Σ itself fell from 0.044 to 0.019.
+  All tolerances in `tests/test_example_data.py` were RE-MEASURED, not relaxed to pass, and the file says what was
+  measured and when, as it did before. The counts in `tests/test_datasets.py` are now DERIVED from the published
+  parameters: three hard-coded numbers had to be found one failure at a time, which is the same defect as the
+  hard-coded author list corrected earlier today. **More synthetic rows do not make the science stronger** — they are
+  drawn from the same μ and Σ and carry no new information about human bodies; what they buy is a demonstration
+  legible enough to read. The base remains a demonstration of the machinery, never evidence.
 
 - **v1.0.0rc1 (2026-09-23)** — **the language boundary is declared instead of implied (the user's decision).** §3.4
   promised a single catalog in four languages and that no message is left untranslated in silence, while the refusal

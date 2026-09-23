@@ -20,8 +20,12 @@ FILES = ["zaku_exemplo.csv", "zaku_exemplo.ipynb", "zaku_exemplo_params.json"]
 def test_there_is_exactly_one_example_and_it_is_listed():
     rows = list_examples()
     assert [r["name"] for r in rows] == ["zaku_exemplo"] == list(EXAMPLES)
-    assert rows[0]["kind"] == "synthetic" and rows[0]["rows"] == 400
-    assert len(load_example("zaku_exemplo")) == 400 and example_path("zaku_exemplo").exists()
+    # EN: the counts are DERIVED from the published parameters, never written here: the size of the base changed on
+    #     2026-09-23 (400 → 1400) and three hard-coded numbers in this file had to be chased down one failure at a time.
+    P = json.loads((ROOT / "examples/zaku_exemplo_params.json").read_text(encoding="utf-8"))
+    n_total = 2 * P["n_per_sex"]
+    assert rows[0]["kind"] == "synthetic" and rows[0]["rows"] == n_total
+    assert len(load_example("zaku_exemplo")) == n_total and example_path("zaku_exemplo").exists()
     with pytest.raises(KeyError):
         load_example("nope")
 
@@ -30,9 +34,13 @@ def test_the_one_example_serves_regression_classification_with_a_known_answer_an
     df = load_example("zaku_exemplo")
     need = {"id", "sexo", "R", "Xc", "H_cm", "W", "idade", "BMXARMC", "BMXWAIST", "BMXCALF", "LMI_DXA", "ALMI_DXA", "FMI_DXA",
             "lean_kg", "alm_kg", "fat_kg", "label_synthetic", "diabetes"}
-    assert need <= set(df.columns) and df.id.is_unique and df.sexo.value_counts().to_dict() == {0: 200, 1: 200}
+    P = json.loads((ROOT / "examples/zaku_exemplo_params.json").read_text(encoding="utf-8"))
+    por_sexo, com_diabetes = P["n_per_sex"], P["n_diabetes_per_sex"]
+    assert need <= set(df.columns) and df.id.is_unique
+    assert df.sexo.value_counts().to_dict() == {0: por_sexo, 1: por_sexo}
     g = df.groupby("sexo")
-    assert g.diabetes.sum().to_dict() == {0: 70, 1: 70}
+    assert g.diabetes.sum().to_dict() == {0: com_diabetes, 1: com_diabetes}
+    assert com_diabetes / por_sexo == 0.35          # EN: the case enrichment the parameters declare
     for col in ("diabetes", "label_synthetic"):                         # ≥ 20 per class per sex (classification minimum)
         assert (g[col].sum() >= 20).all() and ((g[col].count() - g[col].sum()) >= 20).all()
     assert (df[["R", "Xc", "H_cm", "W", "LMI_DXA", "FMI_DXA"]] > 0).all().all()

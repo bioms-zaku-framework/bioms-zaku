@@ -72,11 +72,11 @@ Python ≥ 3.10. Dependencies: numpy, pandas, scipy, scikit-learn, pyyaml (+ mat
 
 ## Example data
 
-**The example data** (nothing is downloaded; it ships with the package): ONE synthetic base, `zaku_exemplo.csv`, 400 rows
-(200 per sex), drawn from a log-normal whose means and covariances were estimated in NHANES 1999–2004 separately for each
+**The example data** (nothing is downloaded; it ships with the package): ONE synthetic base, `zaku_exemplo.csv`, 1400 rows
+(700 per sex), drawn from a log-normal whose means and covariances were estimated in NHANES 1999–2004 separately for each
 cell sex × doctor-diagnosed diabetes — so the association of diabetes with every variable is kept. It serves every use:
 regression (`LMI_DXA`, `FMI_DXA`, `ALMI_DXA`), classification with a known answer (`label_synthetic` depends only on FMI and
-age: with `FMI_DXA` as control no index should add), and `diabetes` (70 per sex, case-enriched on purpose). Parameters and
+age: with `FMI_DXA` as control no index should add), and `diabetes` (245 per sex, case-enriched on purpose). Parameters and
 generator: `examples/zaku_exemplo_params.json`, `tools/make_zaku_example.py` (reproduces the CSV byte for byte).
 
 ```bash
