@@ -75,6 +75,17 @@ def test_one_line_switches_the_language_of_the_tool():
     assert all(l in src for l in ("en", "es", "pt", "it"))
 
 
+def test_the_chosen_language_reaches_the_run():
+    """EN: defect found by the user on 2026-09-24. He set LANG = "pt" and the report came out in English: the notebook
+    called `set_language(LANG)` and then handed `run` a configuration WITHOUT a `language` key, so the run fell back to
+    the default and discarded the choice without a word. §3.4 puts the choice in one place — the configuration — so the
+    notebook has to carry it there. Asserted on the source, because the notebook ships unexecuted."""
+    src = "\n".join("".join(c["source"]) for c in _nb()["cells"] if c["cell_type"] == "code")
+    assert '"language": LANG' in src, "the configuration must carry LANG, or the run answers in English"
+    i_lang, i_cfg = src.index('LANG = '), src.index('"language": LANG')
+    assert i_lang < i_cfg, "LANG must be defined before the configuration that uses it"
+
+
 def test_the_public_api_is_used_as_a_reader_would_write_it():
     src = "\n".join("".join(c["source"]) for c in _nb()["cells"] if c["cell_type"] == "code")
     assert "from bioms_zaku.api import check, example_path, run" in src, "the notebook must use the package surface"

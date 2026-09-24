@@ -77,6 +77,15 @@ def resolve(cfg: dict | str | Path) -> dict:
             "data — a column with at most 10 whole numbers is a class, anything else a number — and cannot be "
             "overridden. Remove the key: `bioms-zaku check` prints the type chosen for each column before the run "
             "costs anything.")
+    # EN: a configuration that does NOT declare `language` keeps the language already chosen with `set_language()`,
+    #     instead of falling back to the default and discarding the choice without a word. The CLI has always behaved
+    #     this way — `--lang` is written into the configuration by cli._with_lang before check/run see it — while the
+    #     Python API did not: on 2026-09-24 a user called set_language("pt"), ran, and got an English report, because
+    #     run() re-applies cfg["language"] and the default filled it with "en". A configuration that DOES declare the
+    #     key still wins: the choice lives in one place (§3.4), and this only decides what "not declared" means.
+    if "language" not in cfg:
+        from .i18n import get_language
+        cfg = {**cfg, "language": get_language()}
     r = _merge(DEFAULTS, cfg)
     if r["preset"] not in PRESETS:
         raise ValueError(f"preset must be one of {sorted(PRESETS)}")

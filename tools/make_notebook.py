@@ -51,7 +51,8 @@ md(f'<p align="center"><img src="data:image/png;base64,{_logo}" width="360" alt=
    "This notebook does all three, in that order, on data that travel inside the package. There is nothing to "
    "download and nothing to upload. Run every cell (in Colab: **Runtime → Run all**); it takes about a minute.\n\n"
    "> The narration is in English. The **tool** speaks English, Spanish, Portuguese and Italian: change `LANG` in "
-   "section 1 and every message, figure and the report itself come out in that language.")
+   "section 1 and every message, figure and the report itself come out in that language — `LANG` is passed to "
+   "the tool inside the configuration, in section 3, which is the one place it reads it from.")
 
 code("%pip install -q bioms-zaku")
 
@@ -65,7 +66,7 @@ md("## 1. The data in this example\n\n"
    "the CSV, and `tools/make_zaku_example.py` reproduces it byte for byte.\n\n"
    "`load_example` reads the file from inside the installed package: no download, no upload, no path to fix.")
 
-code('''LANG = "en"        # en · es · pt · it — the language the TOOL speaks (messages, figures, report)
+code('''LANG = "en"        # en · es · pt · it — carried into the configuration in section 3, which is what run() reads
 
 from bioms_zaku.api import load_example, set_language
 
@@ -149,6 +150,9 @@ code('''from bioms_zaku.api import check, example_path, run
 
 config = {
     "run_name": "notebook",
+    # `set_language` above is not enough: `check` and `run` read the language from HERE, the one place the
+    # contract puts it (section 3.4). Without this key they fall back to English and discard the choice.
+    "language": LANG,
     "data": {
         "path": str(example_path("zaku_exemplo")),          # your own CSV goes here
         "columns": {

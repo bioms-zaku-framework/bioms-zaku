@@ -136,3 +136,23 @@ def test_render_formats_thresholds_cleanly_and_keeps_table_order(tmp_path):
     block = lambda s: s.split("## Sensitivity of verdicts")[0]      # everything before the (timestamp-free) sensitivity block must match
     assert block(s1) == block(s2)
     set_language("en")
+
+
+def test_a_configuration_without_language_keeps_the_one_already_chosen():
+    """EN: defect of 2026-09-24. `set_language("pt")` followed by `run(cfg)` produced an English report: run()
+    re-applies cfg["language"], and a configuration that did not declare the key had it filled with the default. The
+    CLI never had the problem — `--lang` is written into the configuration by cli._with_lang before check/run see it —
+    so the same user got two different answers from the terminal and from the API, and the API's was silent.
+    A configuration that DOES declare the key still wins: the choice lives in one place (§3.4)."""
+    from bioms_zaku.config import resolve
+    base = {"run_name": "x", "data": {"path": "a.csv", "columns": {
+        "variables": {"R": "R", "Xc": "Xc", "H": "H", "W": "W"}, "units": {"H": "cm", "W": "kg"},
+        "targets": {"t": "t"}, "controls": {"c": "c"}}}}
+    try:
+        set_language("pt")
+        assert resolve(dict(base))["language"] == "pt", "an undeclared language must not discard set_language()"
+        assert resolve({**base, "language": "it"})["language"] == "it", "a declared language wins over set_language()"
+        set_language("en")
+        assert resolve(dict(base))["language"] == "en"
+    finally:
+        set_language("en")
