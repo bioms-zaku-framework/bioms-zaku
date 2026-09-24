@@ -250,6 +250,12 @@ MSG: dict[str, dict[str, str]] = {
     "r.report": {"en": "report: {path}", "es": "informe: {path}", "pt": "relatório: {path}", "it": "rapporto: {path}"},
     "r.open": {"en": "to open it, paste this in the terminal:  {cmd}   (or double-click the file)", "es": "para abrirlo, pegue esto en la terminal:  {cmd}   (o doble clic en el archivo)",
                "pt": "para abrir, cole isto no terminal:  {cmd}   (ou dois cliques no arquivo)", "it": "per aprirlo, incolla questo nel terminale:  {cmd}   (o doppio clic sul file)"},
+    # EN: Colab has no desktop, no terminal and no file to double-click, and its cell output runs on an isolated
+    #     origin, so an iframe with a path into the VM shows a blank page. Say where the file is and how to get it.
+    "r.open_colab": {"en": "in Colab there is no desktop: open the folder icon on the left, then {folder} → the three dots on report.html → Download. Or run in a cell:  from google.colab import files; files.download(\"{path}\")",
+                     "es": "en Colab no hay escritorio: abra el icono de carpeta a la izquierda, luego {folder} → los tres puntos en report.html → Download. O ejecute en una celda:  from google.colab import files; files.download(\"{path}\")",
+                     "pt": "no Colab não há área de trabalho: abra o ícone de pasta à esquerda, depois {folder} → os três pontinhos no report.html → Download. Ou rode numa célula:  from google.colab import files; files.download(\"{path}\")",
+                     "it": "in Colab non c'è un desktop: apri l'icona della cartella a sinistra, poi {folder} → i tre puntini su report.html → Download. Oppure esegui in una cella:  from google.colab import files; files.download(\"{path}\")"},
     "w.lang_shown": {"en": "language", "es": "idioma", "pt": "idioma", "it": "lingua"},
     # ---------------------------------------------------------------- report (v0.8): method text per block (how · read · rigor)
     "m.input.how": {"en": "The file was read with separator {sep} and decimal {dec} (detected or declared). Only rows with every mapped variable finite and strictly positive enter the algebra (logarithms); a target or control missing removes the row from that audit only. {rin} rows read, {rout} usable. Strata: {strata}.",

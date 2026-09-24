@@ -153,8 +153,27 @@ def render(out_dir: str | Path, lang: str | None = None, *, printer: Callable[[s
     return rp
 
 
+def _where_we_run() -> str:
+    """
+    EN: "colab" | "notebook" | "terminal". Colab is told apart from a local Jupyter because its cell output runs on an
+        isolated origin (*.googleusercontent.com) that cannot read the VM's filesystem: an <iframe> pointing at a path
+        under /content renders a blank page with an error, which is what a user saw on 2026-09-24. So Colab gets an
+        instruction instead of a frame.
+    """
+    import sys as _sys
+    if "google.colab" in _sys.modules:
+        return "colab"
+    try:
+        ip = get_ipython()  # type: ignore[name-defined]  # noqa: F821
+    except NameError:
+        return "terminal"
+    if ip is None or "IPKernelApp" not in getattr(ip, "config", {}):
+        return "terminal"
+    return "notebook"
+
+
 def _show_inline(report: Path) -> None:
-    """EN: inside a Jupyter/Colab notebook, display the report inline (iframe); elsewhere do nothing. Never raises."""
+    """EN: inside a LOCAL Jupyter notebook, display the report inline (iframe); elsewhere do nothing. Never raises."""
     try:
         ip = get_ipython()  # type: ignore[name-defined]  # noqa: F821
     except NameError:
@@ -164,7 +183,8 @@ def _show_inline(report: Path) -> None:
     try:
         from IPython.display import HTML, IFrame, display
         # EN: Jupyter serves files only below the folder it was started in. Inside it → IFrame with a RELATIVE path (works in
-        #     JupyterLab and Colab); outside it → the whole report embedded in the frame (srcdoc), which works anywhere.
+        #     JupyterLab; NOT in Colab, which is handled before this function is called); outside it → the whole report
+        #     embedded in the frame (srcdoc), which works anywhere.
         try:
             rel = report.resolve().relative_to(Path.cwd().resolve()).as_posix()
         except ValueError:
@@ -549,11 +569,15 @@ def _run(cfg: dict, *, printer: Callable[[str], None]) -> dict:
     printer(_t("r.done", sec=f"{time.time() - t0:.0f}", out=out_dir))
     rp = (out_dir / "report.html").resolve()
     if rp.exists():
-        import platform as _pf
-        opener = {"Linux": "xdg-open", "Darwin": "open", "Windows": "start \"\""}.get(_pf.system(), "xdg-open")
         printer(_t("r.report", path=rp))
-        printer(_t("r.open", cmd=f"{opener} \"{rp}\""))
-        _show_inline(rp)
+        onde = _where_we_run()
+        if onde == "colab":
+            printer(_t("r.open_colab", folder=" → ".join(rp.parent.parts[-2:]), path=rp))
+        else:
+            import platform as _pf
+            opener = {"Linux": "xdg-open", "Darwin": "open", "Windows": "start \"\""}.get(_pf.system(), "xdg-open")
+            printer(_t("r.open", cmd=f"{opener} \"{rp}\""))
+            _show_inline(rp)
     return {"tables": tables, "manifest": manifest, "out_dir": out_dir}
 
 

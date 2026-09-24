@@ -639,6 +639,47 @@ This section records what changed in what the tool **promises**. [`CHANGELOG.md`
 what changed for someone who **uses** the tool, per released version. Two records, two questions; the development path
 itself is the git history.
 
+- **v1.0.0rc1 (2026-09-24)** — **the end of a run now speaks to the place it is running in.** A finished run printed
+  two things a Colab user cannot use: a line telling them to paste `xdg-open` into a terminal that does not exist, and
+  an `<iframe>` pointing at a path under `/content`, which renders a **blank page with an error** because Colab serves
+  cell output from an isolated origin that cannot read the virtual machine's filesystem. The code even carried the
+  claim, in a comment, that the relative iframe "works in JupyterLab and Colab"; the first half was true and the second
+  was the defect. Found by the user running the example notebook in Colab before sending it to a reviewer — the numbers
+  were all correct and the tool then had no way to hand the result over.
+  `run` now tells three environments apart — Colab, a local Jupyter, a terminal — and says something usable in each.
+  Colab gets no frame and an instruction instead: the folders to click in the file panel, named, plus the
+  `files.download` line ready to copy. A local Jupyter keeps the inline frame, where it does work. A terminal keeps the
+  command. The message lives in `i18n.py` in the four languages, like the rest of what a researcher reads, and three
+  tests pin it: the three environments are told apart, the Colab path never emits a terminal command and never calls
+  the frame, and the message names the folders. Nothing about any number changes.
+
+- **v1.0.0rc1 (2026-09-24)** — **the example notebook is rewritten: English only, and structured so that a first
+  reader can follow it.** Found by the user running it before sending it to a reviewer, in his words: he could execute
+  the cells and could not do anything else with it. The audit of the whole notebook found the reason, and it was not
+  one defect. It opened with what to press rather than what the tool is for — the problem it solves, dozens of indices
+  many of which are the same thing, and a validation practice that stops at a correlation with lean mass, was in the
+  README and nowhere in the notebook. The configuration map added earlier the same day sat in section 1, using nine
+  terms the reader had not met yet: a reference table in the place of a lesson. The paragraph on the 70/30 split was
+  in the opening, before the reader knew what a target was. The section on the data had no number and no heading of
+  its own, and `label_synthetic` — the known answer that ships inside the example — was buried in a wall of column
+  names. "Your own data go here" appeared in three separate places. The verdict table showed five columns and the
+  narration explained three. And the opening's "the three things the tool does" named redundancy, audit and report,
+  which are neither the notebook's structure nor the tool's three uses.
+  **English only (the user's decision).** Four narrations stacked in every text cell made each one four times longer
+  than it needed to be, and a Portuguese reader scrolled past English and Spanish to reach their own, in a document
+  whose job is to be understood on a first read. `LANG` stayed and was misleading: it made the TOOL speak Portuguese
+  while the narration around it stayed in four languages. The rule is now the documentation's, from 2026-09-21: what
+  you read ABOUT the tool is English; what the tool SAYS to you is in your language — messages, figures and the
+  report, which `LANG` still switches. I argued for generating one notebook per language instead, and was overruled;
+  the decision is recorded because it changes what §3.4 of this contract covers.
+  Structure: an opening that states the problem and the three uses before any code; the data with a heading, a table
+  of columns and `label_synthetic` called out for what it is; redundancy; the audit; the verdicts with all five
+  columns explained; the design, which now carries the paragraph about the split it causes; the report, which says
+  there are TWO of them because the notebook runs twice; and a reference table at the end. The test that required
+  four narrations is replaced by three: the narration is English only, no code cell arrives without a text cell
+  before it, and the narration names every key a reader needs to point the notebook at their own data.
+  Verified: 24 cells, executes end to end outside the repository against the installed wheel, 0 errors.
+
 - **v1.0.0rc1 (2026-09-23)** — **the example base goes from 400 rows to 1400 (700 per sex), so that the tool can
   demonstrate its own design step.** `design` fits the exponents on 70 % of each stratum and audits the index it built
   on the other 30 %; on 200 people per sex that left 60 rows for the audit, and the designed index came out with an
@@ -690,9 +731,10 @@ itself is the git history.
   fall behind; on 09-20 removing three example data sets meant editing seven files to say the same thing seven times.
   Removed: `CONTRATOS.md` and the Spanish, Portuguese and Italian READMEs and guides. `CONTRACTS.md` stops being a
   declared translation and becomes THE contract, carrying section 6. **The four languages the researcher reads while
-  USING the tool are untouched** — report, terminal messages, figures, the example notebook and the catalogue still
-  speak English, Spanish, Portuguese and Italian, and they live in `i18n.py`, one fact per key with the four
-  translations side by side, which is a design that cannot drift. What was removed was duplicated prose in separate
+  USING the tool are untouched** — report, terminal messages, figures and the catalogue still speak English, Spanish,
+  Portuguese and Italian, and they live in `i18n.py`, one fact per key with the four translations side by side, which
+  is a design that cannot drift. (The example NOTEBOOK left this list on 2026-09-24, see that entry: its narration is
+  English, while the tool it drives still answers in the four.) What was removed was duplicated prose in separate
   files, not the tool's languages.
 
 - **v1.0.0rc1 (2026-09-21)** — **the type of every target and every control is read from the data; `audit.task` was
