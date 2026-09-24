@@ -45,13 +45,39 @@ md(f'<p align="center"><img src="data:image/png;base64,{_logo}" width="360" alt=
     "viaggiano dentro il pacchetto. In circa un minuto vedrai le tre cose che lo strumento fa — la ridondanza "
     "**prevista** prima che qualsiasi indice sia calcolato, un audit contro un controllo negativo e il rapporto.")
    + "\n\n" + four(
-    "The data are **synthetic**: 400 people drawn from the means and covariances of NHANES per sex × diabetes. No real "
-    "person is in this file, and every number below is reproducible.",
-    "Los datos son **sintéticos**: 400 personas extraídas de las medias y covarianzas de NHANES por sexo × diabetes. "
+    "**Decide this before configuring anything, because it changes which rows are used.** Judging indices that already "
+    "exist uses EVERY row: nothing is fitted, so nothing has to be held back. Asking the tool to build an index of its "
+    "own is different — an index fitted on rows and then judged on the same rows always looks good — so declaring "
+    "`design` cuts the file once, 70 % to fit and 30 % to judge, and from that point the whole run, the new index and "
+    "the published methods alike, is judged on that 30 %. Section 2 below takes the first road and section 4 the "
+    "second, on the same data, so you can see what the split costs: the intervals widen because n falls.",
+    "**Decida esto antes de configurar nada, porque cambia qué filas se usan.** Juzgar índices que ya existen usa "
+    "TODAS las filas: no se ajusta nada, así que no hay que reservar nada. Pedir a la herramienta que construya un "
+    "índice propio es distinto — un índice ajustado en unas filas y juzgado en esas mismas filas siempre parece bueno "
+    "— así que declarar `design` corta el archivo una vez, 70 % para ajustar y 30 % para juzgar, y desde ahí toda la "
+    "ejecución, el índice nuevo y los métodos publicados por igual, se juzga en ese 30 %. La sección 2 toma el primer "
+    "camino y la 4 el segundo, sobre los mismos datos, para que vea lo que cuesta la división.",
+    "**Decida isto antes de configurar qualquer coisa, porque muda quais linhas são usadas.** Julgar índices que já "
+    "existem usa TODAS as linhas: nada é ajustado, então não há o que reservar. Pedir que a ferramenta construa um "
+    "índice próprio é outra coisa — um índice ajustado numas linhas e julgado nessas mesmas linhas sempre parece bom "
+    "— então declarar `design` corta o arquivo uma vez, 70 % para ajustar e 30 % para julgar, e daí em diante a "
+    "execução inteira, o índice novo e os métodos publicados igualmente, é julgada nesses 30 %. A seção 2 abaixo toma "
+    "o primeiro caminho e a seção 4 o segundo, sobre os mesmos dados, para você ver o que a divisão custa: os "
+    "intervalos alargam porque o n cai.",
+    "**Decidi questo prima di configurare qualsiasi cosa, perché cambia quali righe si usano.** Giudicare indici che "
+    "già esistono usa TUTTE le righe: nulla viene adattato, quindi nulla va tenuto da parte. Chiedere allo strumento "
+    "di costruire un indice proprio è diverso — un indice adattato su certe righe e giudicato sulle stesse righe "
+    "sembra sempre buono — quindi dichiarare `design` taglia il file una volta, 70 % per adattare e 30 % per "
+    "giudicare, e da lì l'intera esecuzione, il nuovo indice e i metodi pubblicati allo stesso modo, è giudicata su "
+    "quel 30 %. La sezione 2 prende la prima strada e la 4 la seconda, sugli stessi dati.")
+   + "\n\n" + four(
+    "The data are **synthetic**: 1400 people drawn from the means and covariances of NHANES per sex × diabetes. No "
+    "real person is in this file, and every number below is reproducible.",
+    "Los datos son **sintéticos**: 1400 personas extraídas de las medias y covarianzas de NHANES por sexo × diabetes. "
     "Ninguna persona real está en este archivo y todos los números de abajo son reproducibles.",
-    "Os dados são **sintéticos**: 400 pessoas sorteadas das médias e covariâncias do NHANES por sexo × diabetes. "
+    "Os dados são **sintéticos**: 1400 pessoas sorteadas das médias e covariâncias do NHANES por sexo × diabetes. "
     "Nenhuma pessoa real está neste arquivo e todo número abaixo é reproduzível.",
-    "I dati sono **sintetici**: 400 persone estratte da medie e covarianze di NHANES per sesso × diabete. Nessuna "
+    "I dati sono **sintetici**: 1400 persone estratte da medie e covarianze di NHANES per sesso × diabete. Nessuna "
     "persona reale è in questo file e ogni numero qui sotto è riproducibile."))
 
 code("%pip install -q bioms-zaku")
@@ -173,22 +199,30 @@ md("## 2. " + " · ".join(("The audit: does the index measure what it claims?",
     "predicts lean mass **beyond** what a fat mass index already predicts. So the run declares, before seeing any "
     "result: target `LMI_DXA` (lean mass by DXA) and negative control `FMI_DXA` (fat mass by DXA). An index is called "
     "*specific* only when it predicts the target beyond the control, and *tracks the control* when its apparent success is "
-    "explained by the control. Everything is declared in the configuration — nothing is chosen afterwards.",
+    "explained by the control. Everything is declared in the configuration — nothing is chosen afterwards. **There is "
+    "no `design` key below, so every row is audited:** 700 people per stratum. Keep that number — section 4 "
+    "declares a design and it becomes 210.",
     "La pregunta no es si un índice correlaciona con la masa magra — casi todo lo hace. Es si predice la masa magra "
     "**más allá** de lo que ya predice un índice de masa grasa. Por eso la ejecución declara, antes de ver cualquier "
     "resultado: objetivo `LMI_DXA` (masa magra por DXA) y control negativo `FMI_DXA` (masa grasa por DXA). Un índice "
     "es *específico* solo cuando predice el objetivo más allá del control, y *sigue al control* cuando su éxito aparente lo "
-    "explica el control. Todo se declara en la configuración — nada se elige después.",
+    "explica el control. Todo se declara en la configuración — nada se elige después. **No hay clave `design` abajo, "
+    "así que se auditan todas las filas:** 700 personas por estrato. Guarde ese número — la sección 4 declara un "
+    "diseño y pasa a 210.",
     "A pergunta não é se um índice correlaciona com massa magra — quase tudo correlaciona. É se ele prediz massa magra "
     "**além** do que um índice de massa gorda já prediz. Por isso a execução declara, antes de ver qualquer "
     "resultado: alvo `LMI_DXA` (massa magra por DXA) e controle negativo `FMI_DXA` (massa gorda por DXA). Um índice é "
     "*específico* só quando prediz o alvo além do controle, e *mede o controle* quando o sucesso aparente é explicado pelo "
-    "controle. Tudo é declarado na configuração — nada é escolhido depois.",
+    "controle. Tudo é declarado na configuração — nada é escolhido depois. **Não há chave `design` abaixo, então "
+    "todas as linhas são auditadas:** 700 pessoas por estrato. Guarde esse número — a seção 4 declara um desenho "
+    "e ele vira 210.",
     "La domanda non è se un indice correla con la massa magra — quasi tutto lo fa. È se predice la massa magra "
     "**oltre** ciò che un indice di massa grassa già predice. Per questo l'esecuzione dichiara, prima di vedere "
     "qualsiasi risultato: target `LMI_DXA` (massa magra da DXA) e controllo negativo `FMI_DXA` (massa grassa da DXA). "
     "Un indice è *specifico* solo quando predice il target oltre il controllo, e *segue il controllo* quando il successo "
-    "apparente è spiegato dal controllo. Tutto è dichiarato nella configurazione — nulla è scelto dopo."))
+    "apparente è spiegato dal controllo. Tutto è dichiarato nella configurazione — nulla è scelto dopo. **Non c'è "
+    "una chiave `design` qui sotto, quindi ogni riga è verificata:** 700 persone per strato. Tieni il numero — la "
+    "sezione 4 dichiara un disegno e diventa 210."))
 
 code('''from bioms_zaku.api import check, example_path, run
 
@@ -272,7 +306,12 @@ code('''import copy
 
 config2 = copy.deepcopy(config)
 config2["run_name"] = "proposals"
-config2["design"] = [{"target": "LMI_DXA", "id": "Zaku_LMI"}]        # the tool builds an index for the target
+# EN: the design cuts the file ONCE. The three keys below are the defaults, written out so the cut is visible:
+#     70 % of each stratum fits the exponents, the other 30 % judges them — and judges every published method
+#     too, so all are compared on rows the fit never saw. seed 42 makes the cut reproducible and the manifest
+#     records its hash. `fraction` accepts only 0.60, 0.70 or 0.75.
+config2["design"] = [{"target": "LMI_DXA", "id": "Zaku_LMI",
+                      "split": "holdout", "fraction": 0.70, "seed": 42}]
 config2["catalog"] = {
     "include": ["curated", "my_index"],                              # the curated methods PLUS your formula
     "user_entries": [{
@@ -285,7 +324,11 @@ config2["catalog"] = {
     }],
 }
 
-res2 = run(config2)''')
+res2 = run(config2)
+
+d = res2["manifest"]["design"]                        # what the cut actually did, from the manifest
+print(f"fitted on {d['n_design']} rows, judged on {d['n_audit']} rows | {d['mode']}"
+      f" fraction={d['fraction']} seed={d['seed']} stratified_by={d['stratify_on']} cut={d['design_hash']}")''')
 
 md(four(
     "The exponents the tool fitted, and the verdict each new index earned out of sample. `designed` marks the index "
