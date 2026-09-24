@@ -80,6 +80,18 @@ md(f'<p align="center"><img src="data:image/png;base64,{_logo}" width="360" alt=
     "I dati sono **sintetici**: 1400 persone estratte da medie e covarianze di NHANES per sesso × diabete. Nessuna "
     "persona reale è in questo file e ogni numero qui sotto è riproducibile."))
 
+md("## 1. " + " · ".join(("Where you configure it", "Dónde se configura", "Onde se configura",
+                         "Dove si configura")) + "\n\n" + four(
+    "Everything you change lives in two cells: the one that builds `config` (section 3) and the one that builds `config2` (section 5). Nothing else has to be touched. Two facts before you edit them. **Regression or classification is read from the data, not declared:** a continuous target is a regression, a target with a few whole values is a classification, and there is no key to set it — point `targets` at `diabetes` instead of `LMI_DXA` and everything changes with it. **Running every cell runs TWO analyses on the same data:** section 3 without a split, every row audited, and section 5 with one, because there an index is fitted. As shipped, the target is `LMI_DXA` (lean mass index by DXA), the negative control is `FMI_DXA` (fat mass index), the strata are the sexes and the preset is `quick`.",
+    "Todo lo que usted cambia vive en dos celdas: la que construye `config` (sección 3) y la que construye `config2` (sección 5). No hay que tocar nada más. Dos hechos antes de editarlas. **Regresión o clasificación se lee del dato, no se declara:** un objetivo continuo es regresión, un objetivo con pocos valores enteros es clasificación, y no hay clave para elegirlo — apunte `targets` a `diabetes` en vez de `LMI_DXA` y todo cambia con él. **Ejecutar todas las celdas ejecuta DOS análisis sobre los mismos datos:** la sección 3 sin división, todas las filas auditadas, y la sección 5 con división, porque allí se ajusta un índice. Tal como viene, el objetivo es `LMI_DXA`, el control negativo `FMI_DXA`, los estratos son los sexos y el preset es `quick`.",
+    "Tudo o que você muda está em duas células: a que monta o `config` (seção 3) e a que monta o `config2` (seção 5). Nada mais precisa ser tocado. Dois fatos antes de editá-las. **Regressão ou classificação é lida do dado, não declarada:** alvo contínuo é regressão, alvo com poucos valores inteiros é classificação, e não existe chave para escolher — aponte `targets` para `diabetes` em vez de `LMI_DXA` e tudo muda junto. **Executar todas as células roda DUAS análises sobre os mesmos dados:** a seção 3 sem divisão, todas as linhas auditadas, e a seção 5 com divisão, porque lá um índice é ajustado. Como vem, o alvo é `LMI_DXA` (índice de massa magra por DXA), o controle negativo é `FMI_DXA` (índice de gordura), os estratos são os sexos e o preset é `quick`.",
+    "Tutto ciò che cambi sta in due celle: quella che costruisce `config` (sezione 3) e quella che costruisce `config2` (sezione 5). Nient'altro va toccato. Due fatti prima di modificarle. **Regressione o classificazione si legge dal dato, non si dichiara:** un target continuo è regressione, un target con pochi valori interi è classificazione, e non c'è una chiave per sceglierlo — punta `targets` su `diabetes` invece di `LMI_DXA` e tutto cambia con esso. **Eseguire tutte le celle esegue DUE analisi sugli stessi dati:** la sezione 3 senza divisione, ogni riga verificata, e la sezione 5 con divisione, perché lì un indice viene adattato. Così com'è, il target è `LMI_DXA`, il controllo negativo `FMI_DXA`, gli strati sono i sessi e il preset è `quick`.")
+   + "\n\n" + "\n\n".join((
+    "**EN**\n\n| where | what it changes |\n|---|---|\n| `LANG` | the language of every message, figure and report |\n| `data.path` and `data.columns.variables` | your CSV, and what your columns are called |\n| `targets`, `controls`, `pairing` | **the question**: what to predict, and what to be protected against |\n| `strata` | the groups judged separately (here: sex) |\n| `covariates` | what *adds value* is measured against (here: body mass and stature) |\n| `catalog.include` | which methods are audited |\n| `preset` | `quick` to demonstrate · `full` to publish |\n| `config2[\"design\"]` | asks the tool to BUILD an index — **this line, and only this line, creates the 70/30 split** |\n| `expr` | your own formula, any expression in R, Xc, H, W |\n",
+    "**ES**\n\n| dónde | qué cambia |\n|---|---|\n| `LANG` | el idioma de cada mensaje, figura e informe |\n| `data.path` y `data.columns.variables` | su CSV y cómo se llaman sus columnas |\n| `targets`, `controls`, `pairing` | **la pregunta**: qué predecir y contra qué protegerse |\n| `strata` | los grupos juzgados por separado (aquí: sexo) |\n| `covariates` | contra qué se mide *añade valor* (aquí: masa corporal y estatura) |\n| `catalog.include` | qué métodos se auditan |\n| `preset` | `quick` para demostrar · `full` para publicar |\n| `config2[\"design\"]` | pide a la herramienta que CONSTRUYA un índice — **esta línea, y sólo ella, crea la división 70/30** |\n| `expr` | su propia fórmula, cualquier expresión en R, Xc, H, W |\n",
+    "**PT**\n\n| onde | o que muda |\n|---|---|\n| `LANG` | o idioma de cada mensagem, figura e relatório |\n| `data.path` e `data.columns.variables` | o seu CSV, e como as suas colunas se chamam |\n| `targets`, `controls`, `pairing` | **a pergunta**: o que prever, e contra o que se proteger |\n| `strata` | os grupos julgados separadamente (aqui: sexo) |\n| `covariates` | contra o que *acrescenta valor* é medido (aqui: massa corporal e estatura) |\n| `catalog.include` | quais métodos são auditados |\n| `preset` | `quick` para demonstrar · `full` para publicar |\n| `config2[\"design\"]` | pede que a ferramenta CONSTRUA um índice — **esta linha, e só ela, cria a divisão 70/30** |\n| `expr` | a sua fórmula, qualquer expressão em R, Xc, H, W |\n",
+    "**IT**\n\n| dove | cosa cambia |\n|---|---|\n| `LANG` | la lingua di ogni messaggio, figura e rapporto |\n| `data.path` e `data.columns.variables` | il tuo CSV e come si chiamano le tue colonne |\n| `targets`, `controls`, `pairing` | **la domanda**: cosa prevedere e da cosa proteggersi |\n| `strata` | i gruppi giudicati separatamente (qui: sesso) |\n| `covariates` | rispetto a cosa si misura *aggiunge valore* (qui: massa e statura) |\n| `catalog.include` | quali metodi vengono verificati |\n| `preset` | `quick` per dimostrare · `full` per pubblicare |\n| `config2[\"design\"]` | chiede allo strumento di COSTRUIRE un indice — **questa riga, e solo questa, crea la divisione 70/30** |\n| `expr` | la tua formula, qualsiasi espressione in R, Xc, H, W |\n")))
+
 code("%pip install -q bioms-zaku")
 
 md("## " + " · ".join(("The data come with the package", "Los datos vienen con el paquete",
@@ -125,7 +137,7 @@ md(four(
     "riferimento. `label_synthetic` è un'etichetta costruita **solo** da massa grassa ed età: una risposta nota per "
     "verificare lo strumento. `diabetes` è la risposta di diagnosi medica dell'indagine di origine."))
 
-md("## 1. " + " · ".join(("Redundancy predicted before anything is computed",
+md("## 2. " + " · ".join(("Redundancy predicted before anything is computed",
                           "Redundancia predicha antes de calcular nada",
                           "Redundância prevista antes de calcular nada",
                           "Ridondanza prevista prima di calcolare nulla")) + "\n\n" + four(
@@ -191,7 +203,7 @@ md(four(
     "**popolazione**, non delle formule: mescolare due popolazioni cambia Σ e con essa ogni correlazione. Per questo "
     "tutto ciò che segue è calcolato dentro uno strato e mai fra strati."))
 
-md("## 2. " + " · ".join(("The audit: does the index measure what it claims?",
+md("## 3. " + " · ".join(("The audit: does the index measure what it claims?",
                           "La auditoría: ¿el índice mide lo que dice medir?",
                           "A auditoria: o índice mede o que diz medir?",
                           "L'audit: l'indice misura ciò che dichiara?")) + "\n\n" + four(
@@ -261,7 +273,7 @@ check(config)''')
 
 code("res = run(config)")
 
-md("## 3. " + " · ".join(("The verdicts", "Los veredictos", "Os vereditos", "I verdetti")) + "\n\n" + four(
+md("## 4. " + " · ".join(("The verdicts", "Los veredictos", "Os vereditos", "I verdetti")) + "\n\n" + four(
     "One row per index and stratum. `redundant`: another index already carries the same information. `specific`: it "
     "predicts the target beyond the negative control. `useful`: it adds something over body mass and stature alone.",
     "Una fila por índice y estrato. `redundant`: otro índice ya lleva la misma información. `specific`: predice el "
@@ -275,7 +287,7 @@ code('''import pandas as pd
 
 pd.read_csv(f"{res['out_dir']}/screening.csv")''')
 
-md("## 4. " + " · ".join(("The tool proposes new indices", "La herramienta propone nuevos índices",
+md("## 5. " + " · ".join(("The tool proposes new indices", "La herramienta propone nuevos índices",
                          "A ferramenta propõe índices novos", "Lo strumento propone nuovi indici")) + "\n\n" + four(
     "The audit above judged what already exists. This is the other direction: from the SAME data the tool fits the "
     "exponents of R, Xc, H and W to the target by least squares on 70 % of the rows of each stratum, and audits the "
@@ -364,7 +376,7 @@ display(novos[["method_id", "stratum", "vector_source", "fit_r2", "e_R", "e_Xc",
 vereditos = pd.read_csv(f"{res2['out_dir']}/screening.csv")
 vereditos[vereditos["method_id"].isin(["Zaku_LMI", "my_index"])]''')
 
-md("## 5. " + " · ".join(("The report, and your own data", "El informe y sus propios datos",
+md("## 6. " + " · ".join(("The report, and your own data", "El informe y sus propios datos",
                           "O relatório e os seus próprios dados", "Il rapporto e i tuoi dati")) + "\n\n" + four(
     "`report.html` in the output folder holds every number above with the method text beside it — how it was "
     "computed, how to read it, what rigor was applied — and a download for every table. It is one file: send it, "
@@ -391,7 +403,7 @@ md("## 5. " + " · ".join(("The report, and your own data", "El informe y sus pr
     "delle colonne sopra, oppure lascia che lo strumento ti interroghi in un terminale: "
     "`bioms-zaku start miei_dati.csv`. Ciò che lo strumento garantisce, e sotto quali ipotesi, è in `CONTRACTS.md`."))
 
-md("## 6. " + " · ".join(("Opening the report in Colab", "Abrir el informe en Colab",
+md("## 7. " + " · ".join(("Opening the report in Colab", "Abrir el informe en Colab",
                          "Abrir o relatório no Colab", "Aprire il rapporto in Colab")) + "\n\n" + four(
     "In Colab the file lives on a machine in Google's cloud, not on yours: there is no desktop to double-click and no "
     "terminal, so the line the tool prints at the end of a run (`xdg-open ...`) has nothing to open. Uncomment the cell "
