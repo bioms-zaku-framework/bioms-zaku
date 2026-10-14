@@ -193,7 +193,32 @@ code("res = run(config)")
 # ----------------------------------------------------------------------------------------------------------------
 # 4. The verdicts
 # ----------------------------------------------------------------------------------------------------------------
-md("## 4. The verdicts\n\n"
+md("## 4. The verdicts — read one before the table\n\n"
+   "The run gives each index, in each stratum, one label such as `original-tracks-control-useful`. A label "
+   "abbreviates three answers, and **each answer is relative to a different reference**:\n\n"
+   "| answer | relative to | in this run |\n|---|---|---|\n"
+   "| *original* or *redundant* | the methods published earlier | redundant when an earlier one ranks people with "
+   "\\|Spearman\\| ≥ 0.95 |\n"
+   "| *specific*, *tracks the control*, *both* or *no signal* | the negative control you declared | `FMI_DXA` |\n"
+   "| *useful* or *not useful* | the covariates you declared | body mass and stature |\n\n"
+   "So before the table, open one row. `explain` shows the numbers behind each answer — the two increments S1 and "
+   "S2 with their intervals, the gain over body mass and stature with its interval — the rule applied to them, and "
+   "the decision. It computes nothing: it reads the tables the run wrote. Section 3 of `report.html` carries the same "
+   "reading for every row.")
+
+code('''from bioms_zaku.api import explain
+
+METHOD, STRATUM = "Rsp", "M"            # any method and stratum of the table below
+explain(res, METHOD, STRATUM)''')
+
+md("**What this row shows.** `Rsp` in men is labelled *tracks the control* and *useful* at the same time, which "
+   "reads like a contradiction until the numbers are open. Over body mass and stature it adds clearly (part 3). "
+   "But beyond the declared control its gain on lean mass stays below the margin (S1 is absent), while its gain on "
+   "fat mass beyond lean mass is large (S2 is present). Useful over size, and not specific to the target: two labels, two "
+   "references, no contradiction.\n\n"
+   "Change `METHOD` and `STRATUM` to open any other row.")
+
+md("### The whole table\n\n"
    "One row per index and stratum. Five columns answer five different questions:\n\n"
    "| column | the question it answers |\n|---|---|\n"
    "| `redundant` | does an index published EARLIER already carry the same information? (Spearman ≥ 0.95; "
@@ -202,8 +227,9 @@ md("## 4. The verdicts\n\n"
    "| `useful` | does it add anything over body mass and stature alone? |\n"
    "| `identity` | is it the same formula as another index, up to a constant? (not merely similar — identical) |\n"
    "| `class` | the four above in one label, e.g. `redundant-specific-useful` |\n\n"
-   "Read them together: an index can be specific and useless, redundant and still useful, or neither. The full "
-   "numbers behind each — increments, intervals, sample sizes — are in `audit.csv` and in the report.")
+   "Read them together: an index can be specific and useless, redundant and still useful, or neither. The numbers "
+   "behind a label are what `explain` prints for its row; `audit.csv`, `utility.csv` and `redundancy.csv` hold them "
+   "at full precision.")
 
 code('''import pandas as pd
 
@@ -269,6 +295,11 @@ display(novos[["method_id", "stratum", "vector_source", "fit_r2", "e_R", "e_Xc",
 vereditos = pd.read_csv(f"{res2['out_dir']}/screening.csv")
 vereditos[vereditos["method_id"].isin(["Zaku_LMI", "my_index"])]''')
 
+md("Open the designed index the same way, and the refusal is in numbers: S1 is present — the index does carry the "
+   "target beyond the control — but S2 is present too, so the verdict is *both*, not *specific*.")
+
+code('explain(res2, "Zaku_LMI", "M")')
+
 # ----------------------------------------------------------------------------------------------------------------
 # 6. The report
 # ----------------------------------------------------------------------------------------------------------------
@@ -313,7 +344,8 @@ md("## 7. Where to change what\n\n"
    "| `preset` | `quick` to demonstrate · `full` to publish (2000 resamples, 5×50 cross-validation) |\n"
    "| `config2[\"design\"]` | asks the tool to BUILD an index — **this line, and only this line, creates the 70/30 "
    "split** |\n"
-   "| `expr` | your own formula: any expression in `R`, `Xc`, `H`, `W` |\n\n"
+   "| `expr` | your own formula: any expression in `R`, `Xc`, `H`, `W` |\n"
+   "| `METHOD`, `STRATUM` (section 4) | which row `explain` opens; it changes nothing in the run |\n\n"
    "Two things that are read and never declared: **the type of the analysis** (continuous target → regression; a few "
    "whole values → classification) and **the type of every control**, which may differ from the target's.")
 

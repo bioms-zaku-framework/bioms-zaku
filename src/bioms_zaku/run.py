@@ -121,6 +121,27 @@ def run(config: dict | str | Path, *, printer: Callable[[str], None] = print, pr
         return _run(cfg, printer=printer)
 
 
+def read_tables(out_dir: str | Path) -> dict[str, pd.DataFrame]:
+    """EN: the tables of a FINISHED run, read back from its CSVs exactly as `render` and `explain` need them: ids and
+        strata as text, booleans as bools, an empty table as an empty frame, and every float equal to the float that
+        was written. pandas' default parser is not exact: on 2026-10-02, 1,719 of the 3,536 floats of the example
+        notebook's two runs came back one unit in the last place away (0.03, written as 0.029999999999999999, read as
+        0.0299999999999999). Harmless while the report only displayed them; not once `explain` re-applies the rules,
+        where P = 0.95 exactly (190 of 200 resamples) read as 0.9499… would turn "present" into "absent"."""
+    str_cols = {"stratum": str, "sigma_from": str, "observed_in": str, "a_id": str, "b_id": str, "method_id": str}
+    def _read(p: Path) -> pd.DataFrame:
+        try:
+            return pd.read_csv(p, dtype=str_cols, float_precision="round_trip")
+        except pd.errors.EmptyDataError:                 # EN: an empty table is written as an empty file
+            return pd.DataFrame()
+    tables = {p.stem: _read(p) for p in sorted(Path(out_dir).glob("*.csv"))}
+    for name, df in tables.items():                       # EN: booleans come back as bools; empty tables stay empty
+        for c in df.columns:
+            if df[c].dtype == object and set(df[c].dropna().unique()) <= {"True", "False"}:
+                df[c] = df[c].map({"True": True, "False": False})
+    return tables
+
+
 def render(out_dir: str | Path, lang: str | None = None, *, printer: Callable[[str], None] = print) -> Path:
     """
     EN: re-write summary.md, figures/ and report.html of a FINISHED run in another language, from the saved tables and
@@ -132,17 +153,7 @@ def render(out_dir: str | Path, lang: str | None = None, *, printer: Callable[[s
     if lang:
         cfg["language"] = lang; cfg.setdefault("figures", {})["language"] = lang
     set_language(cfg.get("language", "en"))
-    str_cols = {"stratum": str, "sigma_from": str, "observed_in": str, "a_id": str, "b_id": str, "method_id": str}
-    def _read(p: Path) -> pd.DataFrame:
-        try:
-            return pd.read_csv(p, dtype=str_cols)
-        except pd.errors.EmptyDataError:                 # EN: an empty table is written as an empty file
-            return pd.DataFrame()
-    tables = {p.stem: _read(p) for p in sorted(out_dir.glob("*.csv"))}
-    for name, df in tables.items():                       # EN: booleans come back as bools; empty tables stay empty
-        for c in df.columns:
-            if df[c].dtype == object and set(df[c].dropna().unique()) <= {"True", "False"}:
-                df[c] = df[c].map({"True": True, "False": False})
+    tables = read_tables(out_dir)
     write_summary(out_dir, cfg, tables, manifest)
     if cfg["output"].get("figures", True):
         from .plots import make_all

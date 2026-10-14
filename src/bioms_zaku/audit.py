@@ -441,7 +441,7 @@ def utility_method(method_id: str, stratum: str, x: np.ndarray, covariates: np.n
                    targets: dict[str, np.ndarray], cfg: AuditConfig, estimator=None, groups: np.ndarray | None = None) -> list[UtilityRow]:
     """
     EN: added value of the index over covariates: A = covariates, B = covariates + index, same resamples, complete-case
-        on the union of columns. Useful if the lower CI bound of (B − A) exceeds the margin (§5).
+        on the union of columns. Useful if the lower CI bound of (B − A) exceeds the margin — stricter than the rule for S1/S2 (contract §3.2).
     """
     names = list(targets)
     Yall = np.column_stack([targets[k] for k in names])

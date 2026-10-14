@@ -56,6 +56,9 @@ Open `report.html` in the browser (the command is on the last line of the termin
 
 - **Key numbers**: people audited, methods, verdicts as colored seals, how many add value, whether target and control are
   coupled in your data.
+- **Reading one result**: one method opened — the earlier method it resembles and how much, the two increments S1 and S2
+  with their intervals and the rule they pass or fail, the gain over body mass and stature, and the label they add up to.
+  Choose any method and stratum in the list.
 - **Verdict card** (one per stratum): each method in three columns — original or repeats an earlier method; specific, tracks the
   control, measures both or no signal; adds value beyond body mass and stature or not. ◇ = yours; △ = designed.
 - **Assumptions and thresholds**: each procedure with the assumption it carries and its state in this run; each threshold with

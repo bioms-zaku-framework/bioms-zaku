@@ -22,6 +22,18 @@ class CheckError(ValueError):
     pass
 
 
+
+def why_skipped(w: str) -> str:
+    """EN: the reason a method was skipped, as recorded in the manifest (English, machine-stable), in the current
+        language. Used by `check`, by the reading of one result (`explain.py`) and by section 3 of the report — one
+        translator, so a reason never reaches a Portuguese page in English (2026-10-02). Anything else (an
+        `AuditError` text) passes unchanged, under the declared exception of contract §3.4."""
+    from .i18n import t
+    if w.startswith("missing inputs "): return t("c.why_missing", list=w[len("missing inputs "):])
+    if w.startswith("excluded: "): return t("c.why_excluded", reason=w[len("excluded: "):])
+    if w.startswith("closed method"): return t("c.why_closed")
+    return w
+
 def check(config: str | Path | dict, *, printer: Callable[[str], None] = print) -> dict:
     """EN: returns a report dict; raises CheckError on blocking problems. ES/PT: relatório; erro quando bloqueante."""
     rep: dict = {"errors": [], "warnings": [], "info": []}
@@ -122,13 +134,8 @@ def check(config: str | Path | dict, *, printer: Callable[[str], None] = print) 
             rep["warnings"].append(t("c.proposed_not_included", id=ue.get("id")))
     hint = {"sexo": "sex", "idade": "age", "C_arm": "arm", "C_waist": "waist", "C_calf": "calf"}
     need: dict[str, list[str]] = {}
-    def _why(w: str) -> str:
-        if w.startswith("missing inputs "): return t("c.why_missing", list=w[len("missing inputs "):])
-        if w.startswith("excluded: "): return t("c.why_excluded", reason=w[len("excluded: "):])
-        if w.startswith("closed method"): return t("c.why_closed")
-        return w
     for k, why in skipped.items():
-        rep["info"].append(t("c.skipped", k=k, why=_why(why)))
+        rep["info"].append(t("c.skipped", k=k, why=why_skipped(why)))
         if why.startswith("missing inputs"):
             for inp in why[len("missing inputs "):].strip("[]").replace("'", "").split(", "):
                 need.setdefault(inp, []).append(k)

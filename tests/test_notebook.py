@@ -100,3 +100,32 @@ def test_the_logo_opens_the_notebook_and_is_embedded():
     assert "data:image/png;base64," in first, "the notebook must open with the embedded logo"
     head = first.split("# BioMS")[0]
     assert "http" not in head, "the logo must not be fetched from the network"
+
+
+def test_the_notebook_runs_end_to_end_and_its_narration_still_holds(tmp_path, monkeypatch):
+    """EN: until 2026-10-02 the notebook was executed only by hand. Section 4 now NAMES what a row shows — `Rsp` in men
+    tracks the control and is useful at once, S1 absent and S2 present — and section 5 says the designed index comes
+    out BOTH, S1 and S2 present. Those sentences are claims about numbers; if the example data, a default or a rule
+    changes, they must fail here and not mislead a reader. Every code cell runs except the install, in a clean folder."""
+    from bioms_zaku import explain as X
+    from bioms_zaku.run import read_tables
+    import json as _json
+    monkeypatch.chdir(tmp_path)
+    g = {"display": lambda *a, **k: None, "__name__": "__main__"}
+    for i, c in enumerate(_nb()["cells"]):
+        src = "".join(c["source"])
+        if c["cell_type"] != "code" or src.lstrip().startswith("%pip"):
+            continue
+        exec(compile(src, f"cell{i}", "exec"), g)                       # an exception here is the failure
+    def row(res, m, s):
+        out = res["out_dir"]; man = _json.loads((out / "manifest.json").read_text(encoding="utf-8"))
+        return X.explain_row(read_tables(out), man["config_resolved"], m, s, manifest=man)
+    assert (g["METHOD"], g["STRATUM"]) == ("Rsp", "M"), "the narration of section 4 is written for Rsp in men"
+    e = row(g["res"], "Rsp", "M")
+    assert e["consistent"] and e["audit"]["verdict"] == "TRACKS_CONTROL" and e["utility"]["useful"]
+    assert not e["audit"]["s1"]["present"] and e["audit"]["s2"]["present"]
+    z = row(g["res2"], "Zaku_LMI", "M")
+    assert z["consistent"] and z["designed"] and z["audit"]["verdict"] == "BOTH"
+    assert z["audit"]["s1"]["present"] and z["audit"]["s2"]["present"]
+    from bioms_zaku.i18n import set_language
+    set_language("en")

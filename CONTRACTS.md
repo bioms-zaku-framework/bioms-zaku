@@ -270,6 +270,19 @@ output: {dir: ./zaku_out, figures: true}
   comparison with the conditional one. Justification: target and control are correlated (0.7 in NHANES); the marginal
   difference credited the index for the part of the target that the control also carries; the conditional one asks what
   the index adds.
+- **Added value (utility), and why its rule differs from the one above (recorded 2026-10-02).** A = the declared
+  `covariates`, B = the covariates + the index, fitted on the same resamples and the same rows (complete case on the
+  union of the columns); the gain is score(B) − score(A), summarized like S1 and S2. The index is *useful* when the
+  **lower end** of the 95 % interval of the gain exceeds `utility_margin` (0.03). This is stricter than the rule for an
+  increment above: a lower end above 0.03 already implies a mean above 0.03, an interval above 0 and P(gain > 0) ≥ 0.975.
+  The two rules come from different dates and were never set side by side until the reading of one row was written
+  out (§4.7): utility kept the rule fixed on 2026-09-10 from the NHANES analysis (the development plan of that date, kept outside this repository, §5; the code was
+  verified equal to the earlier engine to 1e-9), while specificity took its margin in the form "mean > margin" with the
+  conditional control of v0.5 (2026-09-13). The difference was inherited, not chosen; on 2026-10-02 the user kept the
+  stricter rule, because it is the rule of the analysis the paper rests on and changing it would change verdicts
+  already computed. The point estimates `score_base` and `score_with` in `utility.csv` come from the repeated
+  cross-validation; the gain and its interval come from the bootstrap, so `score_with − score_base` is not
+  `delta_mean` and is never read as one.
 - **Convenience sample.** The framework does not estimate population parameters: sampling weights are ignored by design
   and the verdicts describe the analyzed sample. The summary states this.
 - `declarations.target_kinds` (optional): `{column: lean_mass|fat_mass|body_water|hydration|cell_mass|other}` for
@@ -423,6 +436,19 @@ determinism and hash.
   researcher reads in a run that works — the data, catalog, strata, bootstrap and design lines of `check`, the progress
   with ETA, the verdicts block, `summary.md`, the headings of `report.html` and the texts of the five official figures —
   follows `language`, and is tested in the four.
+- **The exception widened (2026-10-02, the user's decision):** the warnings that `run` itself writes into
+  `manifest.warnings` are English too, under every `language`. There are eleven places in `run.py` that write one,
+  counted in the code on that date (an earlier note said ten): (1) the audit of a stratum fell back to the raw scale
+  because a column has non-positive values; (2) fewer than half of the bootstrap resamples were kept for some method;
+  (3) a design leaves fewer than 100 rows to audit; (4) a method declared by its authors for one kind of target is
+  audited against a target and control of other kinds; (5) a formula uses sample statistics of the stratum; (6) a share
+  of the rows lacks the index; (7) an audit of the scale sensitivity was refused (it wraps an `AuditError`); (8)
+  `nested_tuning` was requested and is not implemented; (9) an audit of the estimator sensitivity was refused; (10) a
+  combination of two methods was skipped; (11) the figures were skipped. Each names a stratum, a method id, a column or
+  a YAML key, and they reach `report.html` only through the list of warnings of the Rigor section, which already keeps
+  the language of the run (§4.6). Unlike the input-layer strings above, (1), (4) and (5) are statements about the
+  science of the run, not about a file; they stay in English by the same decision, recorded here so that the boundary
+  is written down and not discovered.
 - Justification: the tool is for researchers; reading in one's own language is part of being intuitive. What is for the
   machine stays stable.
 
@@ -456,7 +482,7 @@ each threshold with its value, origin and support. The adjustments of assumption
 | verdict margin, gain in R² (regression) or in Tjur's D (classification) | 0.03 | anchored in the literature | Case 1 of ch. 9 of Cohen 1988 (2nd ed.; DOI of the reprint 10.4324/9780203771587): f² = ΔR²/(1 − R²_total), A = the control (or W and H), B = the index; a small f² = 0.02 ⇒ ΔR² ≤ 0.02 for any baseline, so 0.03 sits above it; Cohen's values are population values and the gain here is out of sample (a conservative margin); Cohen calls the convention a compromise to be rejected when it does not serve — hence a sensitivity grid; classification: the gain in Tjur's D, asymptotically a fraction of variation explained (exact relations with the quadratic R², Tjur 2009, 10.1198/tast.2009.08210), the same margin by declared analogy; ΔAUROC would be insensitive (Pencina 2008, 10.1002/sim.2929) |
 | P(gain > 0) ≥ | 0.95 | convention | the mirror of the one-sided 5 % |
 | level of the interval | 95 % | convention | universal; the family level 1 − 0.05/k is reported |
-| margin of the added value | 0.03 | anchored | the same anchor as the verdict margin |
+| margin of the added value | 0.03 | anchored | the same anchor as the verdict margin, applied to the LOWER END of the interval, not to the mean — the stricter of the two rules (§3.2) |
 | cos parallel / coupled / projection R² | 0.90 / 0.80 / 0.50 | decision of the framework | descriptive flags; cosines and R² published in full |
 | tolerance of the Σ transfer | 0.05 | decision of the framework | a fixed tolerance in r, fair with respect to n |
 | bootstrap B | 2,000 | convention | stable percentiles (Efron 1979) |
@@ -520,24 +546,33 @@ here. The target↔control correlation per stratum, with a warning above 0.8 (a 
   — extra `bioms-zaku[excel]`; without it, a warning and the CSV); the section **Rigor of this run** (preset, seeds,
   versions, hash of the input, hash of every output, time, warnings, the declaration of independence); the manifest.
 - **The report recomputes nothing:** it reads the tables, the manifest and the configuration. One source of truth.
+  Section 3 re-applies the declared rules to the stored numbers in order to SHOW how each decision follows from them
+  (§4.7); it never produces a number or a decision of its own. `render` reads the tables back exactly — every float
+  equal to the one written (`read_tables`, `float_precision="round_trip"`, 2026-10-02; pandas' default parser returned
+  about half of them one unit in the last place away).
   Consequence: `bioms-zaku --lang xx render <folder>` (or `render(folder, lang)` in the API) re-writes the summary, the
   figures and the report of a finished run in another language, without touching the tables or the manifest (tested: the
   hashes of the tables unchanged). The WARNINGS recorded in the manifest are a record of the moment of the run and stay
   in the language of that run, even inside a re-rendered report.
 - **Determinism:** `report.html` carries a date and time and does NOT enter `outputs_sha256`; the embedded CSVs are byte
   for byte the hashed files (tested). Out of scope: interactive charts, filters, switching language inside the page (the
-  `render` command resolves the language).
-- **Structure (v0.9, 2026-09-15).** Eight numbered sections, in this order, with a sticky table of contents at the top:
+  `render` command resolves the language). One exception, the user's decision of 2026-10-02: the selector of section 3,
+  which shows one of the rows already written into the page (§4.7).
+- **Structure (v0.9, 2026-09-15; ten sections since 2026-10-02).** Ten numbered sections, in this order, with a sticky table of contents at the top:
   1 About (text, citation, the attribution of the name, and the **Zaku diagram** — a fixed SVG of the method in four
   columns: measured variables → decomposition (exact example vectors H²/R, Xc/H, R/H; a schematic Σ; the identity
   r = aᵀΣb/√(aᵀΣa·bᵀΣb)) → out-of-sample audit → verdicts; also written to `figures/zaku_method.svg`, in the language of
   the run); 2 Key numbers (people, strata, methods and curated ones, the verdicts of the primary target as colored
-  seals, added value k of n, target↔control coupling per stratum — all read from the tables, tested); 3 Summary in text
-  (`summary.md`, folded); 4 Figures, grouped by family (the verdict card open; the others closed; one open at a time; a
-  human translated title, the caption once per family, a click enlarges); 5 Results, one foldable block per result
+  seals, added value k of n, target↔control coupling per stratum — all read from the tables, tested); 3 Reading one
+  result (§4.7); 4 Summary in text
+  (`summary.md`, folded); 5 Figures, grouped by family (the verdict card open; the others closed; one open at a time; a
+  human translated title, the caption once per family, a click enlarges); 6 Results, one foldable block per result
   block, **one open at a time** (native `<details name>`, no library), with the method text and the tables (numerics
-  right-aligned; at most 1000 rows shown, the embedded CSV is always complete); 6 Rigor; 7 References; 8 Manifest. The
-  colors of the verdicts are identical to the figures. Printing opens every section (a print stylesheet + `beforeprint`).
+  right-aligned; at most 1000 rows shown, the embedded CSV is always complete); 7 Rigor; 8 Assumptions and thresholds
+  (§3.6); 9 References; 10 Manifest. This list said "eight" and omitted Assumptions from v1.1 (2026-09-16) until
+  2026-10-02, while the page already had nine; corrected with the tenth, and a test now names every number. The
+  colors of the verdicts are identical to the figures. Printing opens every section (a print stylesheet + `beforeprint`);
+  section 3 prints the row selected.
   No external resource: CSS, JS and images embedded.
 - **References (v0.9).** A fixed section, in three parts: (a) the bioimpedance methods evaluated IN THIS run, one line
   per source (catalog entries grouped by DOI; year and authors from the catalog, title and journal from the verified
@@ -578,6 +613,30 @@ here. The target↔control correlation per stratum, with a warning above 0.8 (a 
   10.1097/ede.0b013e3181d61eeb) and 10.1111/sms.12780 (a paper on waist, not a general reference on allometry). Tested:
   every DOI of the catalog has a record; the erratum does not enter; the references of the report are exactly those of
   the methods of the run.
+
+### 4.7 Reading one result (2026-10-02)
+- **Why.** The screening label (`original-specific-useful`, …) abbreviates three answers, each relative to a different
+  reference: redundancy to the methods published earlier, specificity to the control declared for the run, added value
+  to the declared covariates. An external reviewer who ran the example notebook (2026-10-02) wrote that a reader who
+  only executes it leaves with the label, without the size of S1 and S2 or the reference adopted. One row is therefore
+  opened before the long tables, in the notebook and in the report.
+- **What it shows**, per (method, stratum, target, control): the earlier method that ranks people most alike, its
+  |Spearman| and the threshold; S1 and S2, each with the two scores it is the difference of, the gain, its interval
+  and P, then the three conditions of §3.2 one by one (yes/no) and present/absent; the combination that gives the
+  verdict, the reminder that it is relative to the declared control, the family-level verdict beside it when k > 1, and
+  the EPV mark when it applies; the gain over the covariates with its interval and the rule of §3.2 (lower end above
+  the margin); the screening label these answers make up. A designed index says that every number comes from the audit
+  partition. A method not audited says why; methods skipped for the whole run are named under the selector.
+- **One source.** `explain.py` builds it from the tables of a finished run and from nothing else, for the notebook
+  (`bioms_zaku.api.explain(result, method, stratum)`) and for section 3 of the report. Each decision is rebuilt with the
+  package's own rule functions (`audit._positive`, `audit.verdict_conditional`) and compared with the stored one; a
+  difference is written in the open as a warning, never resolved silently (tested: none on every row of real runs, in
+  the four languages).
+- **Numbers.** Printed with as many decimals as it takes for the printed value to fall on the same side of every
+  threshold it is compared with as the true value (0.0287 against 0.03 never prints as 0.03; −0.00002 against 0 never
+  as −0.0000). Thresholds come from the resolved configuration of the run.
+- **The report** renders every row; a selector shows one, opening on the first row of `screening.csv` (a fixed rule,
+  never chosen by result). Words follow `language`; `render` in another language changes words and no number (tested).
 
 ### 4.5 Progress
 The CLI and the API print, per stratum and method, the count, the elapsed time and an estimated finish, from the first
@@ -638,6 +697,26 @@ same record in another language.*
 This section records what changed in what the tool **promises**. [`CHANGELOG.md`](CHANGELOG.md) is a different record:
 what changed for someone who **uses** the tool, per released version. Two records, two questions; the development path
 itself is the git history.
+
+- **v1.0.0rc1 (2026-10-02)** — **one result read in full, after an external review.** The first reader outside the
+  development ran the example notebook in Colab and approved the proposal; the one criticism was that the panel brings three different questions visually close —
+  redundancy, specificity relative to the chosen control, added value over weight and stature — so that a reader who
+  only executes it leaves with the label and without the size of S1 and S2 or the reference adopted. The suggestion,
+  before the long tables: a guided reading of a single method with the two increments, their intervals and the
+  decision. Done as §4.7: `explain.py`, one source for `api.explain` in the notebook and for a new section 3 of the
+  report (selector over every row; sections 3–9 become 4–10). Notebook section 4 now opens a row before the table
+  (`Rsp` in men: tracks the control AND useful, which only the numbers reconcile) and section 5 opens the designed
+  index; a new test executes the whole notebook and fails if those sentences stop being true of the example data.
+  Four things surfaced while doing it, each recorded where it belongs: (1) **the CSVs were not read back exactly** —
+  pandas' default parser returned 1,719 of the 3,536 floats of the notebook's two runs one unit in the last place
+  away; harmless while the report only displayed them, wrong once rules are re-applied (P = 0.95 exactly, 190 of 200
+  resamples, would read as 0.9499…). `read_tables` now reads them exactly, approved by the user; no table, hash or
+  verdict changes, and the 28 tables of the notebook's runs were compared byte for byte before and after. (2) **The
+  rule for added value was written nowhere in this contract**; it is now (§3.2), with why it differs from the rule for
+  S1/S2 — inherited from 2026-09-10, stricter, kept by the user. (3) **§4.6 said "eight sections"** while the page had
+  nine since v1.1; corrected with the tenth. (4) **The language exception** now lists the eleven warnings of `run.py`
+  that stay in English (§3.4), the user's decision. Scope: the selector is the first interactive element of the report,
+  an exception to "filters out of scope" by the user's decision. Nothing about any number changes.
 
 - **v1.0.0rc1 (2026-09-24)** — **the end of a run now speaks to the place it is running in.** A finished run printed
   two things a Colab user cannot use: a line telling them to paste `xdg-open` into a terminal that does not exist, and

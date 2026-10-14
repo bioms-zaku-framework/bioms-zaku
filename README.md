@@ -225,7 +225,8 @@ input hash, the SHA-256 of every output table, wall time and warnings. The repor
 in seconds, leaving tables and manifest untouched.
 
 The report opens with a sticky table of contents and the **Zaku method diagram** (also saved as
-`figures/zaku_method.svg`), shows key numbers read from the tables, groups figures by family and result blocks as an accordion
+`figures/zaku_method.svg`), shows key numbers read from the tables, opens one result in full (the numbers behind each
+answer of its label, the rule and the decision — any row, from a list), groups figures by family and result blocks as an accordion
 (one open at a time), and ends with a **References** section: the bioimpedance sources of the methods evaluated in the run, the
 statistical and algebraic antecedents (ratio indices, allometric scaling, negative controls, ridge, cross-validation, bootstrap,
 combinations) tagged by result block, and the software executed. Every record comes from Crossref metadata verified on

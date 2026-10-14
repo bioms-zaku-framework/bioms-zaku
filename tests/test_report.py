@@ -198,7 +198,7 @@ def test_v09_structure_accordion_diagram_and_references(run_pt):
     pos = [txt.index(f"id='{a}'") for a in anchors]; assert pos == sorted(pos)          # sections in reading order
     blocks = re.findall(r"<details class='block' name='results'( open)?>", txt)
     assert len(blocks) >= 5 and blocks[0] == " open" and sum(b == " open" for b in blocks) == 1
-    figs = re.findall(r"<details class='block' name='figures'( open)?><summary><span class='n'>4\.\d</span>([^<]+)", txt)
+    figs = re.findall(r"<details class='block' name='figures'( open)?><summary><span class='n'>5\.\d</span>([^<]+)", txt)
     assert figs and figs[0][0] == " open" and figs[0][1] == "Ficha de vereditos" and "Mapa do controle negativo condicional" in [f[1] for f in figs]
     assert "Zaku: o método numa imagem" in txt and "<svg xmlns='http://www.w3.org/2000/svg'" in txt
     svg = (out / "figures" / "zaku_method.svg").read_text(encoding="utf-8"); assert svg in txt          # same diagram inline and on disk

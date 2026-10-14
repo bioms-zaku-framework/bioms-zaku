@@ -25,6 +25,8 @@ follows describes what the tool does, once.
   exact identity r_log = cos_Σ·√R² for monomial indices. The flags `PARALLEL_TO_CONTROL` and `COUPLED_TARGET_CONTROL`
   annotate a result; they never change a verdict.
 - **Index design** for a context, fitted on a mandatory design partition and audited on rows it never saw.
+- **Added value** over the declared covariates (body mass and stature by default): *useful* when the lower end of the
+  95 % interval of the gain exceeds 0.03 — stricter than the rule for S1 and S2.
 - Assumptions and thresholds are declared in the report, each with its value, origin and support; a method is refused
   when fewer than max(20, 10 % of B) resamples are valid, so no interval is ever reported at zero width.
 
@@ -39,8 +41,10 @@ follows describes what the tool does, once.
 - `bioms-zaku start data.csv` is one guided path through the three uses; `run` repeats a saved analysis without
   questions, `render` rewrites a finished run in another language without recomputing, `check` inspects a
   configuration before it costs anything, `propose` adds own indices, `examples` copies the example data.
-- A Python API on `bioms_zaku.api`, and an example notebook that runs in Jupyter and in Colab.
-- The report is the product: one HTML file, eight numbered sections, figures, every table downloadable inside it,
+- A Python API on `bioms_zaku.api`, and an example notebook that runs in Jupyter and in Colab. `explain(result, method,
+  stratum)` opens one result: the numbers behind each answer of its label, the rule applied, the reference, the decision.
+- The report is the product: one HTML file, ten numbered sections — the third opens any row the same way `explain`
+  does — figures, every table downloadable inside it,
   optionally an `.xlsx` (extra `[excel]`).
 - English, Spanish, Portuguese and Italian, everywhere a researcher reads. Machine-readable names — CSV columns, YAML
   keys, verdicts, flags — stay in English.

@@ -57,6 +57,11 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;font-family:ui-
 .refs ol{padding-left:22px;font-size:13.5px}.refs li{margin:5px 0}.refs a{color:var(--violet);text-decoration:none;word-break:break-all}.refs .tag{font-size:11px;color:var(--ink2);background:var(--panel);border-radius:4px;padding:0 6px;margin-left:6px;white-space:nowrap}
 pre{background:var(--code);padding:10px;font-size:11px;overflow-x:auto;border-radius:6px}
 footer{color:var(--ink2);font-size:11.5px;padding:18px 28px;border-top:1px solid var(--line)}
+.read select{font:inherit;font-size:13.5px;padding:4px 8px;border:1px solid var(--line);border-radius:6px;background:#fff;max-width:100%}
+.xrow{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 16px 12px;margin:10px 0}.xrow[hidden]{display:none}
+.xrow .xh{font-weight:650;margin:2px 0 6px}.xrow h4{font-size:14px;margin:14px 0 4px;color:var(--violet)}.xrow p{margin:4px 0;font-size:14px}
+.xrow .rule{margin-left:18px;font-size:13px;color:var(--ink2)}.xrow .decision{margin-left:18px;font-weight:600}.xrow .note{margin-left:18px;font-size:13px;color:var(--ink2)}
+.xrow .warn{margin-left:18px;font-size:13px;color:#991b1b;font-weight:600}
 .lb{position:fixed;inset:0;background:rgba(20,20,22,.88);display:flex;align-items:center;justify-content:center;z-index:50;cursor:zoom-out;padding:24px}.lb img{max-width:100%;max-height:100%;background:#fff;border-radius:6px}.lb[hidden]{display:none}
 @media print{nav.toc,.lb,.dl,.hint.zoom{display:none!important}body{background:#fff}details.block,figure.diagram{break-inside:avoid}}
 """
@@ -65,6 +70,7 @@ JS = """
 document.addEventListener('click',function(e){var i=e.target.closest('figure img');if(!i)return;lb.querySelector('img').src=i.src;lb.hidden=false;});
 lb.addEventListener('click',function(){lb.hidden=true;});
 document.addEventListener('keydown',function(e){if(e.key==='Escape')lb.hidden=true;});
+var xs=document.getElementById('xsel');if(xs){xs.addEventListener('change',function(){document.querySelectorAll('.xrow').forEach(function(d){d.hidden=d.dataset.k!==xs.value;});});}
 var st=[];window.addEventListener('beforeprint',function(){var d=document.querySelectorAll('details');st=[];d.forEach(function(x){st.push(x.open);x.open=true;});});
 window.addEventListener('afterprint',function(){document.querySelectorAll('details').forEach(function(x,i){x.open=st[i];});});})();
 """
@@ -286,6 +292,38 @@ def _kpi(cfg: dict, manifest: dict, tables: dict, cat) -> str:
     return f"<section id='key'>{_h2(2, 'key', t('n.key'))}<div class='kpi'>{body}</div></section>"
 
 
+def _reading(cfg: dict, manifest: dict, tables: dict) -> str:
+    """EN: section 3 (v1.2, 2026-10-02) — one row opened: the numbers behind each answer of its label, the rule and the
+        decision, written by `explain.py` (the same text `api.explain` prints in a notebook). Every row is rendered and a
+        selector shows one; it opens on the first row of screening.csv, a fixed rule (`explain.rows`)."""
+    from .i18n import t
+    from . import explain as X
+    from .check import why_skipped
+    keys = X.rows(tables)
+    if not keys:
+        return ""
+    multi = len({(tg, c) for _, _, tg, c in keys}) > 1
+    opts, blocks = [], []
+    for i, (m, s, tg, c) in enumerate(keys):
+        label = f"{m} · {s}" + (f" · {tg} / {c}" if multi else "")
+        opts.append(f"<option value='{i}'{' selected' if i == 0 else ''}>{html.escape(label)}</option>")
+        e = X.explain_row(tables, cfg, m, s, tg or None, c or None, manifest)
+        body = []
+        for kind, txt in X.lines(e):
+            if kind == "head":
+                body.append(f"<p class='xh'>{_pills(html.escape(txt))}</p>")
+            elif kind == "q":
+                body.append(f"<h4>{html.escape(txt)}</h4>")
+            else:
+                body.append(f"<p class='{kind}'>{_pills(html.escape(txt))}</p>")
+        blocks.append(f"<div class='xrow' data-k='{i}'{'' if i == 0 else ' hidden'}>{''.join(body)}</div>")
+    skipped = sorted({(m, w) for st in (manifest.get("methods_skipped") or {}).values() for m, w in st.items()})
+    sk = f"<p class='hint'>{html.escape(t('x.skipped', items='; '.join(f'{m} ({why_skipped(w)})' for m, w in skipped)))}</p>" if skipped else ""
+    return (f"<section id='read' class='read'>{_h2(3, 'read', t('n.read'))}<p>{html.escape(t('x.intro'))}</p>"
+            f"<p><label for='xsel' class='hint'>{html.escape(t('x.choose'))}</label> <select id='xsel'>{''.join(opts)}</select></p>"
+            f"{''.join(blocks)}{sk}</section>")
+
+
 def _figures(fd: Path, captions: dict) -> str:
     from .i18n import t
     figs = sorted(fd.glob("*.png")) if fd.exists() else []
@@ -294,7 +332,7 @@ def _figures(fd: Path, captions: dict) -> str:
         key = next((k for k in sorted(FIG_FAMILIES, key=len, reverse=True) if f.stem == k or f.stem.startswith(k + "_")), f.stem)
         fam.setdefault(key, []).append(f)
     order = [k for k in FIG_FAMILIES if k in fam] + [k for k in fam if k not in FIG_FAMILIES]
-    parts = [_h2(4, "figures", t("h.figures"))]
+    parts = [_h2(5, "figures", t("h.figures"))]
     for i, key in enumerate(order):
         title = t(f"fig.{key}") if f"fig.{key}" in _MSG() else key
         cap = captions.get(key, "")
@@ -304,7 +342,7 @@ def _figures(fd: Path, captions: dict) -> str:
             label = f"{title} · {t('fig.stratum', s=st)}" if st else title
             inner.append(f"<figure><img src='{_img(f)}' alt='{html.escape(label, quote=True)}'><figcaption><b>{html.escape(label)}</b> "
                          f"<span class='hint'>· {t('fig.file')} {f.name} · {t('fig.zoom')}</span></figcaption></figure>")
-        parts.append(f"<details class='block' name='figures'{' open' if i == 0 else ''}><summary><span class='n'>4.{i + 1}</span>{html.escape(title)}"
+        parts.append(f"<details class='block' name='figures'{' open' if i == 0 else ''}><summary><span class='n'>5.{i + 1}</span>{html.escape(title)}"
                      f"<span class='hint'>{len(fam[key])} × {key}</span></summary><div class='body'>{''.join(inner)}</div></details>")
     return "\n".join(parts)
 
@@ -335,7 +373,7 @@ def _references(cfg: dict, tables: dict, cat, manifest: dict | None = None) -> s
     for did, dz in ((manifest.get("design") or {}).get("indices") or {}).items():
         bia += li(t("h.ref_designed", t=dz.get("target"), orth=(t("h.ref_designed_orth", c=dz.get("orthogonal_to")) if dz.get("orthogonal_to") else "")), "", did)
     soft = "".join(li(*R.cite(k)) for k in R.SOFTWARE_REFS)
-    return (f"<section class='refs' id='refs'>{_h2(8, 'refs', t('h.refs_title'))}<p class='hint'>{html.escape(t('h.refs_note', date=R.VERIFIED_ON))}</p>"
+    return (f"<section class='refs' id='refs'>{_h2(9, 'refs', t('h.refs_title'))}<p class='hint'>{html.escape(t('h.refs_note', date=R.VERIFIED_ON))}</p>"
             f"<h3>{html.escape(t('h.refs_bia'))}</h3><ol>{bia}</ol><h3>{html.escape(t('h.refs_methods'))}</h3><ol>{meth}</ol>"
             f"<h3>{html.escape(t('h.refs_software'))}</h3><ol>{soft}</ol></section>")
 
@@ -394,7 +432,7 @@ def _assumptions_section(cfg: dict, manifest: dict, tables: dict) -> str:
              if tables.get("audit") is not None and not tables["audit"].empty and "task" in tables["audit"] and (tables["audit"]["task"].astype(str) == "classification").any() else [])]
     body = "".join(f"<tr><td>{html.escape(a)}</td><td>{html.escape(b)}</td><td><b>{html.escape(c)}</b> · {html.escape(d)}</td></tr>" for a, b, c, d in rows)
     tb = "".join(f"<tr><td>{html.escape(a)}</td><td class='num'>{html.escape(b)}</td><td>{html.escape(c)}</td><td>{html.escape(d)}</td></tr>" for a, b, c, d in thr)
-    return (f"<section id='assump'>{_h2(7, 'assump', t('h.assump_title'))}<p class='hint'>{html.escape(t('h.assump_intro'))}</p>"
+    return (f"<section id='assump'>{_h2(8, 'assump', t('h.assump_title'))}<p class='hint'>{html.escape(t('h.assump_intro'))}</p>"
             f"<div class='tw'><table><thead><tr><th>{t('a.h.procedure')}</th><th>{t('a.h.assumption')}</th><th>{t('a.h.state')}</th></tr></thead><tbody>{body}</tbody></table></div>"
             f"<div class='tw'><table><thead><tr><th>{t('a.h.threshold')}</th><th class='num'>{t('a.h.value')}</th><th>{t('a.h.origin')}</th><th>{t('a.h.support')}</th></tr></thead><tbody>{tb}</tbody></table></div></section>")
 
@@ -421,7 +459,7 @@ def _rigor_section(cfg: dict, manifest: dict, out_dir: Path | None = None, table
             (t("h.rigor.notes"), "<br>".join(html.escape(w) for w in manifest.get("notes") or []) or "—")]
     body = "".join(f"<tr><td>{html.escape(k)}</td><td>{x if k in (t('h.rigor.outputs'), t('h.rigor.warnings'), t('h.rigor.notes'), t('h.rigor.samplestats')) else html.escape(str(x))}</td></tr>" for k, x in rows)
     head = f"{manifest.get('preset')} · CV {cfg['audit']['cv']['folds']}×{cfg['audit']['cv']['repeats']} · B={cfg['audit']['bootstrap']['B']} · seeds cv={cfg['seeds']['cv']} bootstrap={cfg['seeds']['bootstrap']}"
-    return (f"{_h2(6, 'rigor', t('h.rigor_title'))}<details class='block' open><summary><span class='n'>6.1</span>{html.escape(t('h.rigor_title'))}<span class='hint'>{html.escape(head)}</span></summary>"
+    return (f"{_h2(7, 'rigor', t('h.rigor_title'))}<details class='block' open><summary><span class='n'>7.1</span>{html.escape(t('h.rigor_title'))}<span class='hint'>{html.escape(head)}</span></summary>"
             f"<div class='body'><div class='tw'><table class='kv'>{body}</table></div><p class='hint'>{html.escape(t('h.rigor.determinism'))}</p></div></details>")
 
 
@@ -454,16 +492,17 @@ def write_report(out_dir: Path, cfg: dict, tables: dict[str, pd.DataFrame], mani
     extra = "".join(f"<p>{html.escape(x)}</p>" for x in (fig_title, sub) if x)
     parts.append(f"<header>{'<img src=' + chr(34) + logo + chr(34) + ' alt=BioMS-Zaku>' if logo else ''}<span class='brand'>BioMS Zaku</span>"
                  f"<h1><span>{html.escape(_t('h.data'))}:</span> {html.escape(data_name)}</h1>{who}{extra}<div class='chips'>{chips}</div></header>")
-    nav = (("about", t("n.about")), ("key", t("n.key")), ("summary", t("n.summary")), ("figures", t("h.figures")), ("results", t("h.results")),
+    nav = (("about", t("n.about")), ("key", t("n.key")), ("read", t("n.read")), ("summary", t("n.summary")), ("figures", t("h.figures")), ("results", t("h.results")),
            ("rigor", t("h.rigor_title")), ("assump", t("h.assump_title")), ("refs", t("h.refs_title")), ("manifest", t("h.manifest")))
     parts.append("<nav class='toc'>" + "".join(f"<a href='#{a}'>{html.escape(l)}</a>" for a, l in nav) + "</nav><main>")
     parts.append(_about(cfg, manifest))
     parts.append(_kpi(cfg, manifest, tables, cat))
-    parts.append(f"<section id='summary'>{_h2(3, 'summary', t('n.summary'))}<details class='block'><summary><span class='n'>3.1</span>{html.escape(t('h.summary_text'))}</summary>"
+    parts.append(_reading(cfg, manifest, tables))
+    parts.append(f"<section id='summary'>{_h2(4, 'summary', t('n.summary'))}<details class='block'><summary><span class='n'>4.1</span>{html.escape(t('h.summary_text'))}</summary>"
                  f"<div class='body summary'>{_md_to_html(summary_md)}</div></details></section>")
     parts.append(f"<section id='figures'>{_figures(fd, captions)}</section>")
     # ---- results: method text + tables per block, one block open at a time
-    parts.append(f"<section id='results'>{_h2(5, 'results', t('h.results'))}")
+    parts.append(f"<section id='results'>{_h2(6, 'results', t('h.results'))}")
     if xlsx is not None:
         parts.append(f"<p><a class='dl' href='{xlsx.name}' download='{xlsx.name}'>{html.escape(t('h.download_xlsx'))}</a></p>")
     else:
@@ -476,7 +515,7 @@ def write_report(out_dir: Path, cfg: dict, tables: dict[str, pd.DataFrame], mani
         if not present and key not in ("m.input", "m.design"):
             continue
         i += 1
-        parts.append(f"<details class='block' name='results'{' open' if i == 1 else ''}><summary><span class='n'>5.{i}</span>{html.escape(t('b.' + key.split('.')[1]))}"
+        parts.append(f"<details class='block' name='results'{' open' if i == 1 else ''}><summary><span class='n'>6.{i}</span>{html.escape(t('b.' + key.split('.')[1]))}"
                      f"<span class='hint'>{html.escape(', '.join(present))}</span></summary><div class='body'>")
         extra = ""
         if key == "m.spec" and tables.get("audit") is not None and not tables["audit"].empty and "scale" in tables["audit"]:
@@ -494,14 +533,14 @@ def write_report(out_dir: Path, cfg: dict, tables: dict[str, pd.DataFrame], mani
     rest = [n for n, df in tables.items() if n not in shown and df is not None and not df.empty]
     if rest:
         i += 1
-        parts.append(f"<details class='block' name='results'><summary><span class='n'>5.{i}</span>{html.escape(t('h.tables'))}<span class='hint'>{html.escape(', '.join(rest))}</span></summary><div class='body'>"
+        parts.append(f"<details class='block' name='results'><summary><span class='n'>6.{i}</span>{html.escape(t('h.tables'))}<span class='hint'>{html.escape(', '.join(rest))}</span></summary><div class='body'>"
                      + _tables_block(rest, tables, out_dir, "rest") + "</div></details>")
     parts.append("</section>")
     # ---- rigour + references + manifest
     parts.append(_rigor_section(cfg, manifest, out_dir, tables))
     parts.append(_assumptions_section(cfg, manifest, tables))
     parts.append(_references(cfg, tables, cat, manifest))
-    parts.append(f"{_h2(9, 'manifest', t('h.manifest'))}<details class='block'><summary><span class='n'>9.1</span>manifest.json</summary><div class='body'><pre>" + html.escape(json.dumps(manifest, indent=1, ensure_ascii=False, default=str)) + "</pre></div></details>")
+    parts.append(f"{_h2(10, 'manifest', t('h.manifest'))}<details class='block'><summary><span class='n'>10.1</span>manifest.json</summary><div class='body'><pre>" + html.escape(json.dumps(manifest, indent=1, ensure_ascii=False, default=str)) + "</pre></div></details>")
     parts.append(f"</main><div class='lb' id='lb' hidden><img alt=''></div><footer>BioMS Zaku {manifest.get('package_version', '')} · {html.escape(data_name)}{(' · ' + html.escape(researcher)) if researcher else ''} · preset {manifest.get('preset', '')} · {manifest.get('finished_at', '')} · "
                  f"seeds cv={cfg['seeds']['cv']} bootstrap={cfg['seeds']['bootstrap']} · input sha256 {str(manifest.get('input_sha256', ''))[:12]}… · aggregates only, no row-level data</footer><script>{JS}</script></body></html>")
     p = out_dir / "report.html"

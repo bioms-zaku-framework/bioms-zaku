@@ -87,7 +87,7 @@ def test_html_report_has_a_caption_for_every_figure_and_no_english_leak_in_pt(tm
     res = run(cfg, printer=lambda s: None)
     html = (res["out_dir"] / "report.html").read_text(encoding="utf-8")
     import re as _re
-    fams = _re.findall(r"<details class='block' name='figures'(?: open)?><summary><span class='n'>4\.\d</span>([^<]+)<span class='hint'>[^<]*</span></summary><div class='body'>(<p class='hint'>)?", html)
+    fams = _re.findall(r"<details class='block' name='figures'(?: open)?><summary><span class='n'>5\.\d</span>([^<]+)<span class='hint'>[^<]*</span></summary><div class='body'>(<p class='hint'>)?", html)
     empties = [f for f, cap in fams if not cap]
     assert fams and empties == [], f"figure families without caption: {empties}"
     assert "Mapa do controle negativo condicional<span class='hint'>" in html and "<p class='hint'>Mapa do controle negativo condicional" in html
