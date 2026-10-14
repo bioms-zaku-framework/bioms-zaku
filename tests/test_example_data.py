@@ -17,6 +17,7 @@ EN: the shipped example is a KNOWN TRUTH. Two guarantees, of very different shar
     identities on constructed data.
 """
 import json
+import re
 from pathlib import Path
 
 import numpy as np
@@ -90,3 +91,16 @@ def test_published_sigma_still_points_at_the_observed_correlation():
                 observed = np.corrcoef(L @ a, L @ b)[0, 1]
                 worst = max(worst, abs(predicted_pearson_log(a, b, S_pub) - observed))
     assert worst < 0.12, f"published Σ misses the observed ρ by {worst:.4f}"
+
+
+def test_the_listing_states_the_cases_the_base_holds():
+    """EN: `bioms-zaku examples` said "diabetes (70 per sex)" for three weeks after the base grew to 245 cases per sex
+    (2026-09-23); found on 2026-10-14 by running the listing as a new user would. The count is read from the rows, so
+    the sentence can no longer be left behind in any of the four languages."""
+    from bioms_zaku.i18n import LANGS, MSG
+    cases = pd.read_csv(CSV).groupby("sexo").diabetes.sum()
+    assert cases.nunique() == 1, f"the listing states one count per sex; the base has {cases.to_dict()}"
+    n = int(cases.iloc[0])
+    for lang in LANGS:
+        found = [int(x) for x in re.findall(r"\((\d+) (?:per|por) (?:sex|sexo|sesso)\)", MSG["ex.zaku_exemplo"][lang])]
+        assert found == [n], f"{lang}: the listing says {found}, the base holds {n} cases per sex"
